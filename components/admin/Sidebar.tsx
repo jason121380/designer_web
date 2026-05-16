@@ -97,11 +97,11 @@ export default function Sidebar({ userName, userRole, open = false, onClose }: S
                   size={16}
                   className={cn(
                     "flex-shrink-0 transition-colors",
-                    isActive ? "text-amber-400" : "text-gray-400 group-hover:text-gray-600"
+                    isActive ? "text-white" : "text-gray-400 group-hover:text-gray-600"
                   )}
                 />
                 <span className="flex-1">{item.label}</span>
-                {isActive && <ChevronRight size={12} className="text-gray-400" />}
+                {isActive && <ChevronRight size={12} className="text-white/70" />}
               </Link>
             );
           })}
