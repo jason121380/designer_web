@@ -30,7 +30,7 @@ export default function Header({ categories }: HeaderProps) {
       >
         {/* Top bar */}
         <div className="border-b border-gray-100">
-          <div className="max-w-screen-xl mx-auto px-6 py-2 flex justify-between items-center">
+          <div className="max-w-screen-xl mx-auto px-6 py-1 md:py-2 flex justify-between items-center">
             <p className="text-xs text-gray-400 uppercase tracking-widest hidden md:block">
               時尚・美髮・生活美學
             </p>
@@ -47,7 +47,7 @@ export default function Header({ categories }: HeaderProps) {
         </div>
 
         {/* Main nav */}
-        <div className="max-w-screen-xl mx-auto px-6 py-4">
+        <div className="max-w-screen-xl mx-auto px-6 py-2.5 md:py-4">
           <div className="flex items-center justify-between gap-8">
             {/* Mobile menu button */}
             <button
@@ -77,7 +77,7 @@ export default function Header({ categories }: HeaderProps) {
 
             {/* Logo */}
             <Link href="/" className="flex-shrink-0">
-              <Image src="/logo.png" alt="mifaso 迷髮所" width={140} height={56} className="h-12 w-auto object-contain" priority />
+              <Image src="/logo.png" alt="mifaso 迷髮所" width={140} height={56} className="h-8 md:h-12 w-auto object-contain" priority />
             </Link>
 
             {/* Desktop nav right */}
@@ -101,13 +101,13 @@ export default function Header({ categories }: HeaderProps) {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-white pt-32 px-8" onClick={() => setMenuOpen(false)}>
-          <nav className="flex flex-col gap-6">
+        <div className="fixed inset-0 z-40 bg-white pt-24 px-8 overflow-y-auto" onClick={() => setMenuOpen(false)}>
+          <nav className="flex flex-col">
             {categories.map((cat) => (
               <Link
                 key={cat.id}
                 href={`/category/${cat.slug}`}
-                className="font-serif text-2xl text-black hover:text-rose-brand transition-colors border-b border-gray-100 pb-6"
+                className="font-serif text-lg text-black hover:text-rose-brand transition-colors border-b border-gray-100 py-3"
                 onClick={() => setMenuOpen(false)}
               >
                 {cat.name}
@@ -118,7 +118,7 @@ export default function Header({ categories }: HeaderProps) {
       )}
 
       {/* Spacer */}
-      <div className="h-[88px] md:h-[108px]" />
+      <div className="h-[80px] md:h-[108px]" />
     </>
   );
 }
