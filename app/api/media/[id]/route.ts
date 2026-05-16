@@ -6,7 +6,10 @@ import { join } from "path";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const u = session?.user as { role?: string } | undefined;
+  if (!u || (u.role !== "ADMIN" && u.role !== "EDITOR")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const { id } = await params;
   const { alt } = await req.json();

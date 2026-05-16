@@ -57,7 +57,7 @@ export default function ArticlesPage() {
         </div>
         <Link
           href="/admin/articles/new"
-          className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-rose-brand transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-rose-brand text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-rose-dark transition-colors shadow-sm"
         >
           <Plus size={15} />
           新增文章
@@ -203,7 +203,7 @@ export default function ArticlesPage() {
                   </button>
                   {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map((p) => (
                     <button key={p} onClick={() => setPage(p)}
-                      className={`min-w-[32px] h-8 text-xs rounded-lg transition-colors ${p === page ? "bg-gray-900 text-white" : "border border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
+                      className={`min-w-[32px] h-8 text-xs rounded-lg transition-colors ${p === page ? "bg-rose-brand text-white" : "border border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
                       {p}
                     </button>
                   ))}

@@ -76,7 +76,7 @@ export default function UsersPage() {
         <h1 className="font-serif text-3xl font-bold text-gray-900">用戶管理</h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-black text-white px-6 py-3 text-sm uppercase tracking-widest hover:bg-rose-brand transition-colors"
+          className="bg-black text-white px-6 py-3 text-sm uppercase tracking-widest hover:bg-rose-dark transition-colors"
         >
           ＋ 新增用戶
         </button>
@@ -126,7 +126,7 @@ export default function UsersPage() {
             </div>
           </div>
           <div className="flex gap-3 mt-5">
-            <button onClick={createUser} disabled={saving} className="bg-black text-white px-6 py-2.5 text-sm uppercase tracking-widest hover:bg-rose-brand transition-colors disabled:opacity-50">
+            <button onClick={createUser} disabled={saving} className="bg-black text-white px-6 py-2.5 text-sm uppercase tracking-widest hover:bg-rose-dark transition-colors disabled:opacity-50">
               {saving ? "新增中..." : "新增用戶"}
             </button>
             <button onClick={() => setShowForm(false)} className="border border-gray-200 text-gray-500 px-6 py-2.5 text-sm hover:border-black transition-colors">

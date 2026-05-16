@@ -10,7 +10,7 @@ const notoSansTC = Noto_Sans_TC({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(process.env.SITE_URL ?? "https://mifaso.co"),
   title: {
     default: "MIFASO 迷髮所 — 時尚・美髮・生活美學",
     template: "%s｜MIFASO 迷髮所",

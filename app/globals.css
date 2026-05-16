@@ -83,6 +83,64 @@
   }
 }
 
+/* ---- 前台文章內容(WordPress HTML)手機 RWD + 目錄 ---- */
+.prose img,
+.prose figure,
+.prose iframe,
+.prose video,
+.prose blockquote.instagram-media {
+  max-width: 100% !important;
+  height: auto;
+}
+.prose figure { margin: 1.5rem 0; }
+.prose iframe { width: 100%; aspect-ratio: 16 / 9; }
+.prose { overflow-wrap: anywhere; }
+/* 中和 WordPress 對齊類別,避免手機浮動爆版 */
+.prose .alignleft,
+.prose .alignright,
+.prose .aligncenter {
+  float: none !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  max-width: 100% !important;
+}
+/* 寬表格(含 WP 舊版「本文目錄」表)改成可橫向捲動而非撐破版面 */
+.prose table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+/* 錨點跳轉時讓標題不被固定 header 蓋住 */
+.prose :is(h1, h2, h3, h4)[id] { scroll-margin-top: 6rem; }
+
+/* 自動產生的目錄(編輯器插入 <div data-toc> 時) */
+.article-toc {
+  margin: 1.5rem 0 2rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: #fafafa;
+}
+.article-toc .toc-title {
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 0.5rem;
+  color: #1a1a1a;
+}
+.article-toc ul { list-style: none; margin: 0; padding: 0; }
+.article-toc li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+  font-size: 0.95rem;
+}
+.article-toc li:last-child { border-bottom: 0; }
+.article-toc li.toc-l3 { padding-left: 1rem; }
+.article-toc li.toc-l4 { padding-left: 2rem; }
+.article-toc a { color: #C4837A; text-decoration: none; }
+.article-toc a:hover { text-decoration: underline; }
+
 /* 文章目錄（前台自動產生） */
 .prose h2, .prose h3, .prose h4 { scroll-margin-top: 6rem; }
 .article-toc { margin: 1.5rem 0 2rem; }

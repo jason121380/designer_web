@@ -126,7 +126,7 @@ export default function MediaPicker({ onSelect, onClose }: Props) {
               取消
             </button>
             <button onClick={handleConfirm} disabled={!selected}
-              className="px-5 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-rose-brand transition-colors disabled:opacity-40">
+              className="px-5 py-2 text-sm bg-rose-brand text-white rounded-lg hover:bg-rose-dark transition-colors disabled:opacity-40">
               選取圖片
             </button>
           </div>

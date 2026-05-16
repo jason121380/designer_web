@@ -14,7 +14,6 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.96.0",
     "@auth/prisma-adapter": "^2.7.4",
     "@prisma/client": "^5.22.0",
     "@tiptap/extension-image": "^2.10.3",
@@ -33,6 +32,7 @@
     "openai": "^6.38.0",
     "react": "^19",
     "react-dom": "^19",
+    "sanitize-html": "^2.17.4",
     "sharp": "^0.33.5",
     "slugify": "^1.6.6",
     "sonner": "^2.0.7",
@@ -45,6 +45,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.1",
     "autoprefixer": "^10.4.20",
     "postcss": "^8",
     "prisma": "^5.22.0",

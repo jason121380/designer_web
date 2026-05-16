@@ -23,7 +23,12 @@ export default function LoginPage() {
     const result = await signIn("credentials", { account: email, password, redirect: false });
 
     if (result?.ok) {
-      router.push(searchParams.get("callbackUrl") ?? "/admin/dashboard");
+      const cb = searchParams.get("callbackUrl") ?? "";
+      const safe = /^\/(?!\/)[^\s]*$/.test(cb) ? cb : "/admin/dashboard";
+      // 全頁導向(非 router.push):強制 server 端重新渲染 admin layout,
+      // 否則登入後第一次進來側邊選單不會出現,要重新整理才有。
+      window.location.href = safe;
+      return;
     } else {
       setError("帳號或密碼錯誤，請重新輸入");
     }
@@ -98,7 +103,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gray-900 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-rose-brand transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2 shadow-sm"
+              className="w-full bg-rose-brand text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-rose-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2 shadow-sm"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
