@@ -286,7 +286,7 @@ export default function ArticleForm({ initialData, categories, allTags, mode }: 
               <button type="button" onClick={() => handleSave("PUBLISHED")} disabled={saving}
                 className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-rose-brand transition-colors disabled:opacity-50 shadow-sm">
                 <Send size={14} />
-                {saving ? "儲存中..." : "發布文章"}
+                {saving ? "儲存中..." : "儲存並發布"}
               </button>
               <button type="button" onClick={() => handleSave("DRAFT")} disabled={saving}
                 className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors disabled:opacity-50">
