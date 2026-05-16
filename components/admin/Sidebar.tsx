@@ -87,7 +87,7 @@ export default function Sidebar({ userName, userRole, open = false, onClose }: S
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group",
                   isActive
-                    ? "bg-gray-900 text-white shadow-sm"
+                    ? "bg-rose-brand text-white shadow-sm"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 )}
               >
@@ -109,7 +109,7 @@ export default function Sidebar({ userName, userRole, open = false, onClose }: S
       {/* User section */}
       <div className="px-3 py-4 border-t border-gray-100">
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-50 mb-2">
-          <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-rose-brand flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
             {userName?.[0]?.toUpperCase() ?? "A"}
           </div>
           <div className="flex-1 min-w-0">

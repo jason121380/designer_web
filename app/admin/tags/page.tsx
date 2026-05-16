@@ -79,7 +79,7 @@ export default function TagsPage() {
           <button
             onClick={createTag}
             disabled={saving || !newTagName.trim()}
-            className="bg-gray-900 text-white px-6 py-2.5 text-sm font-medium rounded-lg hover:bg-rose-brand transition-colors disabled:opacity-40"
+            className="bg-rose-brand text-white px-6 py-2.5 text-sm font-medium rounded-lg hover:bg-rose-dark transition-colors disabled:opacity-40"
           >
             新增
           </button>

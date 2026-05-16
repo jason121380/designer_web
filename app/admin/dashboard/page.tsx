@@ -62,7 +62,7 @@ export default async function DashboardPage() {
         </div>
         <Link
           href="/admin/articles/new"
-          className="flex items-center gap-2 bg-gray-900 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-rose-brand transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-rose-brand text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-rose-dark transition-colors shadow-sm"
         >
           <FileText size={15} />
           撰寫新文章

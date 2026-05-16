@@ -58,7 +58,7 @@ export default function CategoriesPage() {
         <h1 className="font-serif text-3xl font-bold text-gray-900">分類管理</h1>
         <button
           onClick={() => { resetForm(); setShowForm(true); }}
-          className="bg-black text-white px-6 py-3 text-sm uppercase tracking-widest hover:bg-rose-brand transition-colors"
+          className="bg-black text-white px-6 py-3 text-sm uppercase tracking-widest hover:bg-rose-dark transition-colors"
         >
           ＋ 新增分類
         </button>
@@ -97,7 +97,7 @@ export default function CategoriesPage() {
             </div>
           </div>
           <div className="flex gap-3 mt-5">
-            <button onClick={handleSave} className="bg-gray-900 text-white px-6 py-2.5 text-sm font-medium rounded-lg hover:bg-rose-brand transition-colors">
+            <button onClick={handleSave} className="bg-rose-brand text-white px-6 py-2.5 text-sm font-medium rounded-lg hover:bg-rose-dark transition-colors">
               {editingId ? "更新" : "新增"}
             </button>
             <button onClick={resetForm} className="border border-gray-200 text-gray-500 px-6 py-2.5 text-sm rounded-lg hover:border-gray-400 hover:text-gray-700 transition-colors">

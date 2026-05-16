@@ -82,7 +82,7 @@ export default function MediaPage() {
         <button
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="bg-black text-white px-6 py-3 text-sm uppercase tracking-widest hover:bg-rose-brand transition-colors disabled:opacity-50"
+          className="bg-black text-white px-6 py-3 text-sm uppercase tracking-widest hover:bg-rose-dark transition-colors disabled:opacity-50"
         >
           {uploading ? "上傳中..." : "⊞ 上傳圖片"}
         </button>

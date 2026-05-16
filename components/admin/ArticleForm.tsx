@@ -175,7 +175,7 @@ export default function ArticleForm({ initialData, categories, allTags, mode }: 
                 type="button"
                 onClick={() => generateAI("excerpt")}
                 disabled={!form.title || aiLoading === "excerpt"}
-                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-rose-50 text-rose-brand hover:bg-rose-brand hover:text-white transition-colors disabled:opacity-40 font-medium"
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-rose-50 text-rose-brand hover:bg-rose-dark hover:text-white transition-colors disabled:opacity-40 font-medium"
               >
                 {aiLoading === "excerpt" ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                 AI 精靈
@@ -218,7 +218,7 @@ export default function ArticleForm({ initialData, categories, allTags, mode }: 
                       type="button"
                       onClick={() => generateAI("metaTitle")}
                       disabled={!form.title || aiLoading === "metaTitle"}
-                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-rose-50 text-rose-brand hover:bg-rose-brand hover:text-white transition-colors disabled:opacity-40 font-medium"
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-rose-50 text-rose-brand hover:bg-rose-dark hover:text-white transition-colors disabled:opacity-40 font-medium"
                     >
                       {aiLoading === "metaTitle" ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                       AI 精靈
@@ -239,7 +239,7 @@ export default function ArticleForm({ initialData, categories, allTags, mode }: 
                       type="button"
                       onClick={() => generateAI("metaDescription")}
                       disabled={!form.title || aiLoading === "metaDescription"}
-                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-rose-50 text-rose-brand hover:bg-rose-brand hover:text-white transition-colors disabled:opacity-40 font-medium"
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-rose-50 text-rose-brand hover:bg-rose-dark hover:text-white transition-colors disabled:opacity-40 font-medium"
                     >
                       {aiLoading === "metaDescription" ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                       AI 精靈
@@ -284,7 +284,7 @@ export default function ArticleForm({ initialData, categories, allTags, mode }: 
             </div>
             <div className="space-y-2">
               <button type="button" onClick={() => handleSave("PUBLISHED")} disabled={saving}
-                className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-rose-brand transition-colors disabled:opacity-50 shadow-sm">
+                className="w-full flex items-center justify-center gap-2 bg-rose-brand text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-rose-dark transition-colors disabled:opacity-50 shadow-sm">
                 <Send size={14} />
                 {saving ? "儲存中..." : "儲存並發布"}
               </button>
@@ -338,7 +338,7 @@ export default function ArticleForm({ initialData, categories, allTags, mode }: 
                 type="button"
                 onClick={() => generateAI("tags")}
                 disabled={!form.title || aiLoading === "tags"}
-                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-rose-50 text-rose-brand hover:bg-rose-brand hover:text-white transition-colors disabled:opacity-40 font-medium"
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-rose-50 text-rose-brand hover:bg-rose-dark hover:text-white transition-colors disabled:opacity-40 font-medium"
               >
                 {aiLoading === "tags" ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                 AI 選標籤
@@ -352,7 +352,7 @@ export default function ArticleForm({ initialData, categories, allTags, mode }: 
                   const tag = tags.find((t) => t.id === id);
                   if (!tag) return null;
                   return (
-                    <span key={id} className="inline-flex items-center gap-1 text-xs bg-gray-900 text-white px-2.5 py-1 rounded-full font-medium">
+                    <span key={id} className="inline-flex items-center gap-1 text-xs bg-rose-brand text-white px-2.5 py-1 rounded-full font-medium">
                       {tag.name}
                       <button type="button" onClick={() => toggleTag(id)} className="hover:text-rose-300 transition-colors">
                         <X size={10} />

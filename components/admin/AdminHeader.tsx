@@ -56,12 +56,12 @@ export default function AdminHeader({ userName, onMenu }: { userName: string; on
       <div className="flex items-center gap-3">
         <Link
           href="/admin/articles/new"
-          className="hidden md:flex items-center gap-1.5 bg-gray-900 text-white text-xs font-medium px-4 py-2 rounded-lg hover:bg-rose-brand transition-colors"
+          className="hidden md:flex items-center gap-1.5 bg-rose-brand text-white text-xs font-medium px-4 py-2 rounded-lg hover:bg-rose-dark transition-colors"
         >
           <span className="text-base leading-none">+</span>
           新增文章
         </Link>
-        <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-white text-xs font-semibold">
+        <div className="w-8 h-8 rounded-full bg-rose-brand flex items-center justify-center text-white text-xs font-semibold">
           {userName?.[0]?.toUpperCase() ?? "A"}
         </div>
       </div>
