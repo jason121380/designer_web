@@ -18,6 +18,9 @@ interface MediaItem {
 
 export default function MediaPage() {
   const [media, setMedia] = useState<MediaItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selected, setSelected] = useState<MediaItem | null>(null);
@@ -25,14 +28,18 @@ export default function MediaPage() {
   const [copied, setCopied] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  async function fetchMedia() {
-    const res = await fetch("/api/media?pageSize=48");
+  async function fetchMedia(p = 1) {
+    if (p > 1) setLoadingMore(true);
+    const res = await fetch(`/api/media?page=${p}&pageSize=48`);
     const data = await res.json();
-    setMedia(data.media ?? []);
+    setMedia((prev) => (p === 1 ? data.media ?? [] : [...prev, ...(data.media ?? [])]));
+    setTotal(data.meta?.total ?? 0);
+    setPage(p);
     setLoading(false);
+    setLoadingMore(false);
   }
 
-  useEffect(() => { fetchMedia(); }, []);
+  useEffect(() => { fetchMedia(1); }, []);
 
   async function handleUpload(files: FileList | null) {
     if (!files?.length) return;
@@ -63,6 +70,7 @@ export default function MediaPage() {
     if (!confirm("確定要刪除此圖片？")) return;
     await fetch(`/api/media/${id}`, { method: "DELETE" });
     setMedia((prev) => prev.filter((m) => m.id !== id));
+    setTotal((t) => Math.max(0, t - 1));
     if (selected?.id === id) setSelected(null);
   }
 
@@ -77,7 +85,7 @@ export default function MediaPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="font-serif text-3xl font-bold text-gray-900">媒體庫</h1>
-          <p className="text-gray-400 text-sm mt-1">{media.length} 張圖片</p>
+          <p className="text-gray-400 text-sm mt-1">{media.length} / {total} 張圖片</p>
         </div>
         <button
           onClick={() => inputRef.current?.click()}
@@ -130,6 +138,18 @@ export default function MediaPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {!loading && media.length < total && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => fetchMedia(page + 1)}
+                disabled={loadingMore}
+                className="border border-gray-200 text-gray-600 px-6 py-2.5 text-sm rounded-lg hover:border-rose-brand hover:text-rose-brand transition-colors disabled:opacity-50"
+              >
+                {loadingMore ? "載入中..." : `載入更多(剩 ${total - media.length})`}
+              </button>
             </div>
           )}
         </div>
