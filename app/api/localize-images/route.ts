@@ -61,6 +61,9 @@ async function exists(p: string): Promise<boolean> {
 }
 
 export async function GET(req: NextRequest) {
+  if (process.env.MAINT_TOOLS !== "1") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
   const session = await auth();
   const role = (session?.user as { role?: string } | undefined)?.role;
   if (!session?.user || role !== "ADMIN") {

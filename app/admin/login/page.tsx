@@ -23,7 +23,9 @@ export default function LoginPage() {
     const result = await signIn("credentials", { account: email, password, redirect: false });
 
     if (result?.ok) {
-      router.push(searchParams.get("callbackUrl") ?? "/admin/dashboard");
+      const cb = searchParams.get("callbackUrl") ?? "";
+      const safe = /^\/(?!\/)[^\s]*$/.test(cb) ? cb : "/admin/dashboard";
+      router.push(safe);
     } else {
       setError("帳號或密碼錯誤，請重新輸入");
     }
