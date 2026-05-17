@@ -2,14 +2,13 @@
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { InstagramEmbed, TableOfContents, HeadingId } from "./tiptap-nodes";
+import { InstagramEmbed, TableOfContents, HeadingId, ImageWithRemove } from "./tiptap-nodes";
 import MediaPicker from "./MediaPicker";
 
 interface Props {
@@ -62,7 +61,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "é–‹å§
     extensions: [
       StarterKit,
       Underline,
-      Image.configure({ inline: false, allowBase64: true }),
+      ImageWithRemove.configure({ inline: false, allowBase64: true }),
       Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-rose-brand underline" } }),
       Placeholder.configure({ placeholder }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),

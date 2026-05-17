@@ -10,6 +10,14 @@ interface Preview {
   sample: { title: string; removed: string[] }[];
 }
 
+interface NormResult {
+  totalArticles: number;
+  articlesChanged: number;
+  manualTocsRemoved: number;
+  executed: boolean;
+  sample: { title: string; tocRemoved: number; bytesBefore: number; bytesAfter: number }[];
+}
+
 interface ScanItem {
   title: string;
   slug: string;
@@ -71,6 +79,31 @@ export default function ToolsPage() {
       setFixing(false);
     }
   }, [doScan]);
+
+  const [norm, setNorm] = useState<NormResult | null>(null);
+  const [normLoading, setNormLoading] = useState(false);
+  const [normErr, setNormErr] = useState("");
+  const [normConfirm, setNormConfirm] = useState(false);
+  const [normRunning, setNormRunning] = useState(false);
+  const [normMsg, setNormMsg] = useState("");
+
+  const loadNorm = useCallback(async (run = false) => {
+    setNormErr("");
+    if (run) setNormRunning(true); else setNormLoading(true);
+    try {
+      const res = await fetch(`/api/normalize-content${run ? "?run=1" : ""}`);
+      if (res.status === 401) { setNormErr("需要以管理員身分登入。"); return; }
+      const j = (await res.json()) as NormResult & { note?: string };
+      setNorm(j);
+      if (run) setNormMsg(j?.note ?? "完成。");
+    } catch {
+      setNormErr("讀取失敗,請稍後再試。");
+    } finally {
+      setNormLoading(false);
+      setNormRunning(false);
+      setNormConfirm(false);
+    }
+  }, []);
 
   const clearCache = useCallback(async () => {
     setClearing(true);
@@ -174,6 +207,67 @@ export default function ToolsPage() {
             </div>
           </>
         ) : null}
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
+        <div>
+          <h2 className="font-semibold text-gray-900">全文樣式整齊 + 目錄統一</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            移除手動 / WP 舊版「本文目錄」(表格、清單、標題+清單),原本有目錄者統一改用
+            自動目錄(<code className="text-xs bg-gray-100 px-1 py-0.5 rounded">data-toc</code>);
+            並清掉文字標籤雜亂 inline style 與空段落。不動圖片/IG/表格。不更動發布日期。
+          </p>
+        </div>
+
+        {normLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="w-7 h-7 border-2 border-rose-brand border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : normErr ? (
+          <p className="text-sm text-red-500">{normErr}</p>
+        ) : norm ? (
+          <>
+            <div className="flex flex-wrap gap-6 text-sm">
+              <span>影響文章:<b className="text-gray-900">{norm.articlesChanged}</b> / {norm.totalArticles}</span>
+              <span>移除手動目錄:<b className="text-gray-900">{norm.manualTocsRemoved}</b></span>
+            </div>
+            {norm.sample.length > 0 && (
+              <div className="border border-gray-100 rounded-lg divide-y divide-gray-50">
+                <p className="px-4 py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">預覽(前 5 篇)</p>
+                {norm.sample.map((s, i) => (
+                  <div key={i} className="px-4 py-3">
+                    <p className="text-sm font-medium text-gray-800 truncate">{s.title}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      移除目錄 {s.tocRemoved} 個・內容 {s.bytesBefore} → {s.bytesAfter} 字元
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+            {normMsg && (
+              <p className="text-sm text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                ✓ {normMsg}
+              </p>
+            )}
+          </>
+        ) : null}
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => loadNorm(false)}
+            disabled={normRunning || normLoading}
+            className="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg hover:border-rose-brand hover:text-rose-brand transition-colors disabled:opacity-40"
+          >
+            預覽
+          </button>
+          <button
+            onClick={() => setNormConfirm(true)}
+            disabled={normRunning || !norm || norm.articlesChanged === 0}
+            className="px-4 py-2 text-sm bg-rose-brand text-white rounded-lg hover:bg-rose-dark transition-colors disabled:opacity-40"
+          >
+            {!norm || norm.articlesChanged === 0 ? "無可整理項目" : "確認整理"}
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
@@ -316,6 +410,38 @@ export default function ToolsPage() {
                 className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-40"
               >
                 {running ? "處理中…" : "確定刪除"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {normConfirm && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setNormConfirm(false); }}
+        >
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-5">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">確認整理</h3>
+            <p className="text-sm text-gray-500">
+              將整理 <b className="text-gray-900">{norm?.articlesChanged}</b> 篇文章
+              (移除 <b className="text-gray-900">{norm?.manualTocsRemoved}</b> 個手動目錄、
+              統一改用自動目錄並清理樣式)。此動作無法復原,確定要繼續嗎?
+            </p>
+            <div className="flex justify-end gap-2 mt-5">
+              <button
+                onClick={() => setNormConfirm(false)}
+                disabled={normRunning}
+                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-800 disabled:opacity-40"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => loadNorm(true)}
+                disabled={normRunning}
+                className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-40"
+              >
+                {normRunning ? "處理中…" : "確定整理"}
               </button>
             </div>
           </div>

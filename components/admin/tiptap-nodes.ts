@@ -1,4 +1,55 @@
 import { Node, Extension, mergeAttributes } from "@tiptap/core";
+import Image from "@tiptap/extension-image";
+
+/** 在 node view 右上角加一個 ✕ 移除鈕 */
+function removeButton(onRemove: () => void): HTMLButtonElement {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.setAttribute("aria-label", "移除");
+  btn.title = "移除";
+  btn.textContent = "✕";
+  btn.style.cssText =
+    "position:absolute;top:6px;right:6px;width:24px;height:24px;border:none;border-radius:9999px;background:rgba(0,0,0,.55);color:#fff;font-size:13px;line-height:24px;text-align:center;cursor:pointer;z-index:5;padding:0;";
+  btn.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onRemove();
+  });
+  return btn;
+}
+
+/** 圖片節點:沿用 Tiptap Image,額外提供 ✕ 移除鈕 */
+export const ImageWithRemove = Image.extend({
+  draggable: true,
+  addNodeView() {
+    return ({ node, editor, getPos }) => {
+      const dom = document.createElement("div");
+      dom.contentEditable = "false";
+      dom.style.cssText =
+        "position:relative;display:block;max-width:100%;margin:1rem 0;";
+      const img = document.createElement("img");
+      img.src = node.attrs.src || "";
+      img.alt = node.attrs.alt || "";
+      if (node.attrs.title) img.title = node.attrs.title;
+      img.style.cssText =
+        "max-width:100%;height:auto;display:block;border-radius:2px;";
+      dom.appendChild(img);
+      dom.appendChild(
+        removeButton(() => {
+          if (typeof getPos === "function") {
+            const pos = getPos();
+            editor
+              .chain()
+              .focus()
+              .deleteRange({ from: pos, to: pos + node.nodeSize })
+              .run();
+          }
+        })
+      );
+      return { dom, ignoreMutation: () => true, stopEvent: () => true };
+    };
+  },
+});
 
 /**
  * 讓標題(H1-H6)可保留/輸出 id 屬性,作為手動目錄的錨點。
@@ -64,17 +115,29 @@ export const InstagramEmbed = Node.create({
   },
 
   addNodeView() {
-    return ({ node }) => {
+    return ({ node, editor, getPos }) => {
       const dom = document.createElement("div");
       dom.contentEditable = "false";
       dom.setAttribute("data-instagram-embed", "");
-      dom.style.cssText = "margin:12px 0;";
+      dom.style.cssText = "position:relative;margin:12px 0;";
+
+      const remove = removeButton(() => {
+        if (typeof getPos === "function") {
+          const pos = getPos();
+          editor
+            .chain()
+            .focus()
+            .deleteRange({ from: pos, to: pos + node.nodeSize })
+            .run();
+        }
+      });
 
       const url: string = node.attrs.url || "";
 
       if (!url) {
         dom.innerHTML =
           '<div style="border:1px dashed #C4837A;border-radius:8px;padding:14px;background:#FBF4F3;color:#A3635B;font-size:13px;text-align:center;">📷 Instagram 貼文（未設定網址）</div>';
+        dom.appendChild(remove);
         return { dom, ignoreMutation: () => true, stopEvent: () => true };
       }
 
@@ -93,6 +156,7 @@ export const InstagramEmbed = Node.create({
         "display:block;padding:18px;color:#A3635B;font-size:13px;text-align:center;word-break:break-all;";
       bq.appendChild(a);
       dom.appendChild(bq);
+      dom.appendChild(remove);
 
       const process = () => {
         try {
