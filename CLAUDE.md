@@ -69,6 +69,8 @@ npm run db:seed:demo   # 只灌 2 篇示範（prisma/seed.ts，admin@mifaso.com 
 - `GET /api/fix-updated-at` — 把 88 篇 `updatedAt` 設為其真實 `publishedAt`
   (seed 的 updatedAt/createdAt 皆匯入當天,無意義)。`?dry=1` 預覽。**後台列表/總覽
   現已直接顯示/排序 `publishedAt`,此工具僅在需要修正 DB 值時才用。**
+- `GET /api/strip-related-reading` — 移除所有文章內文的「延伸閱讀」段落
+  (整個 `<p>…延伸閱讀…</p>`,含其中連結),raw SQL 更新不動 `updatedAt`。`?dry=1` 預覽。
 
 ## 內容/資料
 

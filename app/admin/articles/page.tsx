@@ -116,11 +116,11 @@ export default function ArticlesPage() {
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
                   <th className="px-2 md:px-4 py-3 w-8" />
-                  <th className="text-left px-3 md:px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">文章標題</th>
-                  <th className="text-left px-3 md:px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap hidden md:table-cell">分類</th>
-                  <th className="text-left px-3 md:px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap hidden lg:table-cell">作者</th>
-                  <th className="text-left px-3 md:px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">狀態</th>
-                  <th className="text-left px-3 md:px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap hidden xl:table-cell">發布日期</th>
+                  <th className="text-left px-3 md:px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap w-full">文章標題</th>
+                  <th className="text-left px-3 md:px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap hidden md:table-cell w-36">分類</th>
+                  <th className="text-left px-3 md:px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap hidden lg:table-cell w-36">作者</th>
+                  <th className="text-left px-3 md:px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap w-28">狀態</th>
+                  <th className="text-left px-3 md:px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap hidden xl:table-cell w-32">發布日期</th>
                   <th className="px-6 py-3 w-24" />
                 </tr>
               </thead>
@@ -141,23 +141,18 @@ export default function ArticlesPage() {
                       </button>
                     </td>
                     <td className="px-3 md:px-6 py-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 line-clamp-2">{article.title}</p>
-                        {article.excerpt && (
-                          <p className="text-xs text-gray-400 mt-0.5 line-clamp-1 max-w-xs hidden lg:block">{article.excerpt}</p>
-                        )}
-                      </div>
+                      <p className="text-sm font-medium text-gray-900 line-clamp-2">{article.title}</p>
                     </td>
-                    <td className="px-3 md:px-6 py-4 hidden md:table-cell">
+                    <td className="px-3 md:px-6 py-4 hidden md:table-cell whitespace-nowrap">
                       {article.category ? (
                         <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-medium">{article.category.name}</span>
                       ) : (
                         <span className="text-gray-300 text-sm">—</span>
                       )}
                     </td>
-                    <td className="px-3 md:px-6 py-4 hidden lg:table-cell">
+                    <td className="px-3 md:px-6 py-4 hidden lg:table-cell whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
+                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 flex-shrink-0">
                           {article.author?.name?.[0]}
                         </div>
                         <span className="text-sm text-gray-600">{article.author?.name}</span>
@@ -168,7 +163,7 @@ export default function ArticlesPage() {
                         {STATUS_CONFIG[article.status]?.label}
                       </span>
                     </td>
-                    <td className="px-3 md:px-6 py-4 hidden xl:table-cell">
+                    <td className="px-3 md:px-6 py-4 hidden xl:table-cell whitespace-nowrap">
                       <span className="text-xs text-gray-400">{formatDate(article.publishedAt ?? article.updatedAt)}</span>
                     </td>
                     <td className="px-3 md:px-6 py-4">

@@ -93,7 +93,9 @@
   height: auto;
 }
 .prose figure { margin: 1.5rem 0; }
-.prose iframe { width: 100%; aspect-ratio: 16 / 9; }
+/* 影片用 iframe(YouTube/Vimeo)維持 16:9;Instagram 的 iframe 由 embed.js
+   自行決定高度,不可套 aspect-ratio,否則貼文會被裁切 */
+.prose iframe:not(.instagram-media) { width: 100%; aspect-ratio: 16 / 9; }
 .prose { overflow-wrap: anywhere; }
 /* 中和 WordPress 對齊類別,避免手機浮動爆版 */
 .prose .alignleft,

@@ -1,4 +1,26 @@
-import { Node, mergeAttributes } from "@tiptap/core";
+import { Node, Extension, mergeAttributes } from "@tiptap/core";
+
+/**
+ * 讓標題(H1-H6)可保留/輸出 id 屬性,作為手動目錄的錨點。
+ * 搭配工具列「錨點」按鈕設定 id,內文用連結 #id 即可跳轉。
+ */
+export const HeadingId = Extension.create({
+  name: "headingId",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["heading"],
+        attributes: {
+          id: {
+            default: null,
+            parseHTML: (el) => el.getAttribute("id"),
+            renderHTML: (attrs) => (attrs.id ? { id: attrs.id } : {}),
+          },
+        },
+      },
+    ];
+  },
+});
 
 /**
  * Instagram 嵌入：以原子節點存放，輸出前台 embed.js 需要的 blockquote。
@@ -45,11 +67,76 @@ export const InstagramEmbed = Node.create({
     return ({ node }) => {
       const dom = document.createElement("div");
       dom.contentEditable = "false";
-      dom.style.cssText =
-        "border:1px dashed #C4837A;border-radius:8px;padding:14px;margin:12px 0;background:#FBF4F3;color:#A3635B;font-size:13px;text-align:center;";
-      const url = node.attrs.url || "(未設定網址)";
-      dom.textContent = `📷 Instagram 貼文：${url}`;
-      return { dom };
+      dom.setAttribute("data-instagram-embed", "");
+      dom.style.cssText = "margin:12px 0;";
+
+      const url: string = node.attrs.url || "";
+
+      if (!url) {
+        dom.innerHTML =
+          '<div style="border:1px dashed #C4837A;border-radius:8px;padding:14px;background:#FBF4F3;color:#A3635B;font-size:13px;text-align:center;">📷 Instagram 貼文（未設定網址）</div>';
+        return { dom, ignoreMutation: () => true, stopEvent: () => true };
+      }
+
+      const bq = document.createElement("blockquote");
+      bq.className = "instagram-media";
+      bq.setAttribute("data-instgrm-permalink", url);
+      bq.setAttribute("data-instgrm-version", "14");
+      bq.style.cssText =
+        "width:100%;max-width:540px;margin:1em auto;min-height:120px;border:1px solid #eee;border-radius:6px;background:#fafafa;";
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = "開啟 Instagram 貼文";
+      a.style.cssText =
+        "display:block;padding:18px;color:#A3635B;font-size:13px;text-align:center;word-break:break-all;";
+      bq.appendChild(a);
+      dom.appendChild(bq);
+
+      const process = () => {
+        try {
+          (
+            window as unknown as { instgrm?: { Embeds: { process: () => void } } }
+          ).instgrm?.Embeds.process();
+        } catch {
+          /* ignore */
+        }
+      };
+
+      const w = window as unknown as { instgrm?: unknown };
+      if (w.instgrm) {
+        process();
+      } else if (!document.getElementById("instagram-embed-js")) {
+        const s = document.createElement("script");
+        s.id = "instagram-embed-js";
+        s.src = "https://www.instagram.com/embed.js";
+        s.async = true;
+        s.onload = process;
+        document.body.appendChild(s);
+      } else {
+        let tries = 0;
+        const timer = setInterval(() => {
+          if (w.instgrm) {
+            process();
+            clearInterval(timer);
+          } else if (++tries > 20) {
+            clearInterval(timer);
+          }
+        }, 400);
+      }
+
+      return {
+        dom,
+        // 讓 Instagram embed.js 自由把 blockquote 換成 iframe,ProseMirror 不要重繪
+        ignoreMutation: () => true,
+        stopEvent: () => true,
+        update: (updated) => {
+          if (updated.type.name !== node.type.name) return false;
+          // 網址沒變就保留(避免重置已渲染的嵌入);變了則重建
+          return (updated.attrs.url || "") === url;
+        },
+      };
     };
   },
 });
