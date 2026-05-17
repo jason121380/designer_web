@@ -10,6 +10,21 @@ interface Preview {
   sample: { title: string; removed: string[] }[];
 }
 
+interface FhItem {
+  id: string;
+  title: string;
+  fixed: number;
+  sample: string;
+  bytesBefore: number;
+  bytesAfter: number;
+}
+interface FhResult {
+  totalArticles: number;
+  articlesChanged: number;
+  items: FhItem[];
+  backup?: { count: number; at: string | null };
+}
+
 interface NormItem {
   id: string;
   title: string;
@@ -159,6 +174,70 @@ export default function ToolsPage() {
   const allNormSelected = !!norm && norm.items.length > 0 && normSel.size === norm.items.length;
   const toggleNormAll = () =>
     setNormSel(allNormSelected ? new Set() : new Set(norm?.items.map((i) => i.id) ?? []));
+
+  // ---- 內文樣式優化(修正異常標題)----
+  const [fh, setFh] = useState<FhResult | null>(null);
+  const [fhLoading, setFhLoading] = useState(false);
+  const [fhErr, setFhErr] = useState("");
+  const [fhSel, setFhSel] = useState<Set<string>>(new Set());
+  const [fhConfirm, setFhConfirm] = useState(false);
+  const [fhRunning, setFhRunning] = useState(false);
+  const [fhMsg, setFhMsg] = useState("");
+  const [fhRestoring, setFhRestoring] = useState(false);
+
+  const loadFh = useCallback(async () => {
+    setFhErr(""); setFhMsg(""); setFhLoading(true);
+    try {
+      const res = await fetch("/api/fix-headings");
+      if (res.status === 401) { setFhErr("需要以管理員身分登入。"); return; }
+      const j = (await res.json()) as FhResult;
+      setFh(j);
+      setFhSel(new Set(j.items?.map((it) => it.id) ?? []));
+    } catch {
+      setFhErr("讀取失敗,請稍後再試。");
+    } finally {
+      setFhLoading(false);
+    }
+  }, []);
+
+  const runFh = useCallback(async () => {
+    setFhRunning(true); setFhMsg("");
+    try {
+      const res = await fetch("/api/fix-headings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [...fhSel] }),
+      });
+      const j = await res.json();
+      if (!res.ok) { setFhMsg(j?.error ?? "修正失敗"); return; }
+      setFhMsg(j?.note ?? "完成。");
+      await loadFh();
+    } catch {
+      setFhMsg("修正失敗,請稍後再試。");
+    } finally {
+      setFhRunning(false);
+      setFhConfirm(false);
+    }
+  }, [fhSel, loadFh]);
+
+  const restoreFh = useCallback(async () => {
+    setFhRestoring(true); setFhMsg("");
+    try {
+      const res = await fetch("/api/fix-headings?restore=1");
+      const j = await res.json();
+      setFhMsg(j?.note ?? "已復原。");
+    } catch {
+      setFhMsg("復原失敗,請稍後再試。");
+    } finally {
+      setFhRestoring(false);
+    }
+  }, []);
+
+  const toggleFhSel = (id: string) =>
+    setFhSel((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const allFhSelected = !!fh && fh.items.length > 0 && fhSel.size === fh.items.length;
+  const toggleFhAll = () =>
+    setFhSel(allFhSelected ? new Set() : new Set(fh?.items.map((i) => i.id) ?? []));
 
   const clearCache = useCallback(async () => {
     setClearing(true);
@@ -356,6 +435,74 @@ export default function ToolsPage() {
 
       <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
         <div>
+          <h2 className="font-semibold text-gray-900">內文樣式優化(修正異常標題)</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            找出純文字過長(&gt;80 字)、其實是內文卻被包成 <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">&lt;h1~h6&gt;</code>
+            的標題(常導致整段被當成標題/誤認成目錄),將它<b>降級為段落</b>。只改這些異常標題,其他內容不動;可一鍵復原。
+          </p>
+        </div>
+
+        {fhLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="w-7 h-7 border-2 border-rose-brand border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : fhErr ? (
+          <p className="text-sm text-red-500">{fhErr}</p>
+        ) : fh ? (
+          <>
+            <div className="flex flex-wrap gap-6 text-sm">
+              <span>影響文章:<b className="text-gray-900">{fh.articlesChanged}</b> / {fh.totalArticles}</span>
+            </div>
+            {fh.items.length > 0 && (
+              <div className="border border-gray-100 rounded-lg">
+                <label className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-50 cursor-pointer">
+                  <input type="checkbox" checked={allFhSelected} onChange={toggleFhAll} className="accent-rose-brand" />
+                  <span className="text-xs font-medium text-gray-500">
+                    全選 / 全不選(已選 {fhSel.size} / {fh.items.length} 篇 — 只有打勾的會被修正)
+                  </span>
+                </label>
+                <div className="max-h-[420px] overflow-y-auto divide-y divide-gray-50">
+                  {fh.items.map((it) => (
+                    <label key={it.id} className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50/60">
+                      <input type="checkbox" checked={fhSel.has(it.id)} onChange={() => toggleFhSel(it.id)}
+                        className="mt-0.5 accent-rose-brand flex-shrink-0" />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium text-gray-800 truncate">{it.title}</span>
+                        <span className="block text-xs text-gray-400 mt-0.5">
+                          異常標題 {it.fixed} 個・例:{it.sample}…
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+            {fhMsg && (
+              <p className="text-sm text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">✓ {fhMsg}</p>
+            )}
+          </>
+        ) : null}
+
+        <div className="flex gap-2">
+          <button onClick={() => loadFh()} disabled={fhRunning || fhLoading}
+            className="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg hover:border-rose-brand hover:text-rose-brand transition-colors disabled:opacity-40">
+            {fhLoading ? "載入中…" : "重新掃描"}
+          </button>
+          <button onClick={() => setFhConfirm(true)} disabled={fhRunning || !fh || fhSel.size === 0}
+            className="px-4 py-2 text-sm bg-rose-brand text-white rounded-lg hover:bg-rose-dark transition-colors disabled:opacity-40">
+            {!fh || fh.articlesChanged === 0 ? "沒有異常標題" : `確認修正（${fhSel.size}）`}
+          </button>
+          {(fh?.backup?.count ?? 0) > 0 && (
+            <button onClick={restoreFh} disabled={fhRestoring || fhRunning}
+              className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:border-gray-500 transition-colors disabled:opacity-40">
+              {fhRestoring ? "復原中…" : `復原上次修正（${fh?.backup?.count}）`}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
+        <div>
           <h2 className="font-semibold text-gray-900">清除前台快取</h2>
           <p className="text-sm text-gray-500 mt-1">
             文章頁有快取(ISR),改完內容若前台還是舊的,按這裡立即套用。
@@ -526,6 +673,30 @@ export default function ToolsPage() {
                 className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-40"
               >
                 {normRunning ? "處理中…" : "確定重做目錄"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {fhConfirm && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setFhConfirm(false); }}
+        >
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-5">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">確認修正異常標題</h3>
+            <p className="text-sm text-gray-500">
+              將對勾選的 <b className="text-gray-900">{fhSel.size}</b> 篇文章,把過長(被誤包成標題)的
+              <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">&lt;h&gt;</code> 降級為段落。
+              文字內容不刪、執行前自動備份,可一鍵復原。確定要繼續嗎?
+            </p>
+            <div className="flex justify-end gap-2 mt-5">
+              <button onClick={() => setFhConfirm(false)} disabled={fhRunning}
+                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-800 disabled:opacity-40">取消</button>
+              <button onClick={runFh} disabled={fhRunning}
+                className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-40">
+                {fhRunning ? "處理中…" : "確定修正"}
               </button>
             </div>
           </div>
