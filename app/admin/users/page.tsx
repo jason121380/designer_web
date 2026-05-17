@@ -27,9 +27,23 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "AUTHOR", bio: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  function resetForm() {
+    setForm({ name: "", email: "", password: "", role: "AUTHOR", bio: "" });
+    setEditingId(null);
+    setError("");
+  }
+
+  function startEdit(u: User) {
+    setForm({ name: u.name, email: u.email, password: "", role: u.role, bio: u.bio ?? "" });
+    setEditingId(u.id);
+    setError("");
+    setShowForm(true);
+  }
 
   const currentUser = session?.user as any;
 
@@ -39,18 +53,31 @@ export default function UsersPage() {
       .then((data) => { setUsers(data); setLoading(false); });
   }, []);
 
-  async function createUser() {
+  async function saveUser() {
     setSaving(true);
     setError("");
-    const res = await fetch("/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    const body: Record<string, unknown> = {
+      name: form.name, email: form.email, role: form.role, bio: form.bio,
+    };
+    if (form.password) body.password = form.password;
+    const res = await fetch(
+      editingId ? `/api/users/${editingId}` : "/api/users",
+      {
+        method: editingId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingId ? body : form),
+      }
+    );
     const data = await res.json();
-    if (!res.ok) { setError(typeof data.error === "string" ? data.error : "新增失敗，請確認欄位內容"); setSaving(false); return; }
-    setUsers((prev) => [data, ...prev]);
-    setForm({ name: "", email: "", password: "", role: "AUTHOR", bio: "" });
+    if (!res.ok) {
+      setError(typeof data.error === "string" ? data.error : (editingId ? "更新失敗,請確認欄位內容" : "新增失敗,請確認欄位內容"));
+      setSaving(false);
+      return;
+    }
+    setUsers((prev) =>
+      editingId ? prev.map((u) => (u.id === editingId ? { ...u, ...data } : u)) : [data, ...prev]
+    );
+    resetForm();
     setShowForm(false);
     setSaving(false);
   }
@@ -75,7 +102,7 @@ export default function UsersPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-900">用戶管理</h1>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => { if (showForm) { setShowForm(false); resetForm(); } else { resetForm(); setShowForm(true); } }}
           className="flex items-center gap-2 bg-rose-brand text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-rose-dark transition-colors shadow-sm"
         >
           <span className="text-base leading-none">＋</span> 新增用戶
@@ -84,13 +111,13 @@ export default function UsersPage() {
 
       {showForm && (
         <div className="bg-white border border-gray-100 p-6 mb-8 rounded-xl">
-          <h3 className="font-medium text-gray-900 mb-4">新增用戶</h3>
+          <h3 className="font-medium text-gray-900 mb-4">{editingId ? "編輯用戶" : "新增用戶"}</h3>
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
               { key: "name", label: "姓名", type: "text", placeholder: "姓名" },
               { key: "email", label: "帳號", type: "text", placeholder: "帳號名稱" },
-              { key: "password", label: "密碼（最少 8 字元）", type: "password", placeholder: "••••••••" },
+              { key: "password", label: editingId ? "密碼（留空＝不變更）" : "密碼（最少 8 字元）", type: "password", placeholder: "••••••••" },
             ].map(({ key, label, type, placeholder }) => (
               <div key={key}>
                 <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
@@ -126,10 +153,10 @@ export default function UsersPage() {
             </div>
           </div>
           <div className="flex gap-3 mt-5">
-            <button onClick={createUser} disabled={saving} className="bg-rose-brand text-white px-6 py-2.5 text-sm font-medium rounded-lg hover:bg-rose-dark transition-colors disabled:opacity-50">
-              {saving ? "新增中..." : "新增用戶"}
+            <button onClick={saveUser} disabled={saving} className="bg-rose-brand text-white px-6 py-2.5 text-sm font-medium rounded-lg hover:bg-rose-dark transition-colors disabled:opacity-50">
+              {saving ? "儲存中..." : editingId ? "儲存變更" : "新增用戶"}
             </button>
-            <button onClick={() => setShowForm(false)} className="border border-gray-200 text-gray-500 px-6 py-2.5 text-sm rounded-lg hover:border-gray-400 hover:text-gray-700 transition-colors">
+            <button onClick={() => { setShowForm(false); resetForm(); }} className="border border-gray-200 text-gray-500 px-6 py-2.5 text-sm rounded-lg hover:border-gray-400 hover:text-gray-700 transition-colors">
               取消
             </button>
           </div>
@@ -183,8 +210,14 @@ export default function UsersPage() {
                     {user.id !== currentUser?.id && (
                       <div className="flex items-center gap-3 justify-end">
                         <button
+                          onClick={() => startEdit(user)}
+                          className="text-xs text-gray-500 hover:text-rose-brand transition-colors"
+                        >
+                          編輯
+                        </button>
+                        <button
                           onClick={() => toggleActive(user.id, user.active)}
-                          className="text-xs text-gray-400 hover:text-black transition-colors"
+                          className="text-xs text-gray-400 hover:text-gray-900 transition-colors"
                         >
                           {user.active ? "停用" : "啟用"}
                         </button>
