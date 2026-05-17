@@ -10,12 +10,19 @@ interface Preview {
   sample: { title: string; removed: string[] }[];
 }
 
+interface NormItem {
+  id: string;
+  title: string;
+  tocRemoved: number;
+  bytesBefore: number;
+  bytesAfter: number;
+}
 interface NormResult {
   totalArticles: number;
   articlesChanged: number;
   manualTocsRemoved: number;
   executed: boolean;
-  sample: { title: string; tocRemoved: number; bytesBefore: number; bytesAfter: number }[];
+  items: NormItem[];
   backup?: { count: number; at: string | null };
 }
 
@@ -88,6 +95,7 @@ export default function ToolsPage() {
   const [normRunning, setNormRunning] = useState(false);
   const [normMsg, setNormMsg] = useState("");
   const [normRestoring, setNormRestoring] = useState(false);
+  const [normSel, setNormSel] = useState<Set<string>>(new Set());
 
   const restoreNorm = useCallback(async () => {
     setNormRestoring(true);
@@ -104,23 +112,53 @@ export default function ToolsPage() {
     }
   }, []);
 
-  const loadNorm = useCallback(async (run = false) => {
+  const loadNorm = useCallback(async () => {
     setNormErr("");
-    if (run) setNormRunning(true); else setNormLoading(true);
+    setNormMsg("");
+    setNormLoading(true);
     try {
-      const res = await fetch(`/api/normalize-content${run ? "?run=1" : ""}`);
+      const res = await fetch("/api/normalize-content");
       if (res.status === 401) { setNormErr("需要以管理員身分登入。"); return; }
-      const j = (await res.json()) as NormResult & { note?: string };
+      const j = (await res.json()) as NormResult;
       setNorm(j);
-      if (run) setNormMsg(j?.note ?? "完成。");
+      setNormSel(new Set(j.items?.map((it) => it.id) ?? [])); // 預設全選
     } catch {
       setNormErr("讀取失敗,請稍後再試。");
     } finally {
       setNormLoading(false);
+    }
+  }, []);
+
+  const runNorm = useCallback(async () => {
+    setNormRunning(true);
+    setNormMsg("");
+    try {
+      const res = await fetch("/api/normalize-content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [...normSel] }),
+      });
+      const j = await res.json();
+      if (!res.ok) { setNormMsg(j?.error ?? "整理失敗"); return; }
+      setNormMsg(j?.note ?? "完成。");
+      await loadNorm();
+    } catch {
+      setNormMsg("整理失敗,請稍後再試。");
+    } finally {
       setNormRunning(false);
       setNormConfirm(false);
     }
-  }, []);
+  }, [normSel, loadNorm]);
+
+  const toggleNormSel = (id: string) =>
+    setNormSel((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  const allNormSelected = !!norm && norm.items.length > 0 && normSel.size === norm.items.length;
+  const toggleNormAll = () =>
+    setNormSel(allNormSelected ? new Set() : new Set(norm?.items.map((i) => i.id) ?? []));
 
   const clearCache = useCallback(async () => {
     setClearing(true);
@@ -228,11 +266,11 @@ export default function ToolsPage() {
 
       <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
         <div>
-          <h2 className="font-semibold text-gray-900">全文樣式整齊 + 目錄統一</h2>
+          <h2 className="font-semibold text-gray-900">重做目錄(統一改用自動目錄)</h2>
           <p className="text-sm text-gray-500 mt-1">
             移除手動 / WP 舊版「本文目錄」(表格、清單、標題+清單),原本有目錄者統一改用
-            自動目錄(<code className="text-xs bg-gray-100 px-1 py-0.5 rounded">data-toc</code>);
-            並清掉文字標籤雜亂 inline style 與空段落。不動圖片/IG/表格。不更動發布日期。
+            自動目錄(<code className="text-xs bg-gray-100 px-1 py-0.5 rounded">data-toc</code>,
+            前台依文章標題自動產生)。<b>只動目錄,內文其他內容、樣式、發布日期皆不變。</b>
           </p>
         </div>
 
@@ -248,17 +286,32 @@ export default function ToolsPage() {
               <span>影響文章:<b className="text-gray-900">{norm.articlesChanged}</b> / {norm.totalArticles}</span>
               <span>移除手動目錄:<b className="text-gray-900">{norm.manualTocsRemoved}</b></span>
             </div>
-            {norm.sample.length > 0 && (
-              <div className="border border-gray-100 rounded-lg divide-y divide-gray-50">
-                <p className="px-4 py-2 text-xs font-medium text-gray-400 uppercase tracking-wider">預覽(前 5 篇)</p>
-                {norm.sample.map((s, i) => (
-                  <div key={i} className="px-4 py-3">
-                    <p className="text-sm font-medium text-gray-800 truncate">{s.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      移除目錄 {s.tocRemoved} 個・內容 {s.bytesBefore} → {s.bytesAfter} 字元
-                    </p>
-                  </div>
-                ))}
+            {norm.items.length > 0 && (
+              <div className="border border-gray-100 rounded-lg">
+                <label className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-50 cursor-pointer">
+                  <input type="checkbox" checked={allNormSelected} onChange={toggleNormAll} className="accent-rose-brand" />
+                  <span className="text-xs font-medium text-gray-500">
+                    全選 / 全不選(已選 {normSel.size} / {norm.items.length} 篇 — 只有打勾的會被整理)
+                  </span>
+                </label>
+                <div className="max-h-[420px] overflow-y-auto divide-y divide-gray-50">
+                  {norm.items.map((it) => (
+                    <label key={it.id} className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50/60">
+                      <input
+                        type="checkbox"
+                        checked={normSel.has(it.id)}
+                        onChange={() => toggleNormSel(it.id)}
+                        className="mt-0.5 accent-rose-brand flex-shrink-0"
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium text-gray-800 truncate">{it.title}</span>
+                        <span className="block text-xs text-gray-400 mt-0.5">
+                          移除目錄 {it.tocRemoved} 個・內容 {it.bytesBefore} → {it.bytesAfter} 字元
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
             )}
             {normMsg && (
@@ -271,18 +324,18 @@ export default function ToolsPage() {
 
         <div className="flex gap-2">
           <button
-            onClick={() => loadNorm(false)}
+            onClick={() => loadNorm()}
             disabled={normRunning || normLoading}
             className="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg hover:border-rose-brand hover:text-rose-brand transition-colors disabled:opacity-40"
           >
-            預覽
+            {normLoading ? "載入中…" : "重新整理清單"}
           </button>
           <button
             onClick={() => setNormConfirm(true)}
-            disabled={normRunning || !norm || norm.articlesChanged === 0}
+            disabled={normRunning || !norm || normSel.size === 0}
             className="px-4 py-2 text-sm bg-rose-brand text-white rounded-lg hover:bg-rose-dark transition-colors disabled:opacity-40"
           >
-            {!norm || norm.articlesChanged === 0 ? "無可整理項目" : "確認整理"}
+            {!norm || norm.articlesChanged === 0 ? "無可整理項目" : `確認整理（${normSel.size}）`}
           </button>
           {(norm?.backup?.count ?? 0) > 0 && (
             <button
@@ -453,11 +506,11 @@ export default function ToolsPage() {
           onMouseDown={(e) => { if (e.target === e.currentTarget) setNormConfirm(false); }}
         >
           <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-5">
-            <h3 className="text-base font-semibold text-gray-900 mb-2">確認整理</h3>
+            <h3 className="text-base font-semibold text-gray-900 mb-2">確認重做目錄</h3>
             <p className="text-sm text-gray-500">
-              將整理 <b className="text-gray-900">{norm?.articlesChanged}</b> 篇文章
-              (移除 <b className="text-gray-900">{norm?.manualTocsRemoved}</b> 個手動目錄、
-              統一改用自動目錄並清理樣式)。此動作無法復原,確定要繼續嗎?
+              將對勾選的 <b className="text-gray-900">{normSel.size}</b> 篇文章重做目錄
+              (移除手動目錄、統一改用自動目錄;內文其他內容不變)。
+              執行前會自動備份,可一鍵復原。確定要繼續嗎?
             </p>
             <div className="flex justify-end gap-2 mt-5">
               <button
@@ -468,11 +521,11 @@ export default function ToolsPage() {
                 取消
               </button>
               <button
-                onClick={() => loadNorm(true)}
+                onClick={runNorm}
                 disabled={normRunning}
                 className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-40"
               >
-                {normRunning ? "處理中…" : "確定整理"}
+                {normRunning ? "處理中…" : "確定重做目錄"}
               </button>
             </div>
           </div>

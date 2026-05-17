@@ -38,40 +38,43 @@ function stripManualTocs(html: string): { html: string; removed: number } {
   }
   return { html, removed };
 }
+async function requireAdmin() {
+  const session = await auth();
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  return !!session?.user && role === "ADMIN";
+}
 
-function tidy(html: string): string {
-  // 文字級標籤移除 inline style(保留 img/iframe/table/figure/blockquote 的 style)
-  html = html.replace(
-    /<(p|span|li|strong|em|u|s|a|h[1-6])\b([^>]*?)\sstyle=("[^"]*"|'[^']*')([^>]*)>/gi,
-    "<$1$2$4>"
-  );
-  html = html.replace(
-    /<div\b(?![^>]*\bdata-toc)([^>]*?)\sstyle=("[^"]*"|'[^']*')([^>]*)>/gi,
-    "<div$1$3>"
-  );
-  // class 殘留(對齊 class 留著,前台已 RWD 中和;這裡只清空 style 後留下的雙空白)
-  html = html.replace(/<([a-z0-9]+)\s{2,}/gi, "<$1 ").replace(/\s+>/g, ">");
-  // 空的內聯/段落標籤
-  for (let i = 0; i < 3; i++) {
-    html = html
-      .replace(/<(p|span|strong|em|b|i|u|s)>\s*(?:&nbsp;| |\s)*<\/\1>/gi, "")
-      .replace(/<p\b[^>]*>\s*(?:&nbsp;| |<br\s*\/?>|\s)*<\/p>/gi, "");
+interface Edit { id: string; title: string; before: string; next: string; removed: number }
+
+async function collectEdits(): Promise<{ edits: Edit[]; tocsRemoved: number; total: number }> {
+  const articles = await prisma.article.findMany({
+    select: { id: true, title: true, content: true },
+  });
+  const edits: Edit[] = [];
+  let tocsRemoved = 0;
+  for (const a of articles) {
+    if (!a.content) continue;
+    const before = a.content;
+    const { html: noToc, removed } = stripManualTocs(before);
+    let next = noToc;
+    const placeholders = (next.match(/<div\b[^>]*\bdata-toc[^>]*>\s*<\/div>/gi) || []).length;
+    const hadAnyToc = removed > 0 || placeholders > 0;
+    next = next.replace(/<div\b[^>]*\bdata-toc[^>]*>\s*<\/div>/gi, "");
+    if (hadAnyToc) next = PLACEHOLDER + "\n" + next;
+    if (next !== before) {
+      tocsRemoved += removed;
+      edits.push({ id: a.id, title: a.title ?? "", before, next, removed });
+    }
   }
-  // 過多換行
-  html = html.replace(/(?:\s*<br\s*\/?>\s*){3,}/gi, "<br><br>");
-  return html.trim();
+  return { edits, tocsRemoved, total: articles.length };
 }
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  const role = (session?.user as { role?: string } | undefined)?.role;
-  if (!session?.user || role !== "ADMIN") {
+  if (!(await requireAdmin())) {
     return NextResponse.json({ error: "需要管理員身分登入後台後再開此連結" }, { status: 401 });
   }
-  const run = req.nextUrl.searchParams.get("run") === "1";
-  const restore = req.nextUrl.searchParams.get("restore") === "1";
 
-  if (restore) {
+  if (req.nextUrl.searchParams.get("restore") === "1") {
     const n = await restoreBackups(OP);
     if (n > 0) revalidatePath("/", "layout");
     return NextResponse.json({
@@ -81,69 +84,53 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const articles = await prisma.article.findMany({
-    select: { id: true, title: true, content: true },
+  const { edits, tocsRemoved, total } = await collectEdits();
+  const backup = await backupInfo(OP);
+  return NextResponse.json({
+    normalizeContent: true,
+    executed: false,
+    totalArticles: total,
+    articlesChanged: edits.length,
+    manualTocsRemoved: tocsRemoved,
+    items: edits.map((e) => ({
+      id: e.id,
+      title: e.title.slice(0, 60),
+      tocRemoved: e.removed,
+      bytesBefore: e.before.length,
+      bytesAfter: e.next.length,
+    })),
+    backup,
+    note: "預覽模式(未寫入)。勾選要重做目錄的文章後按「確認整理」;只動目錄、不改其他內容;執行後可用「復原上次整理」還原。",
   });
+}
 
-  let tocsRemoved = 0;
-  const sample: { title: string; tocRemoved: number; bytesBefore: number; bytesAfter: number }[] = [];
-  const edits: { id: string; before: string; next: string }[] = [];
-
-  for (const a of articles) {
-    if (!a.content) continue;
-    const before = a.content;
-
-    const { html: noToc, removed } = stripManualTocs(before);
-    let next = noToc;
-
-    const placeholders = (next.match(/<div\b[^>]*\bdata-toc[^>]*>\s*<\/div>/gi) || []).length;
-    const hadAnyToc = removed > 0 || placeholders > 0;
-
-    // 去除所有既有 placeholder,稍後若需要再補一個乾淨的
-    next = next.replace(/<div\b[^>]*\bdata-toc[^>]*>\s*<\/div>/gi, "");
-
-    next = tidy(next);
-
-    if (hadAnyToc) {
-      next = PLACEHOLDER + "\n" + next;
-    }
-
-    if (next !== before) {
-      tocsRemoved += removed;
-      edits.push({ id: a.id, before, next });
-      if (sample.length < 5) {
-        sample.push({
-          title: (a.title ?? "").slice(0, 36),
-          tocRemoved: removed,
-          bytesBefore: before.length,
-          bytesAfter: next.length,
-        });
-      }
-    }
+export async function POST(req: NextRequest) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "需要管理員身分" }, { status: 401 });
   }
-
-  if (run && edits.length > 0) {
-    // 先整批備份原始內容(可一鍵復原),再寫入
-    await saveBackups(OP, edits.map((e) => ({ articleId: e.id, content: e.before })));
-    for (const e of edits) {
+  const body = await req.json().catch(() => ({}));
+  const ids: string[] = Array.isArray(body?.ids) ? body.ids.filter((x: unknown) => typeof x === "string") : [];
+  if (ids.length === 0) {
+    return NextResponse.json({ error: "未選擇任何文章" }, { status: 400 });
+  }
+  const idSet = new Set(ids);
+  const { edits } = await collectEdits();
+  const sel = edits.filter((e) => idSet.has(e.id));
+  let removed = 0;
+  if (sel.length > 0) {
+    await saveBackups(OP, sel.map((e) => ({ articleId: e.id, content: e.before })));
+    for (const e of sel) {
       await prisma.$executeRaw`UPDATE "articles" SET "content" = ${e.next} WHERE "id" = ${e.id}`;
+      removed += e.removed;
     }
     revalidatePath("/", "layout");
   }
-
   const backup = await backupInfo(OP);
-
   return NextResponse.json({
-    normalizeContent: true,
-    executed: run,
-    revalidated: run && edits.length > 0,
-    totalArticles: articles.length,
-    articlesChanged: edits.length,
-    manualTocsRemoved: tocsRemoved,
-    sample,
+    executed: true,
+    articlesChanged: sel.length,
+    manualTocsRemoved: removed,
     backup,
-    note: run
-      ? `完成:整理了 ${edits.length} 篇,移除 ${tocsRemoved} 個手動目錄並統一為自動目錄。已備份原內容(可一鍵復原)、已清快取。`
-      : "預覽模式(未寫入)。確認 sample 後按「確認整理」即執行;執行後可用「復原上次整理」還原。",
+    note: `完成:重做了 ${sel.length} 篇的目錄(移除 ${removed} 個手動目錄)。內文其他內容未變。已備份(可一鍵復原)、已清快取。`,
   });
 }
