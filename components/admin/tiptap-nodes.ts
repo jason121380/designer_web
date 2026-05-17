@@ -1,4 +1,26 @@
-import { Node, mergeAttributes } from "@tiptap/core";
+import { Node, Extension, mergeAttributes } from "@tiptap/core";
+
+/**
+ * 讓標題(H1-H6)可保留/輸出 id 屬性,作為手動目錄的錨點。
+ * 搭配工具列「錨點」按鈕設定 id,內文用連結 #id 即可跳轉。
+ */
+export const HeadingId = Extension.create({
+  name: "headingId",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["heading"],
+        attributes: {
+          id: {
+            default: null,
+            parseHTML: (el) => el.getAttribute("id"),
+            renderHTML: (attrs) => (attrs.id ? { id: attrs.id } : {}),
+          },
+        },
+      },
+    ];
+  },
+});
 
 /**
  * Instagram 嵌入：以原子節點存放，輸出前台 embed.js 需要的 blockquote。
