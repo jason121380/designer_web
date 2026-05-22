@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { generateSlug } from "@/lib/utils";
+import { rateLimit, tooMany } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -22,8 +23,13 @@ function strip(html: string, n: number) {
 export async function POST(req: NextRequest) {
   const session = await auth();
   const user = session?.user as { id?: string; role?: string } | undefined;
-  if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user?.id || (user.role !== "ADMIN" && user.role !== "EDITOR")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const userId: string = user.id;
+  // 產文成本高(LLM + image),每使用者每小時 5 次
+  const rl = rateLimit(`ai-gen:${userId}`, { limit: 5, windowMs: 60 * 60_000 });
+  if (!rl.ok) return tooMany(rl.retryAfter, "AI 產文太頻繁,請稍後再試");
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json({ error: "尚未設定 OPENAI_API_KEY,無法使用 AI 產文" }, { status: 400 });
   }

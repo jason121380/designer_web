@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { rateLimit, tooMany } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -17,7 +18,12 @@ const FALLBACK = [
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const u = session?.user as { id?: string; role?: string } | undefined;
+  if (!u?.id || (u.role !== "ADMIN" && u.role !== "EDITOR")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const rl = rateLimit(`ai-topics:${u.id}`, { limit: 30, windowMs: 60 * 60_000 });
+  if (!rl.ok) return tooMany(rl.retryAfter);
 
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json({ topics: FALLBACK, ai: false });
