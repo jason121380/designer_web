@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { auth } from "@/lib/auth";
+import { rateLimit, tooMany } from "@/lib/rate-limit";
 
 function getClient() {
   if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not set");
@@ -9,9 +10,13 @@ function getClient() {
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const u = session?.user as { id?: string; role?: string } | undefined;
+  if (!u?.id || (u.role !== "ADMIN" && u.role !== "EDITOR")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  // 限速:單一使用者每小時 60 次(保護 OpenAI 額度)
+  const rl = rateLimit(`ai:${u.id}`, { limit: 60, windowMs: 60 * 60_000 });
+  if (!rl.ok) return tooMany(rl.retryAfter, "AI 呼叫太頻繁,請稍後再試");
 
   const body = await req.json();
   const { type, title, content, availableTags } = body;

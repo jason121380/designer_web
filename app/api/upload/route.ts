@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import { rateLimit, tooMany } from "@/lib/rate-limit";
 
 const UPLOAD_DIR = join(process.cwd(), "public", "uploads");
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
@@ -10,7 +11,11 @@ const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const u = session?.user as { id?: string; role?: string } | undefined;
+  if (!u?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // 上傳寫磁碟,限速以保護 Volume 容量與 CPU
+  const rl = rateLimit(`upload:${u.id}`, { limit: 60, windowMs: 60 * 60_000 });
+  if (!rl.ok) return tooMany(rl.retryAfter, "上傳太頻繁,請稍後再試");
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
@@ -33,7 +38,6 @@ export async function POST(req: NextRequest) {
   await writeFile(join(uploadPath, filename), buffer);
 
   const url = `/uploads/${folder}/${filename}`;
-  const user = session.user as any;
 
   const media = await prisma.media.create({
     data: {
@@ -42,7 +46,7 @@ export async function POST(req: NextRequest) {
       url,
       size: file.size,
       mimeType: file.type,
-      userId: user.id,
+      userId: u.id,
     },
   });
 
