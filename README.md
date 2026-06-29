@@ -42,6 +42,10 @@ npm run dev
 ## 注意
 
 - 圖片由 `app/uploads/[...path]/route.ts` 串流服務(Zeabur 不服務 runtime 寫入的 `public/`)。
-- 持久 Volume 必須掛在 `/src/public/uploads`。
-- 一次性維運路由(restore / localize-images / fix-updated-at)預設關閉,需 `MAINT_TOOLS=1`。
+- 持久 Volume 必須掛在 `/src/public/uploads`。**Volume 不會跟著搬家**,換伺服器時用
+  `/api/copy-uploads?from=<舊站>` 把圖檔抓回新 Volume(見 `DEPLOY.md`)。
+- 圖片最佳化:上傳 jpeg/png 自動縮 ≤1600px + 轉 webp;既有圖用 `/api/optimize-images` 批次處理。
+- 一次性維運路由(restore / localize-images / fix-updated-at / copy-uploads / optimize-images)
+  預設關閉,需 `MAINT_TOOLS=1`。
+- 前台列表查詢一律用 `lib/article-select.ts`(勿用 `include` 撈整篇 `content`,會拖慢頁面)。
 - 切勿把密碼 / `AUTH_SECRET` / `DATABASE_URL` 值寫進版控。

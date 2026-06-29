@@ -109,7 +109,7 @@ npx tsx -e "import {PrismaClient} from '@prisma/client'; const p=new PrismaClien
 - [ ] 前台首頁正常顯示
 - [ ] 後台 /admin/login 可以登入，**登入後第一次就有側邊選單**（不需重整）
 - [ ] 文章可以新增/編輯/發布；前台文章已消毒（無 `<script>` 注入）、IG 嵌入正常
-- [ ] 圖片上傳正常（Persistent Volume 已掛載於 `/src/public/uploads`）
+- [ ] 圖片上傳正常（Persistent Volume 已掛載於 `/src/public/uploads`；上傳 jpeg/png 會自動轉 webp）
 - [ ] Sitemap `/sitemap.xml`、`/robots.txt`、RSS `/feed.xml` 可訪問
 - [ ] `curl -I https://mifaso.co` 有安全標頭（HSTS、X-Content-Type-Options、CSP `upgrade-insecure-requests`），瀏覽器不再「Not Secure」
 - [ ] 未登入 `POST /api/ai` 回 401；未設 `MAINT_TOOLS` 時維運路由回 404
@@ -119,11 +119,30 @@ npx tsx -e "import {PrismaClient} from '@prisma/client'; const p=new PrismaClien
 
 ## 維運工具（一次性，預設關閉）
 
-`/api/restore-from-mifaso`、`/api/localize-images`、`/api/fix-updated-at` 皆受
-`MAINT_TOOLS` 控管：**未設 / 非 `1` 時一律回 404**（避免會改資料的 GET 被 CSRF/SSRF）。
+`/api/restore-from-mifaso`、`/api/localize-images`、`/api/fix-updated-at`、
+`/api/copy-uploads`、`/api/optimize-images` 皆受 `MAINT_TOOLS` 控管：
+**未設 / 非 `1` 時一律回 404**（避免會改資料的 GET 被 CSRF/SSRF）。
 
-要用時：Zeabur `mifaso-tal` 暫設 `MAINT_TOOLS=1` → 重新部署 → 登入 ADMIN 後在瀏覽器開對應網址
+要用時：Zeabur 服務暫設 `MAINT_TOOLS=1` → 重新部署 → 登入 ADMIN 後在瀏覽器開對應網址
 （先 `?dry=1` 預覽）→ 用完**移除 `MAINT_TOOLS`** 再重新部署關閉入口。詳見 `CLAUDE.md`。
+
+## 搬伺服器 / Volume 遷移（重要）
+
+Zeabur 的 Volume **不會自動跟著搬家**。在新服務開機 = 全新空 Volume → 圖檔不在 → 全站破圖。
+DB 路徑已在地化成本地 `/uploads/...`，`localize-images` 無外部 URL 可抓（救不了），改用：
+
+1. 新服務 Volume 掛 **`/src/public/uploads`**（不是 `/app`；`zeabur.yaml` 已修正）。
+2. **保留舊服務**（例 `mifaso1.zeabur.app`）別急著砍——圖檔是唯一一份。
+3. 新服務暫設 `MAINT_TOOLS=1`、ADMIN 登入，開
+   `/api/copy-uploads?from=https://<舊站>&dry=1` 預覽 → `&auto=1` 跑到完。
+4. 確認前台圖片回來 → 才可下線舊服務。
+
+## 圖片最佳化 / CDN 快取
+
+- 既有圖：`MAINT_TOOLS=1` 後開 `/api/optimize-images?auto=1`（縮 1600 + 轉 webp，循序不 OOM，原檔保留）。
+- 新上傳：`/api/upload` 已自動縮+轉 webp，無需手動。
+- **Cloudflare**：建議加 Cache Rule `URI Path starts with /uploads/` → Eligible for cache、
+  Edge TTL Respect origin（圖片回應已帶 `immutable max-age=30天`）。驗證：DevTools 看 `cf-cache-status` 第二次為 `HIT`。
 
 ## 資料庫密碼輪替（Zeabur PostgreSQL）
 

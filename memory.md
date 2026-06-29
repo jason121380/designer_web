@@ -2,27 +2,29 @@
 
 跨 session 的工作記憶:目前狀態與待辦。新 session 先讀這份 + `CLAUDE.md`。
 
-## 目前狀態（2026-05）
+## 目前狀態（2026-06，搬伺服器後）
 
-- 資料庫:Zeabur PostgreSQL,88 篇文章 + 分類 + 標籤已 seed。
-- 圖片:已在地化到持久 Volume(掛在 `/src/public/uploads`),由
-  `app/uploads/[...path]/route.ts` 串流服務,重新部署不會再消失。媒體庫已登錄 391 張。
-- 後台 NextAuth 已可登入;`NEXTAUTH_URL`/`SITE_URL` 已設 `https://mifaso.co`。
-- 網域 cut over 已完成,`https://mifaso.co` 上線。
-- **分支 `claude/read-repo-chinese-response-xTdlH`** 累積本輪所有修正(資安/debug/SEO/
-  流量分析/UI),**尚未合併進 `main`**;合併後 Zeabur 自動部署、`page_views`
-  migration 會自動套用。
+- 已**搬到新的 Zeabur 服務**(新 = `mifaso`,舊 = `mifaso1.zeabur.app` 暫時保留當備份)。
+  新服務的 Volume(id `data`)已掛在 `/src/public/uploads`(正確);`zeabur.yaml` 也已修正
+  (原本誤掛 `/app/...`)。
+- 資料庫:Zeabur PostgreSQL,88 篇文章 + 分類 + 標籤;`page_views` 流量表。
+- 圖片:搬家後新 Volume 是空的 → 用 `/api/copy-uploads` 從舊站 `mifaso1` 救回 **405 張**;
+  再用 `/api/optimize-images` 全部縮 1600px + 轉 webp(**403 張**),DB 已改指向新 `.webp`,
+  原 jpg/png 仍保留在 Volume 可回退。由 `app/uploads/[...path]/route.ts` 串流服務。
+- 新上傳的圖片會在 `/api/upload` 自動縮 1600px + 轉 webp(jpeg/png;gif/avif/webp 原樣)。
+- 後台 NextAuth 可登入;`NEXTAUTH_URL`/`SITE_URL` = `https://mifaso.co`。
+- 本輪(搬家修復 + 全站效能)所有修正**已合併進 `main`**並部署。`MAINT_TOOLS` 已移除。
 
 ## 進行中 / 待辦
 
-1. **合併部署**:把 `claude/read-repo-chinese-response-xTdlH` 合併進 `main` → Zeabur 重新部署。
-2. **rotate DB 密碼**:Zeabur PostgreSQL 密碼曾外流。步驟見 `DEPLOY.md`「資料庫密碼輪替」
-   (先 `ALTER USER` 改真實密碼,再同步 env,最後 `mifaso-tal` 重新部署)。
-3. **(選用)修 updatedAt**:後台已直接顯示/排序 `publishedAt`,通常不需要;若仍要把 DB
-   的 `updatedAt` 改成 `publishedAt`,暫設 `MAINT_TOOLS=1` 後開 `/api/fix-updated-at?dry=1`
-   預覽再正式跑,用完移除 `MAINT_TOOLS`。
-4. **(選用)Search Console**:設 `GOOGLE_SITE_VERIFICATION` 後重新部署,送出 sitemap。
-5. **已知無解破圖**:1 張內文圖 hotlink 自 `www.mlgroup.io`(外部、已刪),無法在地化,可接受。
+1. **(可選)Cloudflare 快取**:加 Cache Rule `URI Path starts with /uploads/` → Eligible for cache、
+   Edge TTL Respect origin(圖片回應已帶 `immutable max-age=30天`)。讓 `/uploads` 暖起來後全球都快。
+2. **舊站下線**:圖片確認 OK 後 `mifaso1` 可下線;建議先留幾天當備份再砍。
+3. **(可選)清原圖**:webp 轉好後 Volume 上的原 jpg/png 仍佔空間,確定都正常後可清掉省空間。
+4. **rotate DB 密碼**:Zeabur PostgreSQL 密碼曾外流。步驟見 `DEPLOY.md`「資料庫密碼輪替」。
+5. **(選用)Search Console**:設 `GOOGLE_SITE_VERIFICATION` 後重新部署,送出 sitemap。
+6. **已知無解破圖**:`/uploads/2024/11/首頁精選圖-2.jpg`、`/uploads/2025/03/截圖-2025-03-06-下午3.04.52.jpg`
+   舊站本來就 404(搬家前就壞);另 1 張內文圖 hotlink 自 `www.mlgroup.io`(已刪)。皆可接受。
 
 ## 已完成的關鍵修正（歷史,避免重蹈覆轍）
 
@@ -51,6 +53,19 @@
 - **UI**:header 搜尋移右、去上方細條、配色對齊 footer(rose-brand)、logo 全黑、
   黑 favicon/app icon、手機 hero 4:5、後台主題色、側欄 active 白 icon、媒體庫
   載入更多、精選排序最前、後台日期改 publishedAt、footer 移除「編輯後台」。
+
+### 2026-06（本次:搬伺服器修復 + 全站效能）
+
+- **搬家破圖根因**:新 Zeabur 服務 = 全新空 Volume,舊站圖檔沒跟過來(DB 路徑已在地化成
+  本地 `/uploads/...`,`localize-images` 無外部 URL 可抓 → 救不了)。新增 `/api/copy-uploads`
+  從舊站 `mifaso1` 公開的 `/uploads` 串流路由把 405 張抓回新 Volume。
+- **首載慢根因**:`images.unoptimized:true`(小機器 sharp 即時壓會 OOM)→ 吐 2560px 原圖。
+  新增 `/api/optimize-images`(離線批次、循序、不 OOM)把舊圖縮 1600 + 轉 webp(403 張);
+  `/api/upload` 也改成上傳即縮+轉 webp。
+- **後台/前台慢根因**:列表/格狀查詢用 `include` 連整篇 `content`(數十 KB)+ tags 都撈。
+  新增 `lib/article-select.ts` 共用精簡 select,套用到 `/api/articles`、首頁、分類、搜尋、
+  相關文章、後台總覽。分析頁 14 條 COUNT 併成 1 條 GROUP BY;`/api/admin/stats` 目錄掃描加 60s 快取。
+- `zeabur.yaml` Volume 由誤掛 `/app/public/uploads` 改回 `/src/public/uploads`。
 
 ## 帳號
 

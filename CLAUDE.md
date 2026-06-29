@@ -74,11 +74,25 @@ npm run db:seed:demo   # 只灌 2 篇示範（prisma/seed.ts，admin@mifaso.com 
   **只需 ADMIN 登入(不需 `MAINT_TOOLS`)**;預設只預覽,加 `?run=1` 才實際寫入
   (重跑為 no-op)。流量分析的 `page_views` 表改為首次使用時自動建立
   (`lib/page-views.ts`),不再依賴 `prisma migrate deploy`。
+- `GET /api/copy-uploads?from=<舊站網址>` — **搬伺服器專用**。新 Volume 是空的時,
+  從舊站(例 `https://mifaso1.zeabur.app`)公開的 `/uploads` 串流路由把 DB 參照到的
+  圖檔抓回本機 Volume。`?dry=1` 統計、`?auto=1` 自動分批。**不碰 DB,只補檔案。**
+  (`localize-images` 在圖片已在地化成本地路徑後失效時用這支。)
+- `GET /api/optimize-images` — 把本機 `/uploads` 的 jpg/png 縮 ≤1600px + 轉 webp(品質 80),
+  並改寫 DB(featuredImage/內文/媒體庫)指向新 `.webp`。`?dry=1` 統計、`?auto=1` 自動分批。
+  **循序處理不 OOM**(這是 `images.unoptimized:true` 之外的補強);原 jpg/png 保留可回退。
 
 ## 內容/資料
 
 88 篇文章由 `scripts/seed-production.ts` 從 `scripts/seed-data/*.json` 匯入(原始來自
-mifaso.co WordPress)。圖片已在地化到持久 Volume。登入帳號見 `scripts/seed-data/users.json`
-(`admin` = M編 ADMIN、`jason` = AUTHOR,密碼為原站匯出值)。
+mifaso.co WordPress)。圖片已在地化到持久 Volume,並已縮 ≤1600px + 轉 webp(見上方
+`optimize-images`);**新上傳的圖片 `app/api/upload/route.ts` 會自動縮+轉 webp**(jpeg/png)。
+登入帳號見 `scripts/seed-data/users.json`(`admin` = M編 ADMIN、`jason` = AUTHOR,密碼為原站匯出值)。
+
+## 效能(列表查詢勿退化)
+
+前台格狀/列表(首頁、分類、搜尋、相關文章)與後台文章列表/總覽**一律用
+`lib/article-select.ts` 的 `articleCardSelect`**,不要用 `include` —— `include` 會把整篇
+`content`(HTML,單篇數十 KB)+ tags 都撈回來,卡片用不到,會明顯拖慢頁面。新增列表查詢請沿用此 select。
 
 詳見 `DEPLOY.md`(部署步驟)與 `memory.md`(當前狀態與待辦)。
