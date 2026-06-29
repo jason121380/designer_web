@@ -30,7 +30,11 @@ spec:
             value: ${OPENAI_API_KEY}
         volumes:
           - id: uploads
-            dir: /app/public/uploads
+            # Zeabur runtime cwd = /src（不是 /app）。上傳/在地化圖片寫在
+            # process.cwd()/public/uploads = /src/public/uploads，由
+            # app/uploads/[...path]/route.ts 串流服務。Volume 必須掛在這裡，
+            # 掛 /app/... 會完全無效（程式讀不到 → 全站破圖）。詳見 CLAUDE.md。
+            dir: /src/public/uploads
         commands:
           build:
             - npm install
