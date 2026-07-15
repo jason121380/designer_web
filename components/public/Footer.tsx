@@ -1,11 +1,10 @@
-import { frontendDemo } from "@/lib/frontend-demo";
+import { getDesignerWebContent } from "@/lib/designer-web-settings";
 
-export default function Footer() {
+export default async function Footer() {
+  const content = await getDesignerWebContent();
   return (
-    <footer className="py-6 text-center text-sm text-white" style={{ backgroundColor: frontendDemo.themeColor }}>
-      <p>
-        Copyright © {new Date().getFullYear()} {frontendDemo.brandName} ｜ Powered by LURE
-      </p>
+    <footer className="py-6 text-center text-sm text-white" style={{ backgroundColor: content.brand.themeColor }}>
+      <p>Copyright © {new Date().getFullYear()} {content.brand.name}</p>
     </footer>
   );
 }

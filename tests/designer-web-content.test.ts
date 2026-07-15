@@ -71,7 +71,7 @@ async function main() {
   const previousDatabaseUrl = process.env.DATABASE_URL;
   delete process.env.DATABASE_URL;
   const fallback = await getDesignerWebContent();
-  assert.equal(fallback.hero?.title, defaultDesignerWebContent.hero.title);
+  assert.equal(fallback.hero.heading, defaultDesignerWebContent.hero.heading);
   if (previousDatabaseUrl) process.env.DATABASE_URL = previousDatabaseUrl;
 }
 

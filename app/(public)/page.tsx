@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
 import { MapPin, MessageCircle, Phone } from "lucide-react";
-import { frontendDemo } from "@/lib/frontend-demo";
+import { getDesignerWebContent } from "@/lib/designer-web-settings";
 
 export const metadata: Metadata = {
   title: { absolute: "中壢接髮推薦｜KIMEKO HAIR 首席接髮設計師" },
   description: "中壢首席接髮設計師，極致零感羽毛接髮、鏡面燙、手刷染、光線染、5G 護髮。",
   alternates: { canonical: "/" },
-  openGraph: {
-    url: "/",
-    title: "中壢接髮推薦｜KIMEKO HAIR 首席接髮設計師",
-    description: "中壢首席接髮設計師，極致零感羽毛接髮、鏡面燙、手刷染、光線染、5G 護髮。",
-  },
 };
 
 const sectionStyle = { backgroundColor: "var(--cream-3)" };
@@ -26,93 +21,127 @@ function SectionHeading({ en, zh }: { en: string; zh: string }) {
   );
 }
 
-function BulletList({ label, items, icon }: { label: string; items: string[]; icon: string }) {
+function BulletList({ label, items }: { label: string; items: string[] }) {
+  if (!items.length) return null;
   return (
-    <>
+    <div className="mb-4">
       <p className="mb-1 font-semibold text-neutral-700">{label}</p>
-      <ul className="mb-4 space-y-1">
-        {items.map((item) => (
-          <li key={item} className="text-neutral-600">
-            {icon} {item}
-          </li>
-        ))}
+      <ul className="space-y-1 text-neutral-600">
+        {items.map((item) => <li key={item}>- {item}</li>)}
       </ul>
-    </>
+    </div>
   );
 }
 
-export default function HomePage() {
-  const demo = frontendDemo;
+export default async function HomePage() {
+  const content = await getDesignerWebContent();
 
   return (
-    <div style={{ ["--brand" as string]: demo.themeColor }}>
-      <section id="top" className="bg-neutral-900">
+    <div style={{ ["--brand" as string]: content.brand.themeColor }}>
+      <section id="top" className="scroll-mt-14 bg-neutral-900">
+        {!!content.hero.mediaUrl && (
+          <div className="mx-auto max-w-6xl overflow-hidden">
+            {content.hero.mediaType === "video" ? (
+              <video
+                src={content.hero.mediaUrl}
+                className="aspect-video w-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <img src={content.hero.mediaUrl} alt={content.brand.name} className="aspect-video w-full object-cover" />
+            )}
+          </div>
+        )}
         <div className="mx-auto max-w-4xl px-4 py-8 text-center md:py-10">
           <h1 className="whitespace-pre-line text-lg leading-relaxed text-white md:text-xl">
-            {demo.hero.heading}
+            {content.hero.heading}
           </h1>
         </div>
       </section>
 
-      {!!demo.promos.length && (
-        <section id="dm" className="py-14 md:py-20" style={warmSectionStyle}>
+      {!!content.promos.length && (
+        <section id="dm" className="scroll-mt-14 py-14 md:py-20" style={warmSectionStyle}>
           <div className="mx-auto max-w-6xl px-4">
-            <SectionHeading en="DM" zh="活動DM" />
+            <SectionHeading en="DM" zh="活動 DM" />
+            <div className="grid gap-5 md:grid-cols-2">
+              {content.promos.map((promo) => (
+                <figure key={promo.id} className="overflow-hidden bg-white shadow-sm">
+                  <img src={promo.image} alt={promo.caption || "活動 DM"} className="h-auto w-full object-cover" loading="lazy" />
+                  {!!promo.caption && <figcaption className="p-4 text-sm text-neutral-600">{promo.caption}</figcaption>}
+                </figure>
+              ))}
+            </div>
           </div>
         </section>
       )}
 
-      <section id="services" className="py-14 md:py-20" style={sectionStyle}>
+      <section id="services" className="scroll-mt-14 py-14 md:py-20" style={sectionStyle}>
         <div className="mx-auto max-w-5xl px-4">
           <SectionHeading en="Services" zh="接髮介紹" />
           <div className="space-y-8">
-            {demo.services.map((service) => (
-              <article key={service.id} className="overflow-hidden rounded-2xl bg-white shadow-sm">
-                <div className="p-6">
+            {content.services.map((service) => (
+              <article key={service.id} className="overflow-hidden bg-white shadow-sm md:grid md:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]">
+                <div className="p-6 md:p-8">
                   <h3 className="mb-3 text-xl font-bold text-neutral-800">{service.title}</h3>
                   <p className="mb-4 whitespace-pre-line leading-relaxed text-neutral-600">{service.description}</p>
-                  <BulletList label="特色：" items={service.features} icon="✔" />
-                  <BulletList label="適合對象：" items={service.suitableFor} icon="💡" />
+                  <BulletList label="特色：" items={service.features} />
+                  <BulletList label="適合對象：" items={service.suitableFor} />
                 </div>
+                {!!service.image && <img src={service.image} alt={service.title} className="h-full min-h-64 w-full object-cover" loading="lazy" />}
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="other-services" className="py-14 md:py-20" style={sectionStyle}>
+      <section id="other-services" className="scroll-mt-14 py-14 md:py-20" style={sectionStyle}>
         <div className="mx-auto max-w-5xl px-4">
           <SectionHeading en="Other Services" zh="其他服務" />
           <div className="grid gap-6 md:grid-cols-2">
-            {demo.otherServices.map((service) => (
-              <article key={service.id} className="rounded-2xl bg-white p-6 shadow-sm">
-                <div className="mb-4 text-center">
-                  <h3 className="text-lg font-bold text-neutral-800">{service.title}</h3>
+            {content.otherServices.map((service) => (
+              <article key={service.id} className="overflow-hidden bg-white shadow-sm">
+                {!!service.image && <img src={service.image} alt={service.title} className="aspect-video w-full object-cover" loading="lazy" />}
+                <div className="p-6">
+                  <h3 className="mb-3 text-lg font-bold text-neutral-800">{service.title}</h3>
+                  <p className="mb-4 whitespace-pre-line leading-relaxed text-neutral-600">{service.description}</p>
+                  <BulletList label="特色：" items={service.features} />
+                  <BulletList label="適合對象：" items={service.suitableFor} />
                 </div>
-                <p className="mb-4 whitespace-pre-line leading-relaxed text-neutral-600">{service.description}</p>
-                <BulletList label="特色：" items={service.features} icon="✔" />
-                <BulletList label="適合對象：" items={service.suitableFor} icon="💡" />
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="pay" className="py-14 md:py-20" style={lightSectionStyle}>
+      {!!content.videos.length && (
+        <section id="hair-video" className="scroll-mt-14 py-14 md:py-20" style={lightSectionStyle}>
+          <div className="mx-auto max-w-6xl px-4">
+            <SectionHeading en="Works" zh="作品影片" />
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {content.videos.map((item) => (
+                <figure key={item.id} className="overflow-hidden bg-white shadow-sm">
+                  <video src={item.video} controls playsInline preload="metadata" className="aspect-[9/16] w-full bg-black object-cover" />
+                  {!!item.caption && <figcaption className="p-4 text-sm text-neutral-600">{item.caption}</figcaption>}
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section id="pay" className="scroll-mt-14 py-14 md:py-20" style={lightSectionStyle}>
         <div className="mx-auto max-w-3xl px-4">
-          <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+          <div className="overflow-hidden bg-white shadow-sm">
             <h3 className="py-4 text-center text-lg font-bold text-white" style={{ backgroundColor: "var(--brand)" }}>
-              ▼ ▼ ▼ 分期介紹 ▼ ▼ ▼
+              分期介紹
             </h3>
-            <div className="space-y-4 p-6">
-              {demo.installment.map((text, index) => (
-                <div key={text}>
-                  <span
-                    className="mb-2 inline-flex h-9 w-9 items-center justify-center font-bold text-white"
-                    style={{ backgroundColor: "#3b3221", borderRadius: "50% 50% 0 50%" }}
-                  >
-                    {index + 1}
-                  </span>
+            <div className="space-y-5 p-6">
+              {content.installment.map((text, index) => (
+                <div key={`${index}-${text}`} className="grid grid-cols-[36px_1fr] gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-800 font-bold text-white">{index + 1}</span>
                   <p className="whitespace-pre-line leading-relaxed text-neutral-700">{text}</p>
                 </div>
               ))}
@@ -121,46 +150,51 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="contact" className="py-14 md:py-20" style={warmSectionStyle}>
+      <section id="pricing" className="scroll-mt-14 py-14 md:py-20" style={warmSectionStyle}>
+        <div className="mx-auto max-w-6xl px-4">
+          <SectionHeading en="Pricing" zh="價目表" />
+          <div className="grid gap-6 md:grid-cols-3">
+            {content.pricing.map((item) => (
+              <article key={item.name} className="border border-black/5 bg-white p-6 shadow-sm">
+                <p className="mb-2 text-sm font-semibold text-neutral-500">{item.name}</p>
+                <h3 className="mb-4 text-2xl font-bold text-neutral-900">{item.price}</h3>
+                <p className="mb-5 leading-relaxed text-neutral-600">{item.description}</p>
+                <ul className="space-y-2 text-sm text-neutral-600">
+                  {item.features.map((feature) => <li key={feature}>- {feature}</li>)}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {!!content.environment.length && (
+        <section id="ev" className="scroll-mt-14 py-14 md:py-20" style={sectionStyle}>
+          <div className="mx-auto max-w-6xl px-4">
+            <SectionHeading en="Environment" zh="環境介紹" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {content.environment.map((item, index) => (
+                <figure key={item.id} className="overflow-hidden bg-white shadow-sm">
+                  <img src={item.image} alt={item.alt || `店內環境 ${index + 1}`} className="aspect-[4/3] w-full object-cover" loading="lazy" />
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section id="contact" className="scroll-mt-14 py-14 md:py-20" style={warmSectionStyle}>
         <div className="mx-auto max-w-4xl px-4">
           <SectionHeading en="Contact" zh="聯絡我們" />
           <div className="grid items-start gap-8 md:grid-cols-2">
             <div className="space-y-3 text-neutral-700">
-              <p className="flex items-center gap-2">
-                <MapPin size={18} style={{ color: "var(--brand)" }} />
-                <a href={demo.contact.mapUrl} target="_blank" rel="noreferrer" className="hover:underline">
-                  {demo.contact.address}
-                </a>
-              </p>
-              <p className="flex items-center gap-2">
-                <Phone size={18} style={{ color: "var(--brand)" }} />
-                <a href={`tel:${demo.contact.phone}`} className="hover:underline">
-                  {demo.contact.phone}
-                </a>
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="w-[18px] text-center text-sm font-bold" style={{ color: "var(--brand)" }}>
-                  f
-                </span>
-                <a href={demo.contact.facebook} target="_blank" rel="noreferrer" className="hover:underline">
-                  Facebook
-                </a>
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>
-                  IG
-                </span>
-                <a href={demo.contact.instagram} target="_blank" rel="noreferrer" className="hover:underline">
-                  Instagram
-                </a>
-              </p>
-              <p className="flex items-center gap-2">
-                <MessageCircle size={18} style={{ color: "var(--brand)" }} />
-                <a href={demo.contact.line} target="_blank" rel="noreferrer" className="hover:underline">
-                  LINE
-                </a>
-              </p>
+              <p className="flex items-center gap-2"><MapPin size={18} style={{ color: "var(--brand)" }} /><a href={content.contact.mapUrl} target="_blank" rel="noreferrer" className="hover:underline">{content.contact.address}</a></p>
+              <p className="flex items-center gap-2"><Phone size={18} style={{ color: "var(--brand)" }} /><a href={`tel:${content.contact.phone}`} className="hover:underline">{content.contact.phone}</a></p>
+              <p className="flex items-center gap-2"><span className="w-[18px] text-center text-sm font-bold" style={{ color: "var(--brand)" }}>f</span><a href={content.contact.facebook} target="_blank" rel="noreferrer" className="hover:underline">Facebook</a></p>
+              <p className="flex items-center gap-2"><span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>IG</span><a href={content.contact.instagram} target="_blank" rel="noreferrer" className="hover:underline">Instagram</a></p>
+              <p className="flex items-center gap-2"><MessageCircle size={18} style={{ color: "var(--brand)" }} /><a href={content.contact.line} target="_blank" rel="noreferrer" className="hover:underline">LINE</a></p>
             </div>
+            {!!content.contact.mapEmbedUrl && <iframe src={content.contact.mapEmbedUrl} title="店家位置" className="h-72 w-full border-0" loading="lazy" />}
           </div>
         </div>
       </section>
