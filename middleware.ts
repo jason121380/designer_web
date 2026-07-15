@@ -31,6 +31,8 @@ export default auth((req) => {
 });
 
 export const config = {
-  // Match all /admin routes EXCEPT /admin/login to avoid redirect loops
-  matcher: ["/admin/((?!login$).*)"],
+  // Match all /admin routes EXCEPT:
+  // - /admin/login（避免 redirect loop）
+  // - /admin/manifest.webmanifest（瀏覽器抓 PWA manifest 不帶 cookie，擋住會讓後台無法安裝成 PWA）
+  matcher: ["/admin/((?!login$|manifest\\.webmanifest$).*)"],
 };

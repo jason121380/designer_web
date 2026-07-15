@@ -12,6 +12,8 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16。新工作
 - 前台目前是 KIMEKO HAIR 示範內容；正式素材與文字應由後台更新。
 - 後台側欄只剩「頁面管理」；入口為頁面列表，支援多頁面（`/{slug}`），每頁獨立編輯。
 - 多頁面已通過本機 PostgreSQL E2E：登入 → 建立/編輯/刪除頁面 → 前台獨立呈現與 404。
+- 側欄收合不再寫入 localStorage（曾造成誤觸後每次進後台側欄消失）；收合只維持當前瀏覽期間。
+- PWA：前台與後台 manifest 已補 icons（192/512）、theme-color、apple-touch-icon 與 viewport-fit=cover；`/admin/manifest.webmanifest` 已從登入 middleware 排除（瀏覽器抓 manifest 不帶 cookie）。
 - 桌機 1280 x 720 與手機 390 x 844 已驗證無水平溢出。
 - 前後台瀏覽器 console 已驗證無 error。
 - 核心測試、TypeScript 與 `npm run build:verify` 已通過。

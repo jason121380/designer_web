@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Toaster } from "sonner";
 import Sidebar from "./Sidebar";
 import AdminHeader from "./AdminHeader";
@@ -15,18 +15,9 @@ export default function AdminShell({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false); // 手機：滑出選單
-  const [collapsed, setCollapsed] = useState(false); // 桌機：收合左側選單
-
-  useEffect(() => {
-    setCollapsed(localStorage.getItem("admin:sidebar-collapsed") === "1");
-  }, []);
-
-  const toggleCollapsed = () =>
-    setCollapsed((c) => {
-      const next = !c;
-      localStorage.setItem("admin:sidebar-collapsed", next ? "1" : "0");
-      return next;
-    });
+  // 桌機收合只維持在當前瀏覽期間，不寫入 localStorage：
+  // 曾因永久記住收合狀態，使用者誤觸一次後每次進後台側欄都消失。
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -53,7 +44,7 @@ export default function AdminShell({
       >
         <AdminHeader
           onMenu={() => setOpen(true)}
-          onToggleCollapse={toggleCollapsed}
+          onToggleCollapse={() => setCollapsed((c) => !c)}
           collapsed={collapsed}
         />
         <main className="flex-1 overflow-x-hidden p-4 md:p-8">{children}</main>

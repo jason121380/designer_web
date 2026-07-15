@@ -8,8 +8,12 @@ export function GET() {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    background_color: "#C4837A",
-    theme_color: "#C4837A",
+    background_color: "#171717",
+    theme_color: "#171717",
+    icons: [
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icon.png", sizes: "512x512", type: "image/png", purpose: "any" },
+    ],
   };
   return new Response(JSON.stringify(manifest), {
     headers: {
