@@ -13,15 +13,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? "https://mifaso.co"),
   manifest: "/manifest.webmanifest",
   title: {
-    default: "MIFASO 迷髮所 — 時尚・美髮・生活美學",
-    template: "%s｜MIFASO 迷髮所",
+    default: "designer_web｜設計師一頁式品牌網站",
+    template: "%s｜designer_web",
   },
-  description: "MIFASO 迷髮所，提供最前沿的美髮造型趨勢、彩妝保養與生活美學內容。",
-  keywords: ["迷髮所", "MIFASO", "mifaso", "美髮", "時尚", "美妝", "保養", "生活美學"],
+  description: "designer_web 提供一頁式品牌網站、內容後台、作品集展示與預約轉換設計。",
+  keywords: ["designer_web", "一頁式網站", "品牌網站", "作品集", "內容管理後台", "網頁設計"],
   openGraph: {
     type: "website",
     locale: "zh_TW",
-    siteName: "MIFASO 迷髮所",
+    siteName: "designer_web",
   },
   twitter: { card: "summary_large_image" },
   alternates: {

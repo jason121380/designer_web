@@ -4,6 +4,12 @@ import bcrypt from "bcryptjs";
 import prisma from "./prisma";
 import { authConfig } from "./auth.config";
 
+export function loginAccountCandidates(account: string) {
+  const normalized = account.trim();
+  if (normalized === "admin") return ["admin", "admin@mifaso.com"];
+  return [normalized];
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
@@ -15,8 +21,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       authorize: async (credentials) => {
         if (!credentials?.account || !credentials?.password) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.account as string },
+        const user = await prisma.user.findFirst({
+          where: { email: { in: loginAccountCandidates(credentials.account as string) } },
         });
 
         if (!user || !user.active) return null;

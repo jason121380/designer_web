@@ -1,135 +1,169 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import Image from "next/image";
-import ArticleCard from "@/components/public/ArticleCard";
-import prisma from "@/lib/prisma";
-import { articleCardSelect } from "@/lib/article-select";
+import { MapPin, MessageCircle, Phone } from "lucide-react";
+import { frontendDemo } from "@/lib/frontend-demo";
 
 export const metadata: Metadata = {
-  title: { absolute: "MIFASO 迷髮所 — 時尚・美髮・生活美學" },
-  description: "MIFASO 迷髮所，提供最前沿的美髮造型趨勢、彩妝保養與生活美學內容。",
+  title: { absolute: "中壢接髮推薦｜KIMEKO HAIR 首席接髮設計師" },
+  description: "中壢首席接髮設計師，極致零感羽毛接髮、鏡面燙、手刷染、光線染、5G 護髮。",
   alternates: { canonical: "/" },
   openGraph: {
     url: "/",
-    title: "MIFASO 迷髮所 — 時尚・美髮・生活美學",
-    description: "MIFASO 迷髮所，提供最前沿的美髮造型趨勢、彩妝保養與生活美學內容。",
+    title: "中壢接髮推薦｜KIMEKO HAIR 首席接髮設計師",
+    description: "中壢首席接髮設計師，極致零感羽毛接髮、鏡面燙、手刷染、光線染、5G 護髮。",
   },
 };
 
-export const revalidate = 60;
+const sectionStyle = { backgroundColor: "var(--cream-3)" };
+const lightSectionStyle = { backgroundColor: "var(--cream-1)" };
+const warmSectionStyle = { backgroundColor: "var(--cream-2)" };
 
-async function getHomeData() {
-  const [featuredArticles, recentArticles, categories] = await Promise.all([
-    prisma.article.findMany({
-      where: { status: "PUBLISHED", featured: true },
-      select: articleCardSelect,
-      orderBy: { publishedAt: "desc" },
-      take: 3,
-    }),
-    prisma.article.findMany({
-      where: { status: "PUBLISHED" },
-      select: articleCardSelect,
-      orderBy: { publishedAt: "desc" },
-      take: 9,
-    }),
-    prisma.category.findMany({
-      orderBy: { sortOrder: "asc" },
-      include: { _count: { select: { articles: { where: { status: "PUBLISHED" } } } } },
-    }),
-  ]);
-
-  return { featuredArticles, recentArticles, categories };
+function SectionHeading({ en, zh }: { en: string; zh: string }) {
+  return (
+    <div className="mb-10 text-center md:mb-14">
+      <p className="subheading mb-2 font-serif-display">{en}</p>
+      <h2 className="text-2xl font-bold text-neutral-800 md:text-3xl">{zh}</h2>
+    </div>
+  );
 }
 
-export default async function HomePage() {
-  const { featuredArticles, recentArticles, categories } = await getHomeData();
-
-  const hero = featuredArticles[0];
-  const subFeatured = featuredArticles.slice(1, 3);
-
+function BulletList({ label, items, icon }: { label: string; items: string[]; icon: string }) {
   return (
     <>
-      {/* Hero Section */}
-      {hero && (
-        <section className="max-w-screen-xl mx-auto md:px-6 mb-12 md:mb-16">
-          <ArticleCard article={hero} variant="featured" />
+      <p className="mb-1 font-semibold text-neutral-700">{label}</p>
+      <ul className="mb-4 space-y-1">
+        {items.map((item) => (
+          <li key={item} className="text-neutral-600">
+            {icon} {item}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+export default function HomePage() {
+  const demo = frontendDemo;
+
+  return (
+    <div style={{ ["--brand" as string]: demo.themeColor }}>
+      <section id="top" className="bg-neutral-900">
+        <div className="mx-auto max-w-4xl px-4 py-8 text-center md:py-10">
+          <h1 className="whitespace-pre-line text-lg leading-relaxed text-white md:text-xl">
+            {demo.hero.heading}
+          </h1>
+        </div>
+      </section>
+
+      {!!demo.promos.length && (
+        <section id="dm" className="py-14 md:py-20" style={warmSectionStyle}>
+          <div className="mx-auto max-w-6xl px-4">
+            <SectionHeading en="DM" zh="活動DM" />
+          </div>
         </section>
       )}
 
-
-      {/* Sub-featured + Sidebar */}
-      <section className="max-w-screen-xl mx-auto px-6 mb-20">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Main content */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center gap-4 mb-10">
-              <h2 className="font-serif text-2xl font-bold">精選報導</h2>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {subFeatured.map((article) => (
-                <ArticleCard key={article.id} article={article} />
-              ))}
-            </div>
-          </div>
-
-          {/* Sidebar: recent */}
-          <div className="lg:border-l lg:border-gray-100 lg:pl-12">
-            <div className="flex items-center gap-4 mb-8">
-              <h2 className="font-serif text-lg font-bold whitespace-nowrap">最新文章</h2>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
-            <div className="flex flex-col gap-8">
-              {recentArticles.slice(0, 5).map((article) => (
-                <ArticleCard key={article.id} article={article} variant="horizontal" />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Divider */}
-      <div className="max-w-screen-xl mx-auto px-6 mb-20">
-        <div className="luxury-divider">
-          <span className="font-serif text-sm tracking-widest text-rose-brand uppercase">Latest</span>
-        </div>
-      </div>
-
-      {/* All recent articles grid */}
-      <section className="max-w-screen-xl mx-auto px-6 mb-20">
-        <div className="article-grid">
-          {recentArticles.slice(3).map((article) => (
-            <ArticleCard key={article.id} article={article} />
-          ))}
-        </div>
-        <div className="text-center mt-16">
-          <Link href="/search" className="btn-outline">
-            瀏覽更多文章
-          </Link>
-        </div>
-      </section>
-
-      {/* Categories showcase */}
-      <section className="border-t border-gray-100 py-16">
-        <div className="max-w-screen-xl mx-auto px-6">
-          <div className="luxury-divider mb-10">
-            <span className="font-serif text-sm tracking-widest text-rose-brand uppercase">探索主題</span>
-          </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/category/${cat.slug}`}
-                className="group px-6 py-4 border border-gray-200 hover:border-rose-brand hover:bg-rose-50 transition-all rounded-lg"
-              >
-                <span className="text-sm font-medium text-gray-800 group-hover:text-rose-brand transition-colors">
-                  {cat.name}
-                </span>
-              </Link>
+      <section id="services" className="py-14 md:py-20" style={sectionStyle}>
+        <div className="mx-auto max-w-5xl px-4">
+          <SectionHeading en="Services" zh="接髮介紹" />
+          <div className="space-y-8">
+            {demo.services.map((service) => (
+              <article key={service.id} className="overflow-hidden rounded-2xl bg-white shadow-sm">
+                <div className="p-6">
+                  <h3 className="mb-3 text-xl font-bold text-neutral-800">{service.title}</h3>
+                  <p className="mb-4 whitespace-pre-line leading-relaxed text-neutral-600">{service.description}</p>
+                  <BulletList label="特色：" items={service.features} icon="✔" />
+                  <BulletList label="適合對象：" items={service.suitableFor} icon="💡" />
+                </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
-    </>
+
+      <section id="other-services" className="py-14 md:py-20" style={sectionStyle}>
+        <div className="mx-auto max-w-5xl px-4">
+          <SectionHeading en="Other Services" zh="其他服務" />
+          <div className="grid gap-6 md:grid-cols-2">
+            {demo.otherServices.map((service) => (
+              <article key={service.id} className="rounded-2xl bg-white p-6 shadow-sm">
+                <div className="mb-4 text-center">
+                  <h3 className="text-lg font-bold text-neutral-800">{service.title}</h3>
+                </div>
+                <p className="mb-4 whitespace-pre-line leading-relaxed text-neutral-600">{service.description}</p>
+                <BulletList label="特色：" items={service.features} icon="✔" />
+                <BulletList label="適合對象：" items={service.suitableFor} icon="💡" />
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="pay" className="py-14 md:py-20" style={lightSectionStyle}>
+        <div className="mx-auto max-w-3xl px-4">
+          <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+            <h3 className="py-4 text-center text-lg font-bold text-white" style={{ backgroundColor: "var(--brand)" }}>
+              ▼ ▼ ▼ 分期介紹 ▼ ▼ ▼
+            </h3>
+            <div className="space-y-4 p-6">
+              {demo.installment.map((text, index) => (
+                <div key={text}>
+                  <span
+                    className="mb-2 inline-flex h-9 w-9 items-center justify-center font-bold text-white"
+                    style={{ backgroundColor: "#3b3221", borderRadius: "50% 50% 0 50%" }}
+                  >
+                    {index + 1}
+                  </span>
+                  <p className="whitespace-pre-line leading-relaxed text-neutral-700">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact" className="py-14 md:py-20" style={warmSectionStyle}>
+        <div className="mx-auto max-w-4xl px-4">
+          <SectionHeading en="Contact" zh="聯絡我們" />
+          <div className="grid items-start gap-8 md:grid-cols-2">
+            <div className="space-y-3 text-neutral-700">
+              <p className="flex items-center gap-2">
+                <MapPin size={18} style={{ color: "var(--brand)" }} />
+                <a href={demo.contact.mapUrl} target="_blank" rel="noreferrer" className="hover:underline">
+                  {demo.contact.address}
+                </a>
+              </p>
+              <p className="flex items-center gap-2">
+                <Phone size={18} style={{ color: "var(--brand)" }} />
+                <a href={`tel:${demo.contact.phone}`} className="hover:underline">
+                  {demo.contact.phone}
+                </a>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="w-[18px] text-center text-sm font-bold" style={{ color: "var(--brand)" }}>
+                  f
+                </span>
+                <a href={demo.contact.facebook} target="_blank" rel="noreferrer" className="hover:underline">
+                  Facebook
+                </a>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>
+                  IG
+                </span>
+                <a href={demo.contact.instagram} target="_blank" rel="noreferrer" className="hover:underline">
+                  Instagram
+                </a>
+              </p>
+              <p className="flex items-center gap-2">
+                <MessageCircle size={18} style={{ color: "var(--brand)" }} />
+                <a href={demo.contact.line} target="_blank" rel="noreferrer" className="hover:underline">
+                  LINE
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

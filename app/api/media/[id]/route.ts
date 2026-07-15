@@ -28,9 +28,11 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
   const media = await prisma.media.findUnique({ where: { id } });
   if (!media) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  try {
-    await unlink(join(process.cwd(), "public", media.url));
-  } catch {}
+  if (media.url.startsWith("/uploads/")) {
+    try {
+      await unlink(join(process.cwd(), "public", media.url));
+    } catch {}
+  }
 
   await prisma.media.delete({ where: { id } });
   return NextResponse.json({ success: true });

@@ -5,6 +5,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import sharp from "sharp";
 import { rateLimit, tooMany } from "@/lib/rate-limit";
+import { isR2Configured, uploadToR2 } from "@/lib/cloudflare-media";
 
 const UPLOAD_DIR = join(process.cwd(), "public", "uploads");
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
@@ -55,13 +56,18 @@ export async function POST(req: NextRequest) {
   // Create year/month folder
   const now = new Date();
   const folder = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const uploadPath = join(UPLOAD_DIR, folder);
-  await mkdir(uploadPath, { recursive: true });
-
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  await writeFile(join(uploadPath, filename), buffer);
+  const key = `uploads/${folder}/${filename}`;
+  let url: string;
 
-  const url = `/uploads/${folder}/${filename}`;
+  if (isR2Configured()) {
+    url = await uploadToR2({ key, body: buffer, contentType: mimeType });
+  } else {
+    const uploadPath = join(UPLOAD_DIR, folder);
+    await mkdir(uploadPath, { recursive: true });
+    await writeFile(join(uploadPath, filename), buffer);
+    url = `/${key}`;
+  }
 
   const media = await prisma.media.create({
     data: {

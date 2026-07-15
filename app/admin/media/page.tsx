@@ -27,6 +27,7 @@ export default function MediaPage() {
   const [altText, setAltText] = useState("");
   const [copied, setCopied] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const isVideo = (mimeType: string) => mimeType.startsWith("video/");
 
   async function fetchMedia(p = 1) {
     if (p > 1) setLoadingMore(true);
@@ -41,18 +42,64 @@ export default function MediaPage() {
 
   useEffect(() => { fetchMedia(1); }, []);
 
+  async function uploadImage(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? "圖片上傳失敗");
+    }
+  }
+
+  async function uploadVideo(file: File) {
+    if (file.size > 200 * 1024 * 1024) {
+      throw new Error("目前後台支援 200MB 以下影片；更大的影片請用 Cloudflare Stream tus 或 Dashboard 上傳");
+    }
+
+    const initRes = await fetch("/api/cloudflare/stream/direct-upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: file.name, size: file.size }),
+    });
+    const init = await initRes.json();
+    if (!initRes.ok) throw new Error(init.error ?? "建立 Cloudflare Stream 上傳失敗");
+
+    const formData = new FormData();
+    formData.append("file", file);
+    const uploadRes = await fetch(init.uploadURL, { method: "POST", body: formData });
+    if (!uploadRes.ok) throw new Error("影片上傳到 Cloudflare Stream 失敗");
+
+    const completeRes = await fetch("/api/cloudflare/stream/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uid: init.uid,
+        originalName: file.name,
+        size: file.size,
+        mimeType: file.type || "video/mp4",
+      }),
+    });
+    const complete = await completeRes.json();
+    if (!completeRes.ok) throw new Error(complete.error ?? "影片登錄媒體庫失敗");
+  }
+
   async function handleUpload(files: FileList | null) {
     if (!files?.length) return;
     setUploading(true);
 
-    for (const file of Array.from(files)) {
-      const formData = new FormData();
-      formData.append("file", file);
-      await fetch("/api/upload", { method: "POST", body: formData });
+    try {
+      for (const file of Array.from(files)) {
+        if (file.type.startsWith("image/")) await uploadImage(file);
+        else if (file.type.startsWith("video/")) await uploadVideo(file);
+        else throw new Error(`不支援的檔案類型：${file.type || file.name}`);
+      }
+      await fetchMedia();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "上傳失敗");
+    } finally {
+      setUploading(false);
     }
-
-    fetchMedia();
-    setUploading(false);
   }
 
   async function saveAlt() {
@@ -85,21 +132,21 @@ export default function MediaPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">媒體庫</h1>
-          <p className="text-gray-400 text-sm mt-1">{media.length} / {total} 張圖片</p>
+          <p className="text-gray-400 text-sm mt-1">{media.length} / {total} 個媒體</p>
         </div>
         <button
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
           className="flex items-center gap-2 bg-rose-brand text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-rose-dark transition-colors shadow-sm disabled:opacity-50"
         >
-          {uploading ? "上傳中..." : "⊞ 上傳圖片"}
+          {uploading ? "上傳中..." : "⊞ 上傳媒體"}
         </button>
       </div>
 
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         multiple
         className="hidden"
         onChange={(e) => handleUpload(e.target.files)}
@@ -112,7 +159,7 @@ export default function MediaPage() {
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => { e.preventDefault(); handleUpload(e.dataTransfer.files); }}
       >
-        <p className="text-gray-300 text-sm">拖拽圖片至此處或點擊上傳（支援批量上傳）</p>
+        <p className="text-gray-300 text-sm">拖拽圖片或影片至此處上傳（圖片：R2；影片：Stream）</p>
       </div>
 
       <div className="flex gap-6">
@@ -132,7 +179,13 @@ export default function MediaPage() {
                     selected?.id === item.id ? "ring-2 ring-gold" : ""
                   }`}
                 >
-                  <Image src={item.url} alt={item.alt ?? item.originalName} fill className="object-cover" />
+                  {isVideo(item.mimeType) ? (
+                    <div className="flex h-full w-full items-center justify-center bg-gray-900 text-center text-xs font-semibold text-white">
+                      VIDEO
+                    </div>
+                  ) : (
+                    <Image src={item.url} alt={item.alt ?? item.originalName} fill className="object-cover" />
+                  )}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
                     <p className="text-white text-xs line-clamp-2">{item.originalName}</p>
                   </div>
@@ -158,7 +211,17 @@ export default function MediaPage() {
         {selected && (
           <div className="w-72 flex-shrink-0 bg-white border border-gray-100 p-5 self-start sticky top-8">
             <div className="relative aspect-video mb-4 overflow-hidden bg-gray-50">
-              <Image src={selected.url} alt={selected.alt ?? selected.originalName} fill className="object-contain" />
+              {isVideo(selected.mimeType) ? (
+                <iframe
+                  src={selected.url}
+                  title={selected.originalName}
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <Image src={selected.url} alt={selected.alt ?? selected.originalName} fill className="object-contain" />
+              )}
             </div>
 
             <p className="font-medium text-sm text-gray-900 mb-1 break-all">{selected.originalName}</p>
@@ -175,7 +238,7 @@ export default function MediaPage() {
                 onChange={(e) => setAltText(e.target.value)}
                 onBlur={saveAlt}
                 className="w-full border border-gray-200 focus:border-rose-brand outline-none px-2 py-1.5 text-sm"
-                placeholder="描述這張圖片"
+                placeholder={isVideo(selected.mimeType) ? "描述這支影片" : "描述這張圖片"}
               />
             </div>
 
@@ -189,7 +252,7 @@ export default function MediaPage() {
               onClick={() => deleteMedia(selected.id)}
               className="w-full border border-red-100 text-red-500 py-2 text-sm rounded-lg hover:bg-red-50 transition-colors"
             >
-              刪除圖片
+              刪除媒體
             </button>
           </div>
         )}

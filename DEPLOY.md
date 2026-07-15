@@ -82,7 +82,33 @@ git push -u origin main
 | `MAINT_TOOLS` | 平時**不設**。需跑一次性維運工具時才暫設 `1`，用完移除（見下方「維運工具」） |
 | `GOOGLE_SITE_VERIFICATION` | 選用，Google Search Console 驗證碼（設了才輸出 meta） |
 
-### 6. 設定 Persistent Volume（圖片存放）
+### 6. 設定 Cloudflare 媒體儲存
+
+圖片建議放 Cloudflare R2，影片放 Cloudflare Stream。後台媒體庫會依環境變數自動切換：
+
+- 有設定 R2：圖片上傳到 R2，資料庫只存公開 URL。
+- 未設定 R2：圖片退回 Zeabur Volume 的 `/src/public/uploads`。
+- 有設定 Stream：影片用 Cloudflare Direct Creator Upload 直接上傳到 Stream，資料庫只存 iframe URL。
+
+R2 必要變數：
+
+| Key | 說明 |
+|-----|------|
+| `CLOUDFLARE_R2_ACCOUNT_ID` | Cloudflare Account ID |
+| `CLOUDFLARE_R2_ACCESS_KEY_ID` | R2 S3 API Access Key ID |
+| `CLOUDFLARE_R2_SECRET_ACCESS_KEY` | R2 S3 API Secret Access Key |
+| `CLOUDFLARE_R2_BUCKET` | R2 bucket 名稱 |
+| `CLOUDFLARE_R2_PUBLIC_URL` | R2 public bucket custom domain，例如 `https://media.example.com` |
+
+Stream 必要變數：
+
+| Key | 說明 |
+|-----|------|
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID |
+| `CLOUDFLARE_STREAM_API_TOKEN` | 可建立 Stream direct upload 的 API token |
+
+若暫時不用 R2，才需要設定 Persistent Volume：
+
 1. 點擊 Next.js 服務 → Volumes
 2. 新增 Volume：Mount path = **`/src/public/uploads`**
    （**不可**用 `/app/...`；Zeabur runtime cwd 是 `/src`，掛錯路徑檔案重新部署就消失）
@@ -109,7 +135,8 @@ npx tsx -e "import {PrismaClient} from '@prisma/client'; const p=new PrismaClien
 - [ ] 前台首頁正常顯示
 - [ ] 後台 /admin/login 可以登入，**登入後第一次就有側邊選單**（不需重整）
 - [ ] 文章可以新增/編輯/發布；前台文章已消毒（無 `<script>` 注入）、IG 嵌入正常
-- [ ] 圖片上傳正常（Persistent Volume 已掛載於 `/src/public/uploads`；上傳 jpeg/png 會自動轉 webp）
+- [ ] 圖片上傳正常（有 R2 時 URL 會是 `CLOUDFLARE_R2_PUBLIC_URL`；未設 R2 時才檢查 Persistent Volume）
+- [ ] 影片上傳正常（Cloudflare Stream direct upload，媒體庫可預覽 iframe）
 - [ ] Sitemap `/sitemap.xml`、`/robots.txt`、RSS `/feed.xml` 可訪問
 - [ ] `curl -I https://mifaso.co` 有安全標頭（HSTS、X-Content-Type-Options、CSP `upgrade-insecure-requests`），瀏覽器不再「Not Secure」
 - [ ] 未登入 `POST /api/ai` 回 401；未設 `MAINT_TOOLS` 時維運路由回 404
@@ -139,10 +166,11 @@ DB 路徑已在地化成本地 `/uploads/...`，`localize-images` 無外部 URL 
 
 ## 圖片最佳化 / CDN 快取
 
-- 既有圖：`MAINT_TOOLS=1` 後開 `/api/optimize-images?auto=1`（縮 1600 + 轉 webp，循序不 OOM，原檔保留）。
-- 新上傳：`/api/upload` 已自動縮+轉 webp，無需手動。
-- **Cloudflare**：建議加 Cache Rule `URI Path starts with /uploads/` → Eligible for cache、
+- 既有本機圖：`MAINT_TOOLS=1` 後開 `/api/optimize-images?auto=1`（縮 1600 + 轉 webp，循序不 OOM，原檔保留）。
+- 新上傳圖片：`/api/upload` 已自動縮+轉 webp；有 R2 設定時會直接存 R2。
+- **Cloudflare R2 custom domain**：建議加 Cache Rule `URI Path starts with /uploads/` → Eligible for cache、
   Edge TTL Respect origin（圖片回應已帶 `immutable max-age=30天`）。驗證：DevTools 看 `cf-cache-status` 第二次為 `HIT`。
+- 影片：放 Cloudflare Stream，不要放 Zeabur Volume 或資料庫。200MB 以下後台走 Direct Creator Upload；更大的影片請用 Stream tus 或 Cloudflare Dashboard 上傳。
 
 ## 資料庫密碼輪替（Zeabur PostgreSQL）
 

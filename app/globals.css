@@ -4,6 +4,10 @@
 
 :root {
   --font-serif: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --brand: #d9bf77;
+  --cream-1: #fdf7f0;
+  --cream-2: #fff8e8;
+  --cream-3: #f9f7f3;
   /* --font-sans is injected by next/font as a CSS variable */
 }
 
@@ -59,6 +63,17 @@
 
   .article-grid {
     @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8;
+  }
+
+  .font-serif-display {
+    font-family: var(--font-serif);
+  }
+
+  .subheading {
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    color: var(--brand);
   }
 
   /* Tiptap editor styles */

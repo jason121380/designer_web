@@ -8,6 +8,7 @@ interface MediaItem {
   id: string;
   url: string;
   originalName: string;
+  mimeType: string;
   alt?: string;
 }
 
@@ -36,7 +37,7 @@ export default function MediaPicker({ onSelect, onClose }: Props) {
   useEffect(() => { fetchMedia(page); }, [fetchMedia, page]);
 
   const filtered = media.filter((m) =>
-    m.originalName.toLowerCase().includes(search.toLowerCase())
+    m.mimeType.startsWith("image/") && m.originalName.toLowerCase().includes(search.toLowerCase())
   );
 
   function handleConfirm() {

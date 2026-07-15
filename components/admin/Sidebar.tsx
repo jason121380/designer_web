@@ -18,6 +18,7 @@ import {
   X,
   BarChart3,
   Wrench,
+  PanelsTopLeft,
 } from "lucide-react";
 
 const navItems: {
@@ -27,6 +28,7 @@ const navItems: {
   adminOnly?: boolean;
 }[] = [
   { href: "/admin/dashboard", label: "總覽", icon: LayoutDashboard },
+  { href: "/admin/designer-web", label: "前台內容", icon: PanelsTopLeft },
   { href: "/admin/articles", label: "文章管理", icon: FileText },
   { href: "/admin/categories", label: "分類管理", icon: FolderOpen },
   { href: "/admin/tags", label: "標籤管理", icon: Tag },
