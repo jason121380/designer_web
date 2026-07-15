@@ -1,98 +1,155 @@
 # CLAUDE.md
 
-專案給 Claude / 開發者的重點說明。**部署在 Zeabur,踩過很多平台特有的坑,動之前先讀完本檔。**
+本檔供 Claude、Codex 與維護者在修改 Designer Web 前快速取得正確上下文。開始工作前依序讀取 `README.md`、`STYLE.md`、`memory.md`，再檢查實際程式碼與 Git 狀態；文件可能落後，程式碼才是最終來源。
 
-## 專案
+## 專案目標
 
-MIFASO 迷髮所 — Next.js 15 (App Router) + React 19 + Prisma + PostgreSQL 的內容網站 / 後台 CMS。
-- 前台：`app/(public)/`(首頁、文章、分類、搜尋)
-- 後台：`app/admin/`(NextAuth v5 + Credentials,JWT session)
-- 部署：Zeabur(Node 服務 `mifaso-tal` + PostgreSQL 服務）
-- 正式網域：`https://mifaso.co`(Cloudflare 管 DNS,www 301 轉址到非 www)
+Designer Web 是設計師品牌的一頁式網站，不是文章 CMS。
 
-## 指令
+- 前台：`app/(public)/page.tsx`。
+- 後台唯一主要功能：`/admin/page-management`。
+- 資料：Zeabur PostgreSQL + Prisma。
+- 圖片：Cloudflare R2；未設定 R2 時才使用本機/Zeabur Volume fallback。
+- 影片：Cloudflare Stream URL。
+- 部署目標：前端與後端由同一個 Next.js 服務提供，PostgreSQL 與 Cloudflare 為外部服務。
 
+## 不可破壞的產品決策
+
+1. 後台側欄只保留「頁面管理」。不要重新加入總覽、文章、分類、標籤、媒體庫、流量分析、用戶或工程工具。
+2. 頁面管理區塊順序必須跟前台一致。
+3. 所有可編輯前台內容都應進入 `DesignerWebContent` 合約並存入 PostgreSQL，不要另建散落的常數或第二份設定來源。
+4. 圖片從各區塊內直接上傳，不顯示獨立媒體庫功能。
+5. 不顯示或重新引用舊專案品牌與 Logo。
+6. 舊 CMS 資料表與程式碼目前為相容性歷史，不代表可重新暴露舊 UI。
+
+## 內容資料流
+
+```txt
+PageManagementForm
+  -> PUT /api/designer-web
+  -> normalizeDesignerWebContent()
+  -> site_settings(key = designer_web_content, value = JSON)
+
+Public page / Header / Footer
+  -> getDesignerWebContent()
+  -> site_settings
+  -> parseDesignerWebContent()
+  -> normalized content or default demo fallback
 ```
-npm run dev            # 本機開發
-npm run build          # prisma generate && next build
-npm run db:seed        # 灌正式 88 篇（scripts/seed-production.ts）
-npm run db:seed:demo   # 只灌 2 篇示範（prisma/seed.ts，admin@mifaso.com / admin123456）
+
+來源真相：
+
+- 合約與預設內容：`lib/designer-web-content.ts`
+- DB 讀取與 fallback：`lib/designer-web-settings.ts`
+- 寫入 API：`app/api/designer-web/route.ts`
+- 後台表單：`components/admin/PageManagementForm.tsx`
+- 前台輸出：`app/(public)/page.tsx`
+
+修改資料結構時必須同步更新 schema、TypeScript interface、default、normalize、表單、前台與測試。對舊 DB JSON 保持容錯，不要讓缺少新欄位造成整頁 500。
+
+## 驗證與授權
+
+- Auth.js 使用 Credentials provider 與 JWT session。
+- `/admin/*` 由 `middleware.ts` 保護，`/admin/login` 除外。
+- `PUT /api/designer-web` 只允許 `ADMIN` 與 `EDITOR`。
+- `POST /api/upload` 要求登入使用者，並有每位使用者上傳限速。
+- 登入後使用全頁導向，確保 server-rendered admin layout 取得新 session。
+- `callbackUrl` 只能使用站內絕對路徑，避免 open redirect。
+
+## Cloudflare 媒體
+
+### 圖片
+
+`app/api/upload/route.ts` 接受 JPEG、PNG、WebP、GIF、AVIF，最大 10MB。
+
+- JPEG/PNG：自動修正 EXIF 方向、最大寬度 1600px、轉 WebP quality 80。
+- WebP/GIF/AVIF：保持原檔，避免破壞動畫或重複壓縮。
+- R2 五個變數完整時上傳至 R2。
+- R2 未設定時寫入 `public/uploads/YYYY/MM`。
+- 每次成功上傳仍會建立 `media` DB 紀錄，但後台不提供獨立媒體庫入口。
+
+### 影片
+
+`lib/cloudflare-media.ts` 與 `/api/cloudflare/stream/*` 已有建立 direct upload 的 helper/API。現行 `PageManagementForm` 尚未接上檔案上傳流程，作品影片與 hero 影片欄位目前填入可播放 URL。不要在文件或 UI 宣稱已有完整影片上傳，除非實作並驗證完成。
+
+## 環境變數
+
+禁止把真實值寫進 Git、issue、日誌或文件。
+
+必要：
+
+- `DATABASE_URL`
+- `AUTH_SECRET`
+- `NEXTAUTH_URL`
+- `SITE_URL`
+
+R2：
+
+- `CLOUDFLARE_R2_ACCOUNT_ID`
+- `CLOUDFLARE_R2_ACCESS_KEY_ID`
+- `CLOUDFLARE_R2_SECRET_ACCESS_KEY`
+- `CLOUDFLARE_R2_BUCKET`
+- `CLOUDFLARE_R2_PUBLIC_URL`
+
+Stream：
+
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CLOUDFLARE_STREAM_API_TOKEN`
+
+Zeabur 正式環境需讓 `NEXTAUTH_URL` 與 `SITE_URL` 使用同一個正式 HTTPS 網域。`lib/auth.config.ts` 的 `trustHost: true` 是反向代理環境必要設定。
+
+## 開發與建置
+
+```bash
+npm install
+npx prisma generate
+npm run dev
 ```
 
-## Zeabur 平台特有的坑（重要，務必遵守）
+開發伺服器運行時，不要執行會寫入同一個 `.next` 的普通 `npm run build`。曾發生建置覆寫 dev 產物而讓前後台 CSS 暫時失效。驗證正式建置請使用：
 
-1. **runtime 工作目錄是 `/src`,不是 `/app`。** 上傳目錄 = `process.cwd()/public/uploads` = `/src/public/uploads`。
-   持久 **Volume 必須掛在 `/src/public/uploads`**(掛 `/app/...` 會完全無效,檔案落在暫存碟、重新部署即消失)。
-2. **Next.js 在 Zeabur 不會服務 runtime 才寫進 `public/` 的檔案。** 因此 `/uploads/*` 由
-   `app/uploads/[...path]/route.ts`(串流路由)服務。**不要刪這支**,刪了所有上傳/在地化圖片會 404。
-3. **`prisma/migrations/migration_lock.toml` 必須存在**(`provider = "postgresql"`),否則
-   `prisma migrate deploy` 不會套用 migration,資料表不會建立 → 全站 500。
-4. **`prisma/schema.prisma` 的 `binaryTargets`** 要含 Debian/glibc(`debian-openssl-3.0.x` 等),
-   不可只有 musl,否則 Prisma 引擎在 Zeabur 跑不起來。
-5. **NextAuth v5 在 Zeabur 反向代理後**:`lib/auth.config.ts` 已設 `trustHost: true`;
-   仍須設 `AUTH_SECRET`,且**用與 `NEXTAUTH_URL` 一致的網域登入**,否則 `app/admin/layout.tsx`
-   讀不到 session → 左側欄消失。
-6. **`next.config.ts` 設 `images.unoptimized: true`**:機器記憶體小(2GB 與 Postgres 共用),
-   sharp 即時最佳化會 OOM。圖片量大時記憶體很敏感。
+```bash
+npm run build:verify
+```
 
-## Zeabur 必要環境變數（`mifaso-tal` 服務）
+該指令透過 `NEXT_DIST_DIR=.next-verify` 隔離輸出；`.next-verify/` 與 `tsconfig.tsbuildinfo` 不進版控。
 
-`DATABASE_URL`(綁 PostgreSQL 服務)、`AUTH_SECRET`、`NEXTAUTH_URL`、`SITE_URL`
-(皆 = `https://mifaso.co`)、`NODE_ENV=production`、`OPENAI_API_KEY`(選用,AI 功能)。
-- `MAINT_TOOLS` — **平時不設**。設 `1` 才會開啟下方一次性維運路由(否則一律 404)。用完移除。
-- `GOOGLE_SITE_VERIFICATION` — 選用,Google Search Console 驗證碼(設了才輸出 meta)。
+## 測試
 
-**勿把任何密碼/金鑰寫進 repo。**
+核心測試目前是可直接執行的 TypeScript 檔：
 
-## 資安 / SEO（本輪強化,改動前先知道）
+```bash
+for test in tests/*.test.ts; do npx tsx "$test" || exit 1; done
+npx tsc --noEmit --incremental false
+npm run build:verify
+```
 
-- 文章內文一律經 `lib/article-html.ts` 的 `sanitize-html` allowlist 消毒(移除
-  `<script>`/`on*`/`javascript:`,保留 IG `blockquote`、表格、目錄)。IG 由
-  `components/public/InstagramEmbed.tsx` 載入的 embed.js 處理,**勿在內文塞 script**。
-- `next.config.ts` 有全站安全標頭(HSTS、nosniff、X-Frame-Options、Referrer-Policy、
-  CSP `upgrade-insecure-requests`)。`/api/ai` 需登入。登入 `callbackUrl` 僅限同站路徑。
-- SEO 集中在 `lib/seo.ts`(Organization/WebSite/Article/Breadcrumb JSON-LD + canonical);
-  `app/sitemap.ts`、`app/robots.ts`、RSS `app/feed.xml/route.ts` 皆依 `SITE_URL`。
-- 後台流量分析:`PageView` model + `/api/track`(公開輕量)+ `components/public/Tracker.tsx`
-  + `app/admin/analytics`。新資料表 migration 由 `prisma migrate deploy` 自動套用。
+重要測試責任：
 
-## 一次性管理工具（瀏覽器觸發,需 ADMIN 登入 + `MAINT_TOOLS=1`,否則 404）
+- `designer-web-content.test.ts`：資料正規化與 fallback。
+- `public-content-source.test.ts`：前台只使用 DB 設定讀取層。
+- `public-section-anchors.test.ts`：前台 section id 與導覽。
+- `page-management-editor.test.ts`：十個頁面管理區塊。
+- `admin-navigation.test.ts`：單一後台入口、品牌與媒體庫移除。
+- `auth-login.test.ts`：登入帳號相容處理。
+- `cloudflare-media.test.ts`：R2/Stream helper。
 
-- `GET /api/restore-from-mifaso` — 從 mifaso.co WordPress REST API 用標題比對,還原 88 篇的
-  `featuredImage` + 原始 `content`(含 IG 嵌入)。`?dry=1` 預覽、`?diag=1` 診斷來源。
-  **依賴舊 WP 站存活;網域 cut over 到新站後此工具失效。**
-- `GET /api/localize-images` — 把外部圖片下載到 `/src/public/uploads` 並改 DB 為本地路徑：
-  - `?dry=1` 只算數量(秒回)
-  - `?auto=1` 自動分批跑到完(HTML 進度頁,放著別關)
-  - `?check=1` 路徑/Volume 健檢(寫 `__healthcheck.txt`)
-  - `?media=1` 把 uploads 內圖片登錄進「媒體庫」(`?media=1&dry=1` 預覽)
-- `GET /api/fix-updated-at` — 把 88 篇 `updatedAt` 設為其真實 `publishedAt`
-  (seed 的 updatedAt/createdAt 皆匯入當天,無意義)。`?dry=1` 預覽。**後台列表/總覽
-  現已直接顯示/排序 `publishedAt`,此工具僅在需要修正 DB 值時才用。**
-- `GET /api/strip-related-reading` — 移除所有文章內文的「延伸閱讀」段落
-  (整個 `<p>…延伸閱讀…</p>`,含其中連結),raw SQL 更新不動 `updatedAt`。
-  **只需 ADMIN 登入(不需 `MAINT_TOOLS`)**;預設只預覽,加 `?run=1` 才實際寫入
-  (重跑為 no-op)。流量分析的 `page_views` 表改為首次使用時自動建立
-  (`lib/page-views.ts`),不再依賴 `prisma migrate deploy`。
-- `GET /api/copy-uploads?from=<舊站網址>` — **搬伺服器專用**。新 Volume 是空的時,
-  從舊站(例 `https://mifaso1.zeabur.app`)公開的 `/uploads` 串流路由把 DB 參照到的
-  圖檔抓回本機 Volume。`?dry=1` 統計、`?auto=1` 自動分批。**不碰 DB,只補檔案。**
-  (`localize-images` 在圖片已在地化成本地路徑後失效時用這支。)
-- `GET /api/optimize-images` — 把本機 `/uploads` 的 jpg/png 縮 ≤1600px + 轉 webp(品質 80),
-  並改寫 DB(featuredImage/內文/媒體庫)指向新 `.webp`。`?dry=1` 統計、`?auto=1` 自動分批。
-  **循序處理不 OOM**(這是 `images.unoptimized:true` 之外的補強);原 jpg/png 保留可回退。
+功能或 bugfix 應先加入能失敗的測試，再實作修正。完成前執行完整測試、TypeScript、隔離建置與瀏覽器驗證。
 
-## 內容/資料
+## UI 修改規則
 
-88 篇文章由 `scripts/seed-production.ts` 從 `scripts/seed-data/*.json` 匯入(原始來自
-mifaso.co WordPress)。圖片已在地化到持久 Volume,並已縮 ≤1600px + 轉 webp(見上方
-`optimize-images`);**新上傳的圖片 `app/api/upload/route.ts` 會自動縮+轉 webp**(jpeg/png)。
-登入帳號見 `scripts/seed-data/users.json`(`admin` = M編 ADMIN、`jason` = AUTHOR,密碼為原站匯出值)。
+- 遵循 `STYLE.md`。
+- 使用現有 Tailwind、Lucide 和 Sonner，不新增第二套設計系統。
+- 不手畫已有對應的 icon。
+- 不使用原生 `alert`、`confirm`、`prompt`。
+- 不建立卡片內卡片。
+- 修改後檢查桌機與 390 x 844 手機 viewport、水平溢出、CSS 回應和 console error。
 
-## 效能(列表查詢勿退化)
+## Git 與部署
 
-前台格狀/列表(首頁、分類、搜尋、相關文章)與後台文章列表/總覽**一律用
-`lib/article-select.ts` 的 `articleCardSelect`**,不要用 `include` —— `include` 會把整篇
-`content`(HTML,單篇數十 KB)+ tags 都撈回來,卡片用不到,會明顯拖慢頁面。新增列表查詢請沿用此 select。
-
-詳見 `DEPLOY.md`(部署步驟)與 `memory.md`(當前狀態與待辦)。
+- 目標遠端：`designer` -> `jason121380/designer_web`。
+- 預設分支：`main`。
+- 不要推送到舊專案的 `origin`，除非使用者明確要求。
+- 提交前執行 `git diff --check` 與完整驗證。
+- 不提交 `.env*`、資料庫備份、上傳素材、`.next*` 或 TypeScript build info。
+- 正式部署前確認 Zeabur 環境變數、資料庫 migration、R2 CORS/公開網域與 Stream token。

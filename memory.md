@@ -1,75 +1,98 @@
 # memory.md
 
-跨 session 的工作記憶:目前狀態與待辦。新 session 先讀這份 + `CLAUDE.md`。
+Designer Web 的跨 session 專案記錄。最後更新：2026-07-16。新工作階段先讀 `README.md`、`STYLE.md`、`CLAUDE.md`，再以目前程式碼與 Git 狀態校正本檔。
 
-## 目前狀態（2026-06，搬伺服器後）
+## 目前狀態
 
-- 已**搬到新的 Zeabur 服務**(新 = `mifaso`,舊 = `mifaso1.zeabur.app` 暫時保留當備份)。
-  新服務的 Volume(id `data`)已掛在 `/src/public/uploads`(正確);`zeabur.yaml` 也已修正
-  (原本誤掛 `/app/...`)。
-- 資料庫:Zeabur PostgreSQL,88 篇文章 + 分類 + 標籤;`page_views` 流量表。
-- 圖片:搬家後新 Volume 是空的 → 用 `/api/copy-uploads` 從舊站 `mifaso1` 救回 **405 張**;
-  再用 `/api/optimize-images` 全部縮 1600px + 轉 webp(**403 張**),DB 已改指向新 `.webp`,
-  原 jpg/png 仍保留在 Volume 可回退。由 `app/uploads/[...path]/route.ts` 串流服務。
-- 新上傳的圖片會在 `/api/upload` 自動縮 1600px + 轉 webp(jpeg/png;gif/avif/webp 原樣)。
-- 後台 NextAuth 可登入;`NEXTAUTH_URL`/`SITE_URL` = `https://mifaso.co`。
-- 本輪(搬家修復 + 全站效能)所有修正**已合併進 `main`**並部署。`MAINT_TOOLS` 已移除。
+- GitHub 目標倉庫：`jason121380/designer_web`。
+- 分支：`main`。
+- 最近完成的頁面管理重整 commit：`f80c45b`。
+- 本機前台：`http://localhost:3000/`。
+- 本機後台：`http://localhost:3000/admin/page-management`。
+- 前台目前是 KIMEKO HAIR 示範內容；正式素材與文字應由後台更新。
+- 後台側欄只剩「頁面管理」。
+- 桌機 1280 x 720 與手機 390 x 844 已驗證無水平溢出。
+- 前後台瀏覽器 console 已驗證無 error。
+- 核心測試、TypeScript 與 `npm run build:verify` 已通過。
 
-## 進行中 / 待辦
+以上是 2026-07-16 本機與該 commit 的狀態，不代表 Zeabur 最新部署一定已更新；部署狀態需到 Zeabur 或正式網域重新確認。
 
-1. **(可選)Cloudflare 快取**:加 Cache Rule `URI Path starts with /uploads/` → Eligible for cache、
-   Edge TTL Respect origin(圖片回應已帶 `immutable max-age=30天`)。讓 `/uploads` 暖起來後全球都快。
-2. **舊站下線**:圖片確認 OK 後 `mifaso1` 可下線;建議先留幾天當備份再砍。
-3. **(可選)清原圖**:webp 轉好後 Volume 上的原 jpg/png 仍佔空間,確定都正常後可清掉省空間。
-4. **rotate DB 密碼**:Zeabur PostgreSQL 密碼曾外流。步驟見 `DEPLOY.md`「資料庫密碼輪替」。
-5. **(選用)Search Console**:設 `GOOGLE_SITE_VERIFICATION` 後重新部署,送出 sitemap。
-6. **已知無解破圖**:`/uploads/2024/11/首頁精選圖-2.jpg`、`/uploads/2025/03/截圖-2025-03-06-下午3.04.52.jpg`
-   舊站本來就 404(搬家前就壞);另 1 張內文圖 hotlink 自 `www.mlgroup.io`(已刪)。皆可接受。
+## 已確定架構
 
-## 已完成的關鍵修正（歷史,避免重蹈覆轍）
+### Next.js 服務
 
-- 首頁 500 根因:缺 `migration_lock.toml` + `binaryTargets` 為 musl + Zeabur 沒設
-  `DATABASE_URL`(`Digest 2606544078` 即此)。皆已修。
-- OOM 502:`images.unoptimized: true`。
-- 後台側欄消失:NextAuth 需 `trustHost: true` + 一致網域登入。
-- 圖片 404 根因:cwd=`/src` 非 `/app`、Volume 掛錯路徑、且 Next 不服務 runtime
-  寫入的 public 檔 → 新增 `app/uploads/[...path]/route.ts` 串流路由 + Volume
-  改掛 `/src/public/uploads`。
-- 編輯器:新增 `components/admin/tiptap-nodes.ts`(InstagramEmbed / TableOfContents
-  正規節點)、`components/public/InstagramEmbed.tsx`(載入後 + 換頁重跑 IG embed)、
-  `lib/article-html.ts`(前台自動產生目錄 + 標題錨點)。上線後需於正式站抽驗。
+同一個 Next.js 服務同時提供：
 
-### 本輪（資安 / debug / SEO / 流量分析 / UI）
+- 一頁式公開前台。
+- 登入頁與頁面管理後台。
+- Auth、頁面設定、圖片與 Cloudflare Stream 輔助 API。
 
-- **資安**:`sanitize-html` 消毒文章(防 stored-XSS)、`/api/ai` 加登入驗證、
-  `next.config.ts` 安全標頭、維運路由改 `MAINT_TOOLS` gate、登入 `callbackUrl`
-  防 open-redirect、JSON-LD 跳脫、`metadataBase` https。移除未用 `@anthropic-ai/sdk`。
-- **debug**:登入後側欄需重整才出現 → 改全頁導向修正;自訂響應式 404;前台 `.prose`
-  手機 RWD(表格/圖/WP 對齊/目錄);media PATCH 限 ADMIN/EDITOR。
-- **SEO**:`lib/seo.ts`(JSON-LD/canonical)、Org+WebSite+Article+Breadcrumb、
-  RSS `/feed.xml`、sitemap/robots 用 https `SITE_URL`、分類標題重複後綴 bug 修正。
-- **流量分析**:`PageView` + migration `20260517000000_page_views` + `/api/track`
-  + `Tracker` + `/admin/analytics` + 側欄。
-- **UI**:header 搜尋移右、去上方細條、配色對齊 footer(rose-brand)、logo 全黑、
-  黑 favicon/app icon、手機 hero 4:5、後台主題色、側欄 active 白 icon、媒體庫
-  載入更多、精選排序最前、後台日期改 publishedAt、footer 移除「編輯後台」。
+目前不需要拆成獨立前端與後端服務。資料庫與媒體儲存維持外部服務。
 
-### 2026-06（本次:搬伺服器修復 + 全站效能）
+### PostgreSQL
 
-- **搬家破圖根因**:新 Zeabur 服務 = 全新空 Volume,舊站圖檔沒跟過來(DB 路徑已在地化成
-  本地 `/uploads/...`,`localize-images` 無外部 URL 可抓 → 救不了)。新增 `/api/copy-uploads`
-  從舊站 `mifaso1` 公開的 `/uploads` 串流路由把 405 張抓回新 Volume。
-- **首載慢根因**:`images.unoptimized:true`(小機器 sharp 即時壓會 OOM)→ 吐 2560px 原圖。
-  新增 `/api/optimize-images`(離線批次、循序、不 OOM)把舊圖縮 1600 + 轉 webp(403 張);
-  `/api/upload` 也改成上傳即縮+轉 webp。
-- **後台/前台慢根因**:列表/格狀查詢用 `include` 連整篇 `content`(數十 KB)+ tags 都撈。
-  新增 `lib/article-select.ts` 共用精簡 select,套用到 `/api/articles`、首頁、分類、搜尋、
-  相關文章、後台總覽。分析頁 14 條 COUNT 併成 1 條 GROUP BY;`/api/admin/stats` 目錄掃描加 60s 快取。
-- `zeabur.yaml` Volume 由誤掛 `/app/public/uploads` 改回 `/src/public/uploads`。
+- 使用 Zeabur PostgreSQL，連線由 `DATABASE_URL` 提供。
+- 頁面設定存於 `site_settings`。
+- 固定 key：`designer_web_content`。
+- value：完整 `DesignerWebContent` JSON。
+- `lib/designer-web-content.ts` 負責 Zod 驗證、清理、預設值與舊資料相容。
+- 若 DB 不可用或 JSON 損壞，前台 fallback 到 KIMEKO 示範內容。
 
-## 帳號
+資料內容包括：
 
-- 正式:`admin`(M編,ADMIN)、`jason`(AUTHOR)— 密碼為原站匯出值。
-- demo seed:`admin@mifaso.com` / `admin123456`(僅 `npm run db:seed:demo`)。
+1. 品牌與導覽。
+2. 首屏形象。
+3. 活動 DM。
+4. 接髮介紹。
+5. 其他服務。
+6. 作品影片。
+7. 分期資訊。
+8. 價目表。
+9. 環境介紹。
+10. 聯絡資訊。
 
-> 不要把任何密碼、`AUTH_SECRET`、`DATABASE_URL` 值寫進此檔或任何 commit。
+### Cloudflare
+
+- 圖片目標儲存：Cloudflare R2。
+- 影片目標儲存：Cloudflare Stream。
+- R2 未完整設定時，`/api/upload` 會 fallback 到 `public/uploads`。
+- 目前後台圖片可直接上傳；影片欄位目前使用播放 URL，尚未接上完整的 direct-upload UI。
+- 不在此檔記錄任何 Cloudflare ID、token 或 secret。
+
+## 已完成決策
+
+- 新專案不顯示舊品牌文字與 Logo。
+- 前台是一頁式服務網站，不是文章首頁。
+- 後台不提供多模組 CMS，只提供頁面管理。
+- 可選區塊沒有內容時，前台與導覽都自動隱藏。
+- 圖片從區塊內上傳，不顯示獨立媒體庫。
+- 舊 `/admin/dashboard`、`/admin/designer-web`、文章、分類、標籤、媒體、分析、用戶與工具路徑由 middleware 導回 `/admin/page-management`。
+- 正式建置驗證使用 `.next-verify`，避免破壞運行中的 `.next` 開發樣式。
+- `tsconfig.tsbuildinfo` 已停止追蹤並加入 `.gitignore`。
+
+## 相容性與技術債
+
+- Prisma schema、部分公開文章頁與舊 API 仍保留原 CMS 結構，目的是避免一次刪除造成資料或 migration 風險。
+- 這些舊路由不應出現在新後台導覽，也不應成為新增功能的依賴。
+- `lib/auth.ts` 仍保留舊管理員 email alias，讓現有帳號可用 `admin` 登入；這是內部相容，不是品牌顯示。
+- `tailwind.config.ts` 與 `app/globals.css` 仍有舊文章編輯器樣式。未確認完全無依賴前不要大規模刪除。
+- 首頁 metadata 目前仍是 KIMEKO 示範文案；正式品牌上線時應改為可管理 metadata 或同步成正式資料。
+- Cloudflare Stream direct-upload API 已存在，但頁面管理 UI 尚未串接。
+- `.env.example` 仍含部分歷史選用變數與示範名稱，後續可單獨清理並加入環境變數驗證。
+
+## 下一步建議
+
+1. 在 Zeabur 設定 R2 與 Stream 環境變數，確認圖片實際回傳 Cloudflare 公開 URL。
+2. 從頁面管理上傳首屏、服務、DM 與環境素材，替換空白示範素材。
+3. 串接 Cloudflare Stream direct-upload UI，避免手動貼影片 URL。
+4. 將 SEO title/description、社群分享圖納入頁面設定。
+5. 在確認不再需要舊 CMS 後，分階段移除舊 admin 頁面、文章 API、模型與套件；每階段都要有 migration/rollback 計畫。
+6. 部署到 Zeabur 後重跑登入、儲存、R2 上傳、前台更新與手機版 smoke test。
+
+## 工作守則
+
+- 不把資料庫 URL、密碼、Auth secret、R2 secret 或 Stream token 寫進 repo。
+- 修改內容合約時同步更新 default、normalize、API、表單、前台與測試。
+- 後台新增功能前先確認是否違反「只要頁面管理」。
+- 開發伺服器運行時使用 `npm run build:verify`，不要讓正式建置覆寫 `.next`。
+- 推送前執行完整測試、`npx tsc --noEmit --incremental false`、`npm run build:verify` 與 `git diff --check`。

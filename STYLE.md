@@ -1,177 +1,153 @@
-# STYLE.md — MIFASO 迷髮所 設計規範（前台 / 後台）
+# STYLE.md
 
-本檔定義整站視覺與元件規範。**新增 / 修改 UI 前先讀本檔,並沿用既有 token 與樣式類別,不要自創黑底按鈕、`rounded-sm` 卡片或 `font-serif text-3xl` 標題。**
+Designer Web 前台與後台的現行設計規範。修改 UI 前先比對實際元件、`tailwind.config.ts` 與 `app/globals.css`；本檔描述目前應維持的視覺語言，不再沿用舊內容媒體網站版型。
 
-技術：Tailwind CSS 3 + `@tailwindcss/typography`。token 在 `tailwind.config.ts`,全站基底與元件類別在 `app/globals.css`。
+## 設計方向
 
----
+- 前台：服務品牌的一頁式展示，安靜、清楚、以內容與素材為主。
+- 後台：工作導向的單頁內容編輯器，資訊密度適中，優先考慮掃描與重複操作。
+- 品牌名稱使用純文字，不依賴舊 Logo。
+- 桌機與手機不可產生水平溢出、文字重疊或固定尺寸破版。
+- 不增加裝飾性漸層、光球、巢狀卡片或行銷式功能說明。
 
-## 1. 設計 Token
+## Token
 
-### 1.1 色彩（`tailwind.config.ts`）
+### 動態前台品牌色
+
+前台由 PostgreSQL 的 `brand.themeColor` 寫入 CSS 變數 `--brand`。目前示範值為 `#d9bf77`，用於：
+
+- Footer 背景。
+- 分期區標題背景。
+- 聯絡資訊 icon。
+- 英文區塊副標題。
+
+新增前台品牌色用途時使用 `var(--brand)`，不要把示範色硬編碼到元件。
+
+### 固定介面色
 
 | Token | 值 | 用途 |
 |---|---|---|
-| `rose-brand` | `#C4837A` | **主題色**。前台 Header/Footer 底色、後台主要按鈕、連結、active、focus ring 基礎、頭像 |
-| `rose-light` | `#EDD5D2` | focus ring（`focus:ring-rose-light`）、淡底 |
-| `rose-dark` | `#A3635B` | 主要按鈕 hover（`hover:bg-rose-dark`） |
-| `gold` `DEFAULT/light/dark` | `#C9A84C` / `#E8D5A3` / `#9A7A2E` | 少量點綴（保留,目前主視覺以 rose 為主） |
-| 中性色 | Tailwind `gray-*`、`black`、`white` | 文字 `text-gray-900/700/600/500/400`、邊線 `border-gray-100/200`、底 `bg-gray-50/100` |
-| 語意色 | `emerald-*`（成功/已發布）、`amber-*`（草稿）、`red-*`（刪除/危險）、`blue-*`（預覽） | 狀態與動作 |
+| `rose-brand` | `#C4837A` | 後台主要按鈕、選單 active、focus |
+| `rose-light` | `#EDD5D2` | 後台 focus ring |
+| `rose-dark` | `#A3635B` | 後台主要按鈕 hover |
+| `--cream-1` | `#fdf7f0` | 作品與分期區背景 |
+| `--cream-2` | `#fff8e8` | DM、價目與聯絡區背景 |
+| `--cream-3` | `#f9f7f3` | 服務與環境區背景 |
+| `neutral-*` / `gray-*` | Tailwind 預設 | 文字、邊框、工作介面底色 |
 
-> 主題色一律用 `rose-brand`。**禁止**新的 `bg-black` 按鈕(品牌色才是主要動作色)。
+## 字體
 
-### 1.2 字體
+- 全站使用 `Noto Sans TC`，由 `app/layout.tsx` 的 `next/font` 注入 `--font-sans`。
+- `body` 使用 `font-sans`，字距維持預設值。
+- 區塊內標題保持緊湊：前台 H2 為 `text-2xl md:text-3xl`，後台頁標題為 `text-2xl`。
+- 不使用隨 viewport 寬度連續縮放的字級。
+- 英文小標可使用 `.subheading`，但不要在按鈕或表單標籤全面套用大字距。
 
-- `--font-sans`：由 `next/font` 注入的 **Noto Sans TC**（300/400/500/600/700）。`body` 預設 `font-sans`。
-- `--font-serif`：`"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif`(`app/globals.css :root`)。
-- `font-serif` 用於**前台**標題（文章 H1、卡片標題、區塊標題）營造雜誌感；`@tailwindcss/typography` 已設定 `.prose` 的 `h1/h2/h3` 用 serif。
-- **後台**一律 `font-sans`（不要用 `font-serif`）。
+## 前台
 
-### 1.3 全站基底（`@layer base`）
+### 頁面順序
 
-- `html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased }`
-- `body { @apply font-sans text-black bg-white }`
-- `::selection { @apply bg-rose-brand text-white }`
-- 捲軸：寬 `4px`,track `gray-100`,thumb `gray-400` → hover `rose-brand`。
-- 動畫：`animate-fade-in`(0.6s)、`animate-slide-up`(0.5s)。
+1. Sticky Header
+2. 首屏形象 `#top`
+3. 活動 DM `#dm`，沒有素材時隱藏
+4. 接髮介紹 `#services`
+5. 其他服務 `#other-services`
+6. 作品影片 `#hair-video`，沒有素材時隱藏
+7. 分期資訊 `#pay`
+8. 價目表 `#pricing`
+9. 環境介紹 `#ev`，沒有素材時隱藏
+10. 聯絡資訊 `#contact`
+11. Footer
 
----
+導覽連結必須跟隨實際可見區塊；可選區塊沒有資料時，不顯示對應導覽。
 
-## 2. 前台（Public）
+### Header
 
-容器統一：`max-w-screen-xl mx-auto px-6`(hero 區手機可全寬,見下)。
+- `sticky top-0 z-50`，高 `h-14`。
+- 深色半透明背景 `bg-neutral-900/95`，搭配輕微 backdrop blur。
+- 左側是資料庫中的品牌名稱；桌機右側顯示錨點導覽。
+- 手機目前只顯示品牌名稱，不把桌機選單硬塞進小寬度。
 
-### 2.1 Header（`components/public/Header.tsx`）
+### 首屏
 
-- `fixed top-0 inset-x-0 z-50`,**底色 = 主題色**：
-  - 未捲動：`bg-rose-brand/95 backdrop-blur-sm`
-  - 已捲動：`bg-rose-brand border-b border-white/20 shadow-sm`
-- Logo：`/logo.png` + `brightness-0 invert`(白色 logo);**不是連結**(後台版亦然,純展示)。
-- 導覽連結：`text-xs uppercase tracking-widest text-white/80 hover:text-white font-medium`。
-- 搜尋：右側**只放放大鏡 icon**(`text-white/80 hover:text-white`),連到 `/search`。
-- 手機:左漢堡(三條 `bg-white` 線)、中 logo、右搜尋;選單為整頁 `bg-rose-brand`,連結 `text-white/90 hover:text-white border-b border-white/20`。
-- Header 下方 spacer：`h-[60px] md:h-[88px]`(改 Header 高度時同步調整)。
+- 深色背景，素材最大寬度 `max-w-6xl`。
+- 圖片或影片固定 `aspect-video`、`object-cover`。
+- 沒有素材時直接顯示主標題，不保留空白媒體框。
+- 主標題支援換行，使用 `whitespace-pre-line`。
 
-### 2.2 Footer（`components/public/Footer.tsx`）
+### 內容區塊
 
-`bg-rose-brand text-white`;白 logo(`brightness-0 invert`);標題 `text-white/50 uppercase tracking-widest`;連結 `text-white/80 hover:text-white`;分隔線 `border-white/20`。**不放後台連結**。
+- 外層垂直間距 `py-14 md:py-20`。
+- 內容容器依區塊使用 `max-w-3xl`、`max-w-5xl` 或 `max-w-6xl`，水平 padding 為 `px-4`。
+- 卡片使用白底、輕量陰影與清楚分隔；公開頁不使用大型圓角。
+- 服務圖片使用穩定比例或最小高度，沒有圖片時文字欄自然吃滿。
+- 圖片 `alt` 優先使用後台圖片說明，其次使用服務名稱或合理 fallback。
+- 影片作品維持 `aspect-[9/16]`，原生 controls、`playsInline`、`preload="metadata"`。
 
-### 2.3 ArticleCard（`components/public/ArticleCard.tsx`）三種變體
+### 響應式
 
-- `featured`(首頁 hero)：`bg-black` + 圖 `opacity-80` + 底部漸層 `bg-gradient-to-t from-black/85 via-black/30 to-transparent`;比例 **手機 `aspect-[4/5]` → `sm:16/10` → `md:16/9`**;手機近全寬(外層 `<section className="max-w-screen-xl mx-auto md:px-6">`,手機不留左右 padding);標題 `font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white`;`priority` + `sizes`。
-- `default`：圖 `aspect-[4/3]`、`group-hover:scale-105`;標題 `font-serif text-xl line-clamp-2`;摘要 `text-gray-500 text-sm line-clamp-2`;meta `text-xs text-gray-400`。
-- `horizontal`(側欄)：縮圖 `w-32 h-24`,標題 `font-serif text-base line-clamp-2`。
+- 主要 breakpoint 沿用 Tailwind `sm`、`md`、`lg`。
+- 390px 寬度必須滿足 `scrollWidth === clientWidth`。
+- Grid 在手機為單欄，服務、價目與聯絡內容只在足夠寬度後展開多欄。
+- 長主標題與 URL 欄位不能撐破容器。
 
-### 2.4 元件類別（`@layer components`）
+## 後台
 
-| 類別 | 用途 |
-|---|---|
-| `.category-badge` | 分類標籤：`inline-block text-xs uppercase tracking-widest text-rose-brand border border-rose-brand px-3 py-1 rounded` |
-| `.btn-primary` | `bg-black text-white px-8 py-3 text-sm uppercase tracking-widest rounded-lg hover:bg-rose-brand`（前台 CTA;後台勿用） |
-| `.btn-outline` | 邊框按鈕,hover 反白成 rose-brand |
-| `.luxury-divider` | 左右細線中夾標題的分隔 |
-| `.gold-line` | `w-12 h-0.5 bg-rose-brand mx-auto` 裝飾短線 |
-| `.article-grid` | `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8` |
+### 外殼
 
-### 2.5 文章內文 `.prose`（Tailwind typography + RWD 覆寫）
+- `AdminShell` 使用 `bg-gray-50`。
+- Sidebar 固定寬 `w-64`，桌機可收合，手機預設移出畫面。
+- Header 高 `h-14`、白底、底線，sticky 於頂部。
+- 內容區 `p-4 md:p-8`，主要表單最大寬 `max-w-5xl`。
 
-- 基底由 typography plugin 提供;`h1-h3` 用 serif;連結 rose-brand。
-- 圖片/figure/video：`max-width:100% !important; height:auto`。
-- **Instagram**：`blockquote.instagram-media`、`iframe.instagram-media` **只設 `max-width:100%`,不可設 `height`/`aspect-ratio`**(高度交給 `embed.js`,否則貼文被裁切)。內文中的 `<script>` 一律被 `lib/article-html.ts` 的 sanitize 移除,IG 由 `components/public/InstagramEmbed.tsx` 載入 embed.js 處理。
-- 影片 iframe(`iframe:not(.instagram-media)`,YouTube/Vimeo)：`width:100%; aspect-ratio:16/9`。
-- WordPress 對齊類 `.alignleft/.alignright/.aligncenter`：手機中和 `float:none; margin:auto; max-width:100%`。
-- 寬表格：`display:block; overflow-x:auto`(含 WP 舊版表格目錄)。
-- 標題錨點:`.prose :is(h1,h2,h3,h4)[id] { scroll-margin-top: 6rem }`(避免被固定 Header 蓋住)。
-- `.prose { overflow-wrap: anywhere }` 防長字串溢出。
+### 導覽
 
-### 2.6 文章目錄 `.article-toc`
+- 側欄只允許一個主要入口：「頁面管理」。
+- Active 使用 `bg-rose-brand text-white`。
+- 品牌顯示為 `Designer Web` 純文字，旁邊只保留預覽前台與手機關閉 icon。
+- 不重新加入總覽、文章、分類、標籤、媒體庫、流量分析、用戶或工程工具。
 
-緊湊、**透明底**(非灰底)、**無逐列分隔線**：外框 `1px #ececec` + `rounded-lg` + `padding .75rem 1rem`;標題 `font-weight:700; font-size:.95rem`;連結 `display:block; padding:.28rem 0; font-size:.9rem; color:#C4837A`,`toc-l3/l4` 階層縮排。可手動(編輯器⚓設標題 id + 連結 `#id`)或自動(插入「目錄」區塊,`lib/article-html.ts` 依 H2-H4 產生)。
+### 頁面管理
 
-### 2.7 404（`app/not-found.tsx`）
+- 區塊順序必須與前台一致。
+- 使用原生 `<details>` 折疊區塊；第一個區塊預設展開。
+- 整體是一個連續工作表面，以細邊線分隔，不在卡片內再放卡片。
+- 頁首保留「預覽前台」與「儲存設定」兩個明確命令。
+- 重複資料提供 Lucide `Plus` / `Trash2`；儲存與預覽使用 `Save` / `ExternalLink`。
+- 刪除是立即從尚未儲存的表單狀態移除，按「儲存設定」後才寫入資料庫。
 
-置中、響應式;`text-rose-brand` 標記 + serif 標題 + 兩顆按鈕(深色「回首頁」/ 邊框「搜尋文章」)。
-
----
-
-## 3. 後台（Admin）
-
-外殼：`AdminShell` → `Sidebar` + `AdminHeader` + `<main className="flex-1 p-4 md:p-8">`,整體 `bg-gray-50`。**全部 `font-sans`**。
-
-### 3.1 Sidebar（`components/admin/Sidebar.tsx`）
-
-- `fixed left-0 top-0 h-dvh w-64 bg-white border-r border-gray-100`;桌機可收合(漢堡 toggle,localStorage 記憶),收合時 `md:-translate-x-full` + 內容區 `md:ml-0`。
-- Logo 區:黑 logo(`brightness-0`,白底),**非連結**;旁有 ExternalLink(開前台)與手機關閉 X。
-- 導覽項 active：`bg-rose-brand text-white shadow-sm`,icon `text-white`,尾端 `ChevronRight text-white/70`;未選 `text-gray-600 hover:bg-gray-50`,icon `text-gray-400`。
-- `adminOnly` 項目(如「工程工具」)僅 `userRole === "ADMIN"` 顯示。
-- 底部使用者區:**無灰底**;頭像 `bg-rose-brand` 圓、姓名/角色、**右側登出 icon 按鈕**(`LogOut`,hover 紅);`flex-shrink-0` + `pb-[calc(1rem+env(safe-area-inset-bottom))]`(避免被手機瀏覽器列/home indicator 蓋住)。
-
-### 3.2 AdminHeader（`components/admin/AdminHeader.tsx`）
-
-`h-14 bg-white border-b border-gray-100 sticky top-0 z-20`;左側麵包屑(`breadcrumbMap` 中文化 slug,新增頁面要補對應);手機漢堡開 Sidebar、桌機漢堡收合 Sidebar。**右上不放「新增」按鈕與頭像**(已移除)。
-
-### 3.3 後台標準元件（所有頁面務必一致）
+### 表單控制
 
 ```txt
-頁標題      h1  text-2xl font-bold text-gray-900   （副標 p text-sm text-gray-400 mt-1）
-卡片        div bg-white rounded-xl border border-gray-100  （內距 p-5 或 p-6）
-主要按鈕    bg-rose-brand text-white px-5 py-2.5 text-sm font-medium rounded-lg
-            hover:bg-rose-dark transition-colors shadow-sm   （前置 icon 用 <span className="text-base leading-none">＋</span>）
-次要/邊框   border border-gray-200 text-gray-500 px-... py-2.5 text-sm rounded-lg
-            hover:border-gray-400 hover:text-gray-700 transition-colors
-危險動作    bg-red-600 text-white rounded-lg hover:bg-red-700   或  border border-red-100 text-red-500 hover:bg-red-50
-輸入/下拉   w-full border border-gray-200 focus:border-rose-brand
-            focus:ring-2 focus:ring-rose-light outline-none px-3 py-2.5 text-sm rounded-lg transition-all
-分段/Tab    容器 bg-gray-100 p-1 rounded-md；active 子項 bg-white shadow-sm font-medium，未選 text-gray-500
-徽章        inline-flex px-2.5 py-0.5 text-xs rounded-full font-medium
-            已發布 emerald-50/700・草稿 amber-50/700・封存 gray-100/500
-頭像        w-8~9 h-8~9 rounded-full bg-rose-brand text-white text-xs font-semibold
-表格        table w-full；thead bg-gray-50 text-xs text-gray-500 uppercase tracking-wider；
-            tbody divide-y divide-gray-50；次要欄 hidden md:/lg:/xl:table-cell；
-            非標題欄 whitespace-nowrap；標題欄吃滿(w-full)、其餘固定寬(w-28~36)
-分頁        方塊按鈕 rounded-lg；當前頁 bg-rose-brand text-white，其餘 border border-gray-200
-列內動作    手機可見、桌機 hover 顯示：opacity-100 md:opacity-0 md:group-hover:opacity-100
-載入中      div w-7~8 h-7~8 border-2 border-rose-brand border-t-transparent rounded-full animate-spin
-空狀態      置中 lucide icon(text-gray-200) + text-gray-400 文案
+輸入框   border-gray-200 bg-white px-3 py-2.5 text-sm
+Focus    border-rose-brand ring-2 ring-rose-light
+文字區   min-h-24 resize-y
+主按鈕   bg-rose-brand text-white px-5 py-2.5 text-sm font-semibold
+次按鈕   border-gray-200 bg-white text-gray-600
+刪除     text-red-500，搭配 Trash2
+區塊標題 text-base font-semibold text-gray-900
+說明     text-sm text-gray-400
 ```
 
-### 3.4 自建彈窗（Modal）— **禁用原生 `window.prompt/alert/confirm`**
+- 使用適合資料型態的控制：主色使用 color input、媒體類型使用 select。
+- 圖片從區塊內直接點擊或拖放上傳，不顯示獨立媒體庫選取器。
+- 影片目前填入 Cloudflare Stream 播放 URL，不假裝已有整合完成的影片上傳 UI。
+- 成功與錯誤狀態使用 Sonner toast，不使用 `window.alert`。
 
-```txt
-遮罩  fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4
-      （onMouseDown：點遮罩本身才關閉）
-卡片  bg-white rounded-lg shadow-xl w-full max-w-sm/md p-5
-標題  h3 text-base font-semibold text-gray-900 mb-4
-動作  右下：取消(text-gray-500 hover:text-gray-800) + 主要(rose-brand) / 危險(red-600)
-```
+## 圖示與可用性
 
-範例：編輯器超連結彈窗分頁「外部連結 / 段落錨點(下拉選文內標題,缺 id 自動補)」;`/admin/tools` 的「確認刪除」二次確認;圖片/IG 插入。
+- 優先使用現有 `lucide-react`，不要手畫 SVG。
+- 純 icon 按鈕必須有 `aria-label` 或 `title`。
+- 可點擊區域要有 hover/focus 狀態。
+- 所有圖片、影片、表單與按鈕都要在桌機和手機檢查。
 
-### 3.5 編輯器（`components/admin/RichTextEditor.tsx`）
+## UI 驗證
 
-外框 `border border-gray-200 rounded-sm`;工具列 `bg-gray-50 p-2 flex flex-wrap gap-1.5`,`ToolbarButton` active 為 `bg-black text-white`(編輯器內部既有風格,維持)。⚓ 設標題錨點、🔗 連結(外部/錨點)、🖼 圖片、IG、目錄、— 分隔線,皆走自建彈窗。
+任何前後台視覺修改完成後至少驗證：
 
-### 3.6 圖示與 PWA
-
-- 前台 favicon/app icon(`app/icon.png`、`app/apple-icon.png`)＋ `app/manifest.ts`：**主題色底 + 白 logo**,`start_url:"/"`。
-- 後台(`/admin/*`)：`app/admin/manifest.webmanifest`(`start_url`/`scope` = `/admin`,standalone)＋ `public/admin-icon.png`/`admin-apple-icon.png`：**白底 + 黑 logo**;後台 `robots noindex`。
-
----
-
-## 4. 約定（Do / Don't）
-
-**Do**
-- 主要動作一律 `bg-rose-brand` → hover `bg-rose-dark`,`rounded-lg`。
-- 卡片 `rounded-xl border border-gray-100`;控制項 `rounded-lg`;徽章 `rounded-full`。
-- 後台頁標題 `text-2xl font-bold text-gray-900`。
-- 行動優先;全高側欄用 `h-dvh` + safe-area;表格次要欄用 `hidden md:/lg:/xl:table-cell`。
-- 內容改動後若前台沒更新 → 用 `/admin/tools` 的「清除前台快取」(文章頁是 ISR `revalidate=300`;Cloudflare 另需 purge)。
-
-**Don't**
-- 不要 `bg-black` 主要按鈕、`rounded-sm` 卡片、`font-serif text-3xl` 後台標題、`uppercase tracking-widest` 後台按鈕。
-- 不要在後台用 `font-serif`;不要用原生 `prompt/alert/confirm`。
-- 不要對 Instagram iframe 設 `height`/`aspect-ratio`;不要在文章內文塞 `<script>`(會被消毒)。
-- 不要把後台連結放進前台 Footer;不要讓後台 logo 變成超連結。
-
-> 視覺改動請同步更新本檔與 `CLAUDE.md`,保持後台各頁一致。
+1. `http://localhost:3000/` 桌機版。
+2. `http://localhost:3000/admin/page-management` 桌機版。
+3. 390 x 844 手機 viewport 的前後台。
+4. CSS 請求回應 200。
+5. 瀏覽器 console 無 error。
+6. 前台錨點只指向存在的區塊。
