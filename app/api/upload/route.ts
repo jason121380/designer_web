@@ -8,7 +8,17 @@ import { rateLimit, tooMany } from "@/lib/rate-limit";
 import { isR2Configured, uploadToR2 } from "@/lib/cloudflare-media";
 
 const UPLOAD_DIR = join(process.cwd(), "public", "uploads");
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
+// MIME → 副檔名：副檔名一律由檔案的實際 MIME 推導，不信任使用者檔名。
+// （舊寫法用 file.name 推副檔名，無副檔名或怪異檔名會讓本機儲存的檔案
+//  透過 /uploads 服務時 Content-Type 變成 octet-stream 而破圖。）
+const MIME_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/avif": "avif",
+};
+const ALLOWED_TYPES = Object.keys(MIME_EXT);
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_WIDTH = 1600;
 const QUALITY = 80;
@@ -36,8 +46,8 @@ export async function POST(req: NextRequest) {
   // 與 Buffer.from(arrayBuffer) 的 Buffer<ArrayBuffer> 在新版 @types/node 不相容，
   // 統一成兩者都可指派的 Uint8Array（writeFile / .length 皆可吃）。
   let buffer: Uint8Array = original;
-  let ext = (file.name.split(".").pop() ?? "jpg").toLowerCase();
   let mimeType = file.type;
+  let ext = MIME_EXT[file.type] ?? "bin";
   if (file.type === "image/jpeg" || file.type === "image/png") {
     try {
       buffer = await sharp(original)

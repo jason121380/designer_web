@@ -5,7 +5,6 @@
 
 type Bucket = { count: number; reset: number };
 const store = new Map<string, Bucket>();
-const lastHit = new Map<string, number>();
 const MAX_KEYS = 5000;
 
 function prune(now: number) {
@@ -40,31 +39,6 @@ export function rateLimit(
     remaining,
     retryAfter: Math.max(1, Math.ceil((b.reset - now) / 1000)),
   };
-}
-
-/** 同 key 在 windowMs 內第二次以上呼叫回 true(用來做「去抖」)。 */
-export function debounce(key: string, windowMs: number): boolean {
-  const now = Date.now();
-  const t = lastHit.get(key) ?? 0;
-  if (now - t < windowMs) return true;
-  lastHit.set(key, now);
-  if (lastHit.size > MAX_KEYS) {
-    const it = lastHit.keys();
-    for (let i = 0; i < 500; i++) {
-      const r = it.next();
-      if (r.done || !r.value) break;
-      lastHit.delete(r.value);
-    }
-  }
-  return false;
-}
-
-export function getClientIp(req: Request): string {
-  const cf = req.headers.get("cf-connecting-ip");
-  if (cf) return cf;
-  const xff = req.headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
-  return req.headers.get("x-real-ip") ?? "anon";
 }
 
 export function tooMany(retryAfter: number, msg = "Too many requests") {
