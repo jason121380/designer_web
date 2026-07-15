@@ -20,7 +20,7 @@ Designer Web 是設計師品牌的一頁式網站，不是文章 CMS。
 3. 所有可編輯前台內容都應進入 `DesignerWebContent` 合約並存入 PostgreSQL，不要另建散落的常數或第二份設定來源。
 4. 圖片從各區塊內直接上傳，不顯示獨立媒體庫功能。
 5. 不顯示或重新引用舊專案品牌與 Logo。
-6. 舊 CMS 資料表與程式碼目前為相容性歷史，不代表可重新暴露舊 UI。
+6. 舊 CMS 程式碼已於 2026-07 全數移除；資料庫中的舊資料表（articles、categories、tags、article_tags、media 以外的 page_views 等）仍保留在 Prisma schema 與 DB，等待確認後再以有 rollback 計畫的 migration 分階段移除，不要重新引用或重建舊 UI。
 
 ## 內容資料流
 

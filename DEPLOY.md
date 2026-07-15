@@ -1,6 +1,7 @@
-# MIFASO 迷髮所 — Zeabur 部署指南
+# Designer Web — Zeabur 部署指南
 
 ## 環境需求
+
 - Node.js 20+
 - PostgreSQL（由 Zeabur 提供）
 
@@ -17,178 +18,35 @@ cp .env.example .env.local
 
 # 3. 安裝依賴
 npm install
+npx prisma generate
 
 # 4. 建立資料表
 npm run db:push
 
-# 5. 填入測試資料
+# 5. 建立管理員帳號
 npm run db:seed
 
 # 6. 啟動開發伺服器
 npm run dev
 ```
 
-開啟 http://localhost:3000 查看前台
-開啟 http://localhost:3000/admin 進入後台
+- 前台：<http://localhost:3000>
+- 後台：<http://localhost:3000/admin/page-management>
 
-**登入帳號（來自 `scripts/seed-data/users.json`）：**
-- 主編：帳號 `admin`（角色 ADMIN）
-- 作者：帳號 `jason`（角色 AUTHOR）
-- 密碼為原網站匯出時設定的密碼（登入頁的 Account 欄位填上方帳號）
-
-> 只想要 2 篇示範資料、用 `admin@mifaso.com` / `admin123456` 登入時，
-> 改執行 `npm run db:seed:demo`。
+**登入帳號：**`db:seed` 預設建立 `admin`（密碼 `admin123456`，對應 email `admin@mifaso.com`）。
+正式環境請先設定 `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` / `SEED_ADMIN_NAME` 再執行 seed，或登入後更換密碼。
 
 ---
 
-## Zeabur 部署步驟
+## Zeabur 部署
 
-### 1. 推送到 GitHub
-```bash
-git init
-git add .
-git commit -m "init: mifaso"
-git remote add origin https://github.com/jason121380/mifaso.git
-git push -u origin main
-```
+1. 建立 PostgreSQL 服務，`DATABASE_URL` 由 Zeabur 注入（見 `zeabur.yaml`）。
+2. 設定環境變數：
+   - 必要：`AUTH_SECRET`、`NEXTAUTH_URL`、`SITE_URL`（後兩者使用同一個正式 HTTPS 網域）。
+   - 圖片走 Cloudflare R2 時：`CLOUDFLARE_R2_ACCOUNT_ID`、`CLOUDFLARE_R2_ACCESS_KEY_ID`、`CLOUDFLARE_R2_SECRET_ACCESS_KEY`、`CLOUDFLARE_R2_BUCKET`、`CLOUDFLARE_R2_PUBLIC_URL`（五個都要設定才會啟用）。
+   - 影片 direct upload API 需要：`CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_STREAM_API_TOKEN`。
+3. 未設定 R2 時圖片寫入 Volume（掛載於 `/src/public/uploads`，見 `zeabur.yaml` 註解）。
+4. 建置流程：`npm install` → `npx prisma generate` → `npx prisma migrate deploy` → `npm run build`。
+5. 部署後 smoke test：登入、儲存頁面設定、圖片上傳、前台更新與 390px 手機版。
 
-### 2. 在 Zeabur 建立專案
-1. 前往 https://zeabur.com，登入
-2. 點「New Project」
-3. 選「Deploy from GitHub」，選擇你的 repo
-4. Zeabur 會自動偵測 Next.js
-
-### 3. 新增 PostgreSQL 服務
-1. 在同一個 Zeabur 專案點「Add Service」
-2. 選「Marketplace → PostgreSQL」
-3. 等待啟動（約 30 秒）
-
-### 4. 連接資料庫
-1. 點擊 Next.js 服務 → Variables
-2. 點「Add Variable」
-3. 輸入 key: `DATABASE_URL`
-4. 點「From Other Services」→ 選 PostgreSQL → `POSTGRESQL_URI`
-
-### 5. 設定必要環境變數
-在 Variables 頁面新增：
-
-| Key | Value |
-|-----|-------|
-| `AUTH_SECRET` | 執行 `openssl rand -base64 32` 取得的值 |
-| `NEXTAUTH_URL` | 正式網域 `https://mifaso.co`（務必與登入用網域一致，否則後台側欄消失、登入後跳舊網域） |
-| `SITE_URL` | `https://mifaso.co`（canonical / sitemap / RSS / OG 皆依此；缺值會 fallback `https://mifaso.co`） |
-| `NODE_ENV` | `production` |
-| `OPENAI_API_KEY` | OpenAI 金鑰（AI 摘要／SEO／標籤功能用，沒設則 AI 功能停用；`/api/ai` 已要求登入） |
-| `MAINT_TOOLS` | 平時**不設**。需跑一次性維運工具時才暫設 `1`，用完移除（見下方「維運工具」） |
-| `GOOGLE_SITE_VERIFICATION` | 選用，Google Search Console 驗證碼（設了才輸出 meta） |
-
-### 6. 設定 Cloudflare 媒體儲存
-
-圖片建議放 Cloudflare R2，影片放 Cloudflare Stream。後台媒體庫會依環境變數自動切換：
-
-- 有設定 R2：圖片上傳到 R2，資料庫只存公開 URL。
-- 未設定 R2：圖片退回 Zeabur Volume 的 `/src/public/uploads`。
-- 有設定 Stream：影片用 Cloudflare Direct Creator Upload 直接上傳到 Stream，資料庫只存 iframe URL。
-
-R2 必要變數：
-
-| Key | 說明 |
-|-----|------|
-| `CLOUDFLARE_R2_ACCOUNT_ID` | Cloudflare Account ID |
-| `CLOUDFLARE_R2_ACCESS_KEY_ID` | R2 S3 API Access Key ID |
-| `CLOUDFLARE_R2_SECRET_ACCESS_KEY` | R2 S3 API Secret Access Key |
-| `CLOUDFLARE_R2_BUCKET` | R2 bucket 名稱 |
-| `CLOUDFLARE_R2_PUBLIC_URL` | R2 public bucket custom domain，例如 `https://media.example.com` |
-
-Stream 必要變數：
-
-| Key | 說明 |
-|-----|------|
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID |
-| `CLOUDFLARE_STREAM_API_TOKEN` | 可建立 Stream direct upload 的 API token |
-
-若暫時不用 R2，才需要設定 Persistent Volume：
-
-1. 點擊 Next.js 服務 → Volumes
-2. 新增 Volume：Mount path = **`/src/public/uploads`**
-   （**不可**用 `/app/...`；Zeabur runtime cwd 是 `/src`，掛錯路徑檔案重新部署就消失）
-
-### 7. 設定 Build Command
-在 Settings → Build Command 輸入：
-```
-npm install && npx prisma generate && npx prisma migrate deploy && npm run build
-```
-
-### 8. Seed 初始資料（首次部署後）
-在 Zeabur 的 Terminal 執行（會匯入正式的 88 篇文章、分類、標籤與帳號）：
-```bash
-npm run db:seed
-```
-驗證雲端文章數：
-```bash
-npx tsx -e "import {PrismaClient} from '@prisma/client'; const p=new PrismaClient(); p.article.count().then(n=>{console.log('雲端文章數:',n);process.exit()})"
-```
-
----
-
-## 部署後確認清單
-- [ ] 前台首頁正常顯示
-- [ ] 後台 /admin/login 可以登入，**登入後第一次就有側邊選單**（不需重整）
-- [ ] 文章可以新增/編輯/發布；前台文章已消毒（無 `<script>` 注入）、IG 嵌入正常
-- [ ] 圖片上傳正常（有 R2 時 URL 會是 `CLOUDFLARE_R2_PUBLIC_URL`；未設 R2 時才檢查 Persistent Volume）
-- [ ] 影片上傳正常（Cloudflare Stream direct upload，媒體庫可預覽 iframe）
-- [ ] Sitemap `/sitemap.xml`、`/robots.txt`、RSS `/feed.xml` 可訪問
-- [ ] `curl -I https://mifaso.co` 有安全標頭（HSTS、X-Content-Type-Options、CSP `upgrade-insecure-requests`），瀏覽器不再「Not Secure」
-- [ ] 未登入 `POST /api/ai` 回 401；未設 `MAINT_TOOLS` 時維運路由回 404
-- [ ] 逛幾頁前台後 `/admin/analytics` 有數據（流量分析）
-
----
-
-## 維運工具（一次性，預設關閉）
-
-`/api/restore-from-mifaso`、`/api/localize-images`、`/api/fix-updated-at`、
-`/api/copy-uploads`、`/api/optimize-images` 皆受 `MAINT_TOOLS` 控管：
-**未設 / 非 `1` 時一律回 404**（避免會改資料的 GET 被 CSRF/SSRF）。
-
-要用時：Zeabur 服務暫設 `MAINT_TOOLS=1` → 重新部署 → 登入 ADMIN 後在瀏覽器開對應網址
-（先 `?dry=1` 預覽）→ 用完**移除 `MAINT_TOOLS`** 再重新部署關閉入口。詳見 `CLAUDE.md`。
-
-## 搬伺服器 / Volume 遷移（重要）
-
-Zeabur 的 Volume **不會自動跟著搬家**。在新服務開機 = 全新空 Volume → 圖檔不在 → 全站破圖。
-DB 路徑已在地化成本地 `/uploads/...`，`localize-images` 無外部 URL 可抓（救不了），改用：
-
-1. 新服務 Volume 掛 **`/src/public/uploads`**（不是 `/app`；`zeabur.yaml` 已修正）。
-2. **保留舊服務**（例 `mifaso1.zeabur.app`）別急著砍——圖檔是唯一一份。
-3. 新服務暫設 `MAINT_TOOLS=1`、ADMIN 登入，開
-   `/api/copy-uploads?from=https://<舊站>&dry=1` 預覽 → `&auto=1` 跑到完。
-4. 確認前台圖片回來 → 才可下線舊服務。
-
-## 圖片最佳化 / CDN 快取
-
-- 既有本機圖：`MAINT_TOOLS=1` 後開 `/api/optimize-images?auto=1`（縮 1600 + 轉 webp，循序不 OOM，原檔保留）。
-- 新上傳圖片：`/api/upload` 已自動縮+轉 webp；有 R2 設定時會直接存 R2。
-- **Cloudflare R2 custom domain**：建議加 Cache Rule `URI Path starts with /uploads/` → Eligible for cache、
-  Edge TTL Respect origin（圖片回應已帶 `immutable max-age=30天`）。驗證：DevTools 看 `cf-cache-status` 第二次為 `HIT`。
-- 影片：放 Cloudflare Stream，不要放 Zeabur Volume 或資料庫。200MB 以下後台走 Direct Creator Upload；更大的影片請用 Stream tus 或 Cloudflare Dashboard 上傳。
-
-## 資料庫密碼輪替（Zeabur PostgreSQL）
-
-只改環境變數**不會**真的換掉密碼（DB 已初始化，env 只在首次初始化生效），順序：
-
-1. PostgreSQL 服務 →「服務狀態」→「指令」執行（帳號見 `POSTGRES_USERNAME`，多為 `root`）：
-   `ALTER USER root WITH PASSWORD '<新強密碼>';`
-2. PostgreSQL 服務 →「環境變數」把 `PASSWORD`、`POSTGRES_PASSWORD` 改成新密碼；
-   `POSTGRES_CONNECTION_STRING`/`POSTGRES_URI` 若是 `${PASSWORD}` 參考型免動，寫死字串才換。
-3. `mifaso-tal` 的 `DATABASE_URL`：參考型自動更新；寫死字串手動換密碼段。
-4. `mifaso-tal` 重新部署 → `/admin` 能登入即成功（步驟間會短暫斷線，挑離峰）。
-
----
-
-## 帳號角色說明
-
-| 角色 | 權限 |
-|------|------|
-| ADMIN | 所有功能，包含用戶管理 |
-| EDITOR | 管理所有文章、分類、標籤、媒體 |
-| AUTHOR | 只能管理自己的文章 |
+不要把真實密碼、連線字串或 Cloudflare 金鑰提交到 Git。

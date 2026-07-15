@@ -66,6 +66,17 @@ assert.equal(normalized.environment[0].image, "https://cdn.example.com/salon.jpg
 assert.equal(normalized.environment[0].alt, "店內環境");
 assert.equal(normalized.contact.phone, "0900-000-000");
 assert.equal(normalized.contact.email, defaultDesignerWebContent.contact.email);
+// 已提供 contact 資料時，連結欄位清空就是清空，不回填示範連結
+assert.equal(normalized.contact.line, "");
+assert.equal(normalized.contact.instagram, "");
+assert.equal(normalized.contact.facebook, "");
+assert.equal(normalized.contact.mapUrl, "");
+// 地址與電話仍保留預設，避免聯絡區塊空白
+assert.equal(normalized.contact.address, defaultDesignerWebContent.contact.address);
+
+// 完全沒有 contact 資料（示範狀態）→ 沿用預設示範聯絡資訊
+const demoNormalized = normalizeDesignerWebContent({});
+assert.deepEqual(demoNormalized.contact, defaultDesignerWebContent.contact);
 
 async function main() {
   const previousDatabaseUrl = process.env.DATABASE_URL;

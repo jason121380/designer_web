@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
-import { MapPin, MessageCircle, Phone } from "lucide-react";
+import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { getDesignerWebContent } from "@/lib/designer-web-settings";
 
-export const metadata: Metadata = {
-  title: { absolute: "中壢接髮推薦｜KIMEKO HAIR 首席接髮設計師" },
-  description: "中壢首席接髮設計師，極致零感羽毛接髮、鏡面燙、手刷染、光線染、5G 護髮。",
-  alternates: { canonical: "/" },
-};
+// SEO title / description 跟著後台品牌設定走，不再硬編碼示範文案。
+export async function generateMetadata(): Promise<Metadata> {
+  const { brand, hero } = await getDesignerWebContent();
+  return {
+    title: { absolute: `${brand.tagline}｜${brand.name}` },
+    description: hero.heading.replace(/\s*\n\s*/g, "，").slice(0, 150),
+    alternates: { canonical: "/" },
+  };
+}
 
 const sectionStyle = { backgroundColor: "var(--cream-3)" };
 const lightSectionStyle = { backgroundColor: "var(--cream-1)" };
@@ -154,8 +158,8 @@ export default async function HomePage() {
         <div className="mx-auto max-w-6xl px-4">
           <SectionHeading en="Pricing" zh="價目表" />
           <div className="grid gap-6 md:grid-cols-3">
-            {content.pricing.map((item) => (
-              <article key={item.name} className="border border-black/5 bg-white p-6 shadow-sm">
+            {content.pricing.map((item, index) => (
+              <article key={`${item.name}-${index}`} className="border border-black/5 bg-white p-6 shadow-sm">
                 <p className="mb-2 text-sm font-semibold text-neutral-500">{item.name}</p>
                 <h3 className="mb-4 text-2xl font-bold text-neutral-900">{item.price}</h3>
                 <p className="mb-5 leading-relaxed text-neutral-600">{item.description}</p>
@@ -188,11 +192,19 @@ export default async function HomePage() {
           <SectionHeading en="Contact" zh="聯絡我們" />
           <div className="grid items-start gap-8 md:grid-cols-2">
             <div className="space-y-3 text-neutral-700">
-              <p className="flex items-center gap-2"><MapPin size={18} style={{ color: "var(--brand)" }} /><a href={content.contact.mapUrl} target="_blank" rel="noreferrer" className="hover:underline">{content.contact.address}</a></p>
+              <p className="flex items-center gap-2">
+                <MapPin size={18} style={{ color: "var(--brand)" }} />
+                {content.contact.mapUrl ? (
+                  <a href={content.contact.mapUrl} target="_blank" rel="noreferrer" className="hover:underline">{content.contact.address}</a>
+                ) : (
+                  <span>{content.contact.address}</span>
+                )}
+              </p>
               <p className="flex items-center gap-2"><Phone size={18} style={{ color: "var(--brand)" }} /><a href={`tel:${content.contact.phone}`} className="hover:underline">{content.contact.phone}</a></p>
-              <p className="flex items-center gap-2"><span className="w-[18px] text-center text-sm font-bold" style={{ color: "var(--brand)" }}>f</span><a href={content.contact.facebook} target="_blank" rel="noreferrer" className="hover:underline">Facebook</a></p>
-              <p className="flex items-center gap-2"><span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>IG</span><a href={content.contact.instagram} target="_blank" rel="noreferrer" className="hover:underline">Instagram</a></p>
-              <p className="flex items-center gap-2"><MessageCircle size={18} style={{ color: "var(--brand)" }} /><a href={content.contact.line} target="_blank" rel="noreferrer" className="hover:underline">LINE</a></p>
+              {!!content.contact.email && <p className="flex items-center gap-2"><Mail size={18} style={{ color: "var(--brand)" }} /><a href={`mailto:${content.contact.email}`} className="hover:underline">{content.contact.email}</a></p>}
+              {!!content.contact.facebook && <p className="flex items-center gap-2"><span className="w-[18px] text-center text-sm font-bold" style={{ color: "var(--brand)" }}>f</span><a href={content.contact.facebook} target="_blank" rel="noreferrer" className="hover:underline">Facebook</a></p>}
+              {!!content.contact.instagram && <p className="flex items-center gap-2"><span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>IG</span><a href={content.contact.instagram} target="_blank" rel="noreferrer" className="hover:underline">Instagram</a></p>}
+              {!!content.contact.line && <p className="flex items-center gap-2"><MessageCircle size={18} style={{ color: "var(--brand)" }} /><a href={content.contact.line} target="_blank" rel="noreferrer" className="hover:underline">LINE</a></p>}
             </div>
             {!!content.contact.mapEmbedUrl && <iframe src={content.contact.mapEmbedUrl} title="店家位置" className="h-72 w-full border-0" loading="lazy" />}
           </div>

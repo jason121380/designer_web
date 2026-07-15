@@ -26,8 +26,6 @@ spec:
             value: ${ZEABUR_WEB_URL}
           - key: NODE_ENV
             value: production
-          - key: OPENAI_API_KEY
-            value: ${OPENAI_API_KEY}
         volumes:
           - id: uploads
             # Zeabur runtime cwd = /src（不是 /app）。上傳/在地化圖片寫在

@@ -174,7 +174,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
     email: "",
     line: "https://lin.ee/Urb3nYc",
     instagram: "https://www.instagram.com/kimeko0905",
-    facebook: "https://www.facebook.com/",
+    facebook: "",
     mapEmbedUrl: "",
   },
 };
@@ -199,6 +199,24 @@ function normalizeServices(items: RawContent["services"], fallback: PageService[
       price: trim(item.price),
     }));
   return normalized.length ? normalized : fallback;
+}
+
+function normalizeContact(contact: RawContent["contact"]): DesignerWebContent["contact"] {
+  const defaults = defaultDesignerWebContent.contact;
+  // 完全沒有 contact 資料（示範狀態）→ 用預設示範值。
+  if (!contact) return { ...defaults };
+  // 已有 contact 資料時：地址與電話保留預設避免區塊空白，
+  // 連結類欄位清空就是清空，前台會隱藏對應項目，不再被塞回示範連結。
+  return {
+    address: withDefault(contact.address, defaults.address),
+    mapUrl: trim(contact.mapUrl),
+    phone: withDefault(contact.phone, defaults.phone),
+    email: trim(contact.email),
+    line: trim(contact.line),
+    instagram: trim(contact.instagram),
+    facebook: trim(contact.facebook),
+    mapEmbedUrl: trim(contact.mapEmbedUrl),
+  };
 }
 
 export function normalizeDesignerWebContent(input: unknown): DesignerWebContent {
@@ -257,16 +275,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
       : defaultDesignerWebContent.installment,
     pricing: pricing.length ? pricing : defaultDesignerWebContent.pricing,
     environment,
-    contact: {
-      address: withDefault(data.contact?.address, defaultDesignerWebContent.contact.address),
-      mapUrl: withDefault(data.contact?.mapUrl, defaultDesignerWebContent.contact.mapUrl),
-      phone: withDefault(data.contact?.phone, defaultDesignerWebContent.contact.phone),
-      email: trim(data.contact?.email),
-      line: withDefault(data.contact?.line, defaultDesignerWebContent.contact.line),
-      instagram: withDefault(data.contact?.instagram, defaultDesignerWebContent.contact.instagram),
-      facebook: withDefault(data.contact?.facebook, defaultDesignerWebContent.contact.facebook),
-      mapEmbedUrl: trim(data.contact?.mapEmbedUrl),
-    },
+    contact: normalizeContact(data.contact),
   };
 }
 

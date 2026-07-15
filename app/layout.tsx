@@ -24,9 +24,6 @@ export const metadata: Metadata = {
     siteName: "designer_web",
   },
   twitter: { card: "summary_large_image" },
-  alternates: {
-    types: { "application/rss+xml": "/feed.xml" },
-  },
   verification: process.env.GOOGLE_SITE_VERIFICATION
     ? { google: process.env.GOOGLE_SITE_VERIFICATION }
     : undefined,
