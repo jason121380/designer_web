@@ -3,59 +3,58 @@ import { z } from "zod";
 export const DESIGNER_WEB_SETTINGS_KEY = "designer_web_content";
 
 const nullableString = z.string().optional().nullable();
-
-const heroSchema = z.object({
-  eyebrow: nullableString,
-  title: nullableString,
-  subtitle: nullableString,
-  description: nullableString,
-  primaryCtaLabel: nullableString,
-  primaryCtaHref: nullableString,
-  secondaryCtaLabel: nullableString,
-  secondaryCtaHref: nullableString,
-  image: nullableString,
-});
+const nullableStringList = z.array(z.string()).optional().nullable();
 
 const serviceSchema = z.object({
-  title: z.string().optional().nullable(),
-  description: z.string().optional().nullable(),
-  price: z.string().optional().nullable(),
-});
-
-const portfolioSchema = z.object({
-  title: z.string().optional().nullable(),
-  category: z.string().optional().nullable(),
-  image: z.string().optional().nullable(),
+  id: nullableString,
+  title: nullableString,
+  description: nullableString,
+  features: nullableStringList,
+  suitableFor: nullableStringList,
+  image: nullableString,
+  price: nullableString,
 });
 
 const pricingSchema = z.object({
-  name: z.string().optional().nullable(),
-  price: z.string().optional().nullable(),
-  description: z.string().optional().nullable(),
-  features: z.array(z.string()).optional().nullable(),
-});
-
-const processSchema = z.object({
-  title: z.string().optional().nullable(),
-  description: z.string().optional().nullable(),
+  name: nullableString,
+  price: nullableString,
+  description: nullableString,
+  features: nullableStringList,
 });
 
 export const designerWebContentSchema = z.object({
   brand: z.object({
     name: nullableString,
     tagline: nullableString,
+    themeColor: nullableString,
   }).optional(),
-  hero: heroSchema.optional(),
-  announcement: z.object({
-    title: nullableString,
-    body: nullableString,
+  hero: z.object({
+    heading: nullableString,
+    mediaUrl: nullableString,
+    mediaType: z.enum(["image", "video"]).optional().nullable(),
   }).optional(),
+  promos: z.array(z.object({
+    id: nullableString,
+    image: nullableString,
+    caption: nullableString,
+  })).optional(),
   services: z.array(serviceSchema).optional(),
-  portfolio: z.array(portfolioSchema).optional(),
+  otherServices: z.array(serviceSchema).optional(),
+  videos: z.array(z.object({
+    id: nullableString,
+    video: nullableString,
+    caption: nullableString,
+  })).optional(),
+  installment: z.array(z.string()).optional(),
   pricing: z.array(pricingSchema).optional(),
-  process: z.array(processSchema).optional(),
+  environment: z.array(z.object({
+    id: nullableString,
+    image: nullableString,
+    alt: nullableString,
+  })).optional(),
   contact: z.object({
     address: nullableString,
+    mapUrl: nullableString,
     phone: nullableString,
     email: nullableString,
     line: nullableString,
@@ -65,180 +64,217 @@ export const designerWebContentSchema = z.object({
   }).optional(),
 });
 
-export type DesignerWebContent = z.infer<typeof designerWebContentSchema>;
+export interface PageService {
+  id: string;
+  title: string;
+  description: string;
+  features: string[];
+  suitableFor: string[];
+  image: string;
+  price: string;
+}
 
-const trim = (value: unknown) => (typeof value === "string" ? value.trim() : "");
-const withDefault = (value: unknown, fallback: string) => trim(value) || fallback;
+export interface DesignerWebContent {
+  brand: { name: string; tagline: string; themeColor: string };
+  hero: { heading: string; mediaUrl: string; mediaType: "image" | "video" };
+  promos: { id: string; image: string; caption: string }[];
+  services: PageService[];
+  otherServices: PageService[];
+  videos: { id: string; video: string; caption: string }[];
+  installment: string[];
+  pricing: { name: string; price: string; description: string; features: string[] }[];
+  environment: { id: string; image: string; alt: string }[];
+  contact: {
+    address: string;
+    mapUrl: string;
+    phone: string;
+    email: string;
+    line: string;
+    instagram: string;
+    facebook: string;
+    mapEmbedUrl: string;
+  };
+}
 
-export const defaultDesignerWebContent = {
+export const defaultDesignerWebContent: DesignerWebContent = {
   brand: {
-    name: "designer_web",
-    tagline: "設計師個人品牌・一頁式形象網站",
+    name: "KIMEKO HAIR（示範）",
+    tagline: "中壢接髮推薦",
+    themeColor: "#d9bf77",
   },
   hero: {
-    eyebrow: "DESIGNER WEB STUDIO",
-    title: "讓專業服務被看見，也讓預約變得更簡單",
-    subtitle: "一頁式品牌網站・內容後台・作品集展示",
-    description:
-      "專為設計師、美業職人與個人服務品牌打造的單頁官網。從首屏形象、服務介紹、作品展示、價目資訊到聯絡預約，所有內容都能在後台更新。",
-    primaryCtaLabel: "立即諮詢",
-    primaryCtaHref: "#contact",
-    secondaryCtaLabel: "查看服務",
-    secondaryCtaHref: "#services",
-    image:
-      "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=80",
+    heading:
+      "中壢接髮推薦 KIMEKO HAIR\n極致零感羽毛接髮｜新縮毛鏡面燙｜歐美手刷染\n日韓系光線染｜5G 網狀纖維護髮｜特殊色白金髮",
+    mediaUrl: "",
+    mediaType: "image",
   },
-  announcement: {
-    title: "限量品牌改版方案",
-    body: "適合需要快速建立專業形象頁、作品集與預約入口的個人品牌。",
-  },
+  promos: [],
   services: [
     {
-      title: "一頁式品牌網站",
-      description: "以手機優先設計首頁、錨點導覽、服務介紹、作品展示與聯絡 CTA。",
-      price: "NT$ 38,000 起",
-    },
-    {
-      title: "內容後台建置",
-      description: "保留 CMS 管理能力，可更新前台文字、作品、價目、聯絡資訊與圖片。",
-      price: "NT$ 18,000 起",
-    },
-    {
-      title: "SEO 與轉換優化",
-      description: "設定標題描述、結構化內容與預約動線，讓訪客更容易採取行動。",
-      price: "NT$ 12,000 起",
+      id: "feather-extension",
+      title: "1. 極致零感羽毛接髮",
+      description: "一種超輕量、超隱形的接髮技術，強調零感佩戴，像羽毛一樣輕盈柔順。",
+      features: ["小接點設計，接合處幾乎隱形", "適合細軟髮、髮量少，增量不增負擔", "可自然擺動，洗髮梳理都方便"],
+      suitableFor: ["希望接髮後仍維持自然輕盈感的人", "容易因接髮重量頭皮不適的人"],
+      image: "",
+      price: "",
     },
   ],
-  portfolio: [
+  otherServices: [
     {
-      title: "Hair Artist Landing",
-      category: "美業設計師",
-      image:
-        "https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=900&q=80",
+      id: "mirror-perm",
+      title: "1. 新縮毛鏡面燙",
+      description: "升級版縮毛矯正，讓頭髮達到超順直與高光澤，像鏡面一樣反光。",
+      features: ["比傳統縮毛矯正更溫和", "光澤感提升，柔順亮麗"],
+      suitableFor: ["自然捲、毛躁髮想要柔順光澤的人"],
+      image: "",
+      price: "",
     },
     {
-      title: "Interior Profile",
-      category: "空間設計",
-      image:
-        "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=900&q=80",
+      id: "balayage",
+      title: "2. 歐美手刷染",
+      description: "來自歐美的 Balayage 手刷染，創造自然漸層與光影。",
+      features: ["自然漸層，不會一塊一塊", "維護簡單，布丁頭不明顯"],
+      suitableFor: ["想要層次感、不喜歡單一髮色的人"],
+      image: "",
+      price: "",
     },
-    {
-      title: "Personal Brand System",
-      category: "顧問服務",
-      image:
-        "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=900&q=80",
-    },
+  ],
+  videos: [],
+  installment: [
+    "【zingala 銀角零卡】先享受、後付款，不需要任何信用卡。",
+    "分期可分 3/6/9 期，美麗無壓力，先享受下個月再付款。",
+    "申請條件：1. 年滿 18 歲 2. 需有工作收入 3. 信用正常。",
   ],
   pricing: [
     {
-      name: "Starter",
-      price: "NT$ 38,000",
-      description: "適合剛開始建立個人品牌的設計師。",
-      features: ["單頁形象網站", "手機版 RWD", "基本 SEO", "聯絡 CTA"],
+      name: "極致零感羽毛接髮",
+      price: "私訊報價",
+      description: "依原生髮長、髮量與希望呈現的長度現場評估。",
+      features: ["小接點設計", "輕盈自然", "可染可燙可造型"],
     },
     {
-      name: "Studio",
-      price: "NT$ 68,000",
-      description: "適合需要後台管理與作品集的工作室。",
-      features: ["內容管理後台", "作品與價目管理", "媒體庫", "流量分析"],
+      name: "染燙造型",
+      price: "私訊報價",
+      description: "鏡面燙、歐美手刷染與日韓系光線染，依髮況提供完整建議。",
+      features: ["髮況評估", "客製色彩", "居家整理建議"],
     },
     {
-      name: "Growth",
-      price: "客製報價",
-      description: "適合需要多頁內容、AI 輔助與長期優化的品牌。",
-      features: ["內容策略", "進階 SEO", "AI 產文輔助", "部署與維運"],
+      name: "5G 網狀纖維護髮",
+      price: "私訊報價",
+      description: "依受損程度與髮長評估護髮用量及完整療程。",
+      features: ["強韌髮芯", "改善乾燥毛躁", "提升光澤與柔順度"],
     },
   ],
-  process: [
-    { title: "01 訪談", description: "釐清品牌定位、服務內容、目標客群與預約流程。" },
-    { title: "02 設計", description: "建立一頁式資訊架構、視覺方向與手機版動線。" },
-    { title: "03 建置", description: "串接前台與後台，讓內容可以由管理者自行更新。" },
-    { title: "04 上線", description: "完成 SEO、部署、測試與後續優化建議。" },
-  ],
+  environment: [],
   contact: {
-    address: "台北市信義區設計路 88 號",
-    phone: "02-2345-6789",
-    email: "hello@designer-web.tw",
-    line: "https://line.me/R/ti/p/@designerweb",
-    instagram: "https://www.instagram.com/",
+    address: "桃園市中壢區中平路106號2樓",
+    mapUrl: "https://maps.app.goo.gl/nRbRwUan3vsPeUmT8",
+    phone: "0938-323-506",
+    email: "",
+    line: "https://lin.ee/Urb3nYc",
+    instagram: "https://www.instagram.com/kimeko0905",
     facebook: "https://www.facebook.com/",
     mapEmbedUrl: "",
   },
-} satisfies DesignerWebContent;
+};
 
-function compactItems<T extends Record<string, unknown>>(items: T[] | undefined, requiredKey: keyof T) {
-  return (items ?? []).filter((item) => trim(item[requiredKey]).length > 0);
+type RawContent = z.infer<typeof designerWebContentSchema>;
+
+const trim = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+const withDefault = (value: unknown, fallback: string) => trim(value) || fallback;
+const stringList = (items: string[] | null | undefined) => (items ?? []).map(trim).filter(Boolean);
+const itemId = (value: unknown, prefix: string, index: number) => trim(value) || `${prefix}-${index + 1}`;
+
+function normalizeServices(items: RawContent["services"], fallback: PageService[]) {
+  const normalized = (items ?? [])
+    .filter((item) => trim(item.title))
+    .map((item, index) => ({
+      id: itemId(item.id, "service", index),
+      title: trim(item.title),
+      description: trim(item.description),
+      features: stringList(item.features),
+      suitableFor: stringList(item.suitableFor),
+      image: trim(item.image),
+      price: trim(item.price),
+    }));
+  return normalized.length ? normalized : fallback;
 }
 
 export function normalizeDesignerWebContent(input: unknown): DesignerWebContent {
   const parsed = designerWebContentSchema.safeParse(input);
   const data = parsed.success ? parsed.data : {};
+  const legacyDesignerSeed = trim(data.brand?.name).toLowerCase() === "designer_web";
+  if (legacyDesignerSeed) return structuredClone(defaultDesignerWebContent);
 
-  const content: DesignerWebContent = {
-    brand: {
-      name: withDefault(data.brand?.name, defaultDesignerWebContent.brand.name),
-      tagline: withDefault(data.brand?.tagline, defaultDesignerWebContent.brand.tagline),
-    },
-    hero: {
-      eyebrow: withDefault(data.hero?.eyebrow, defaultDesignerWebContent.hero.eyebrow),
-      title: withDefault(data.hero?.title, defaultDesignerWebContent.hero.title),
-      subtitle: withDefault(data.hero?.subtitle, defaultDesignerWebContent.hero.subtitle),
-      description: withDefault(data.hero?.description, defaultDesignerWebContent.hero.description),
-      primaryCtaLabel: withDefault(data.hero?.primaryCtaLabel, defaultDesignerWebContent.hero.primaryCtaLabel),
-      primaryCtaHref: withDefault(data.hero?.primaryCtaHref, defaultDesignerWebContent.hero.primaryCtaHref),
-      secondaryCtaLabel: withDefault(data.hero?.secondaryCtaLabel, defaultDesignerWebContent.hero.secondaryCtaLabel),
-      secondaryCtaHref: withDefault(data.hero?.secondaryCtaHref, defaultDesignerWebContent.hero.secondaryCtaHref),
-      image: withDefault(data.hero?.image, defaultDesignerWebContent.hero.image),
-    },
-    announcement: {
-      title: withDefault(data.announcement?.title, defaultDesignerWebContent.announcement.title),
-      body: withDefault(data.announcement?.body, defaultDesignerWebContent.announcement.body),
-    },
-    services: compactItems(data.services, "title").map((item) => ({
-      title: trim(item.title),
-      description: trim(item.description),
-      price: trim(item.price),
-    })),
-    portfolio: compactItems(data.portfolio, "title").map((item) => ({
-      title: trim(item.title),
-      category: trim(item.category),
+  const promos = (data.promos ?? [])
+    .filter((item) => trim(item.image))
+    .map((item, index) => ({
+      id: itemId(item.id, "dm", index),
       image: trim(item.image),
-    })),
-    pricing: compactItems(data.pricing, "name").map((item) => ({
+      caption: trim(item.caption),
+    }));
+  const videos = (data.videos ?? [])
+    .filter((item) => trim(item.video))
+    .map((item, index) => ({
+      id: itemId(item.id, "video", index),
+      video: trim(item.video),
+      caption: trim(item.caption),
+    }));
+  const pricing = (data.pricing ?? [])
+    .filter((item) => trim(item.name))
+    .map((item) => ({
       name: trim(item.name),
       price: trim(item.price),
       description: trim(item.description),
-      features: (item.features ?? []).map((feature) => feature.trim()).filter(Boolean),
-    })),
-    process: compactItems(data.process, "title").map((item) => ({
-      title: trim(item.title),
-      description: trim(item.description),
-    })),
+      features: stringList(item.features),
+    }));
+  const environment = (data.environment ?? [])
+    .filter((item) => trim(item.image))
+    .map((item, index) => ({
+      id: itemId(item.id, "environment", index),
+      image: trim(item.image),
+      alt: trim(item.alt),
+    }));
+
+  return {
+    brand: {
+      name: withDefault(data.brand?.name, defaultDesignerWebContent.brand.name),
+      tagline: withDefault(data.brand?.tagline, defaultDesignerWebContent.brand.tagline),
+      themeColor: withDefault(data.brand?.themeColor, defaultDesignerWebContent.brand.themeColor),
+    },
+    hero: {
+      heading: withDefault(data.hero?.heading, defaultDesignerWebContent.hero.heading),
+      mediaUrl: trim(data.hero?.mediaUrl),
+      mediaType: data.hero?.mediaType ?? defaultDesignerWebContent.hero.mediaType,
+    },
+    promos,
+    services: normalizeServices(data.services, defaultDesignerWebContent.services),
+    otherServices: normalizeServices(data.otherServices, defaultDesignerWebContent.otherServices),
+    videos,
+    installment: stringList(data.installment).length
+      ? stringList(data.installment)
+      : defaultDesignerWebContent.installment,
+    pricing: pricing.length ? pricing : defaultDesignerWebContent.pricing,
+    environment,
     contact: {
       address: withDefault(data.contact?.address, defaultDesignerWebContent.contact.address),
+      mapUrl: withDefault(data.contact?.mapUrl, defaultDesignerWebContent.contact.mapUrl),
       phone: withDefault(data.contact?.phone, defaultDesignerWebContent.contact.phone),
-      email: withDefault(data.contact?.email, defaultDesignerWebContent.contact.email),
+      email: trim(data.contact?.email),
       line: withDefault(data.contact?.line, defaultDesignerWebContent.contact.line),
       instagram: withDefault(data.contact?.instagram, defaultDesignerWebContent.contact.instagram),
       facebook: withDefault(data.contact?.facebook, defaultDesignerWebContent.contact.facebook),
       mapEmbedUrl: trim(data.contact?.mapEmbedUrl),
     },
   };
-
-  return {
-    ...content,
-    services: content.services?.length ? content.services : defaultDesignerWebContent.services,
-    portfolio: content.portfolio?.length ? content.portfolio : defaultDesignerWebContent.portfolio,
-    pricing: content.pricing?.length ? content.pricing : defaultDesignerWebContent.pricing,
-    process: content.process?.length ? content.process : defaultDesignerWebContent.process,
-  };
 }
 
 export function parseDesignerWebContent(value: string | null | undefined): DesignerWebContent {
-  if (!value) return defaultDesignerWebContent;
+  if (!value) return structuredClone(defaultDesignerWebContent);
   try {
     return normalizeDesignerWebContent(JSON.parse(value));
   } catch {
-    return defaultDesignerWebContent;
+    return structuredClone(defaultDesignerWebContent);
   }
 }
