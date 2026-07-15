@@ -39,3 +39,23 @@ assert.doesNotMatch(imageUpload, /MediaPicker|媒體庫/);
 const middleware = read("middleware.ts");
 assert.match(middleware, /legacyAdminPrefixes/);
 assert.match(middleware, /\/admin\/page-management/);
+// manifest 必須繞過登入保護，否則後台 PWA 無法安裝
+assert.ok(middleware.includes("manifest\\\\.webmanifest"), "middleware matcher 必須排除 manifest");
+
+// 側欄收合不可寫入 localStorage：曾造成誤觸收合後，之後每次進後台側欄都消失
+const adminShell = read("components/admin/AdminShell.tsx");
+assert.doesNotMatch(adminShell, /localStorage\.(getItem|setItem)/);
+
+// PWA manifest 必須帶 icons，否則手機安裝失敗或沒有圖示
+const adminManifest = read("app/admin/manifest.webmanifest/route.ts");
+assert.match(adminManifest, /icons/);
+assert.match(adminManifest, /192x192/);
+assert.match(adminManifest, /512x512/);
+const publicManifest = read("app/manifest.webmanifest/route.ts");
+assert.match(publicManifest, /icons/);
+assert.match(publicManifest, /192x192/);
+
+// 後台需宣告 apple-touch-icon 與 PWA meta
+const adminLayout = read("app/admin/layout.tsx");
+assert.match(adminLayout, /appleWebApp/);
+assert.match(adminLayout, /admin-apple-icon\.png/);

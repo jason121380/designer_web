@@ -21,7 +21,7 @@ export default function AdminHeader({
   const segments = pathname.replace("/admin/", "").split("/").filter(Boolean);
 
   const crumbs = segments.map((seg, i) => ({
-    label: breadcrumbMap[seg] ?? (seg.length === 25 ? "編輯文章" : seg),
+    label: breadcrumbMap[seg] ?? (seg === "home" ? "首頁" : `/${seg}`),
     href: "/admin/" + segments.slice(0, i + 1).join("/"),
   }));
 

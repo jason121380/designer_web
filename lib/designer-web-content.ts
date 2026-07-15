@@ -1,6 +1,25 @@
 import { z } from "zod";
 
 export const DESIGNER_WEB_SETTINGS_KEY = "designer_web_content";
+export const DESIGNER_WEB_SETTINGS_PREFIX = `${DESIGNER_WEB_SETTINGS_KEY}:`;
+// 首頁顯示哪個頁面（site_settings key；value 為子頁 slug，空/不存在 = 首頁自己的內容）
+export const DESIGNER_WEB_HOME_PAGE_KEY = "designer_web_home_page";
+
+// 首頁在後台以 `home` 呈現；其餘保留給既有路由，不可作為頁面後綴。
+export const HOME_PAGE_SLUG = "home";
+export const RESERVED_PAGE_SLUGS = [HOME_PAGE_SLUG, "admin", "api", "uploads"];
+
+// 頁面後綴：小寫英數與連字號，1-50 字，頭尾不可為連字號。
+const PAGE_SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,48}[a-z0-9])?$/;
+
+export function isValidPageSlug(slug: string): boolean {
+  return PAGE_SLUG_PATTERN.test(slug) && !RESERVED_PAGE_SLUGS.includes(slug);
+}
+
+/** slug 省略時回傳首頁（`/`）使用的既有 key，維持舊資料相容。 */
+export function pageContentKey(slug?: string | null): string {
+  return slug ? `${DESIGNER_WEB_SETTINGS_PREFIX}${slug}` : DESIGNER_WEB_SETTINGS_KEY;
+}
 
 const nullableString = z.string().optional().nullable();
 const nullableStringList = z.array(z.string()).optional().nullable();
@@ -62,6 +81,11 @@ export const designerWebContentSchema = z.object({
     facebook: nullableString,
     mapEmbedUrl: nullableString,
   }).optional(),
+  seo: z.object({
+    title: nullableString,
+    description: nullableString,
+    ogImage: nullableString,
+  }).optional(),
 });
 
 export interface PageService {
@@ -94,6 +118,8 @@ export interface DesignerWebContent {
     facebook: string;
     mapEmbedUrl: string;
   };
+  /** 每頁獨立 SEO；空字串代表自動使用品牌與主標題產生。 */
+  seo: { title: string; description: string; ogImage: string };
 }
 
 export const defaultDesignerWebContent: DesignerWebContent = {
@@ -177,6 +203,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
     facebook: "",
     mapEmbedUrl: "",
   },
+  seo: { title: "", description: "", ogImage: "" },
 };
 
 type RawContent = z.infer<typeof designerWebContentSchema>;
@@ -276,6 +303,11 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
     pricing: pricing.length ? pricing : defaultDesignerWebContent.pricing,
     environment,
     contact: normalizeContact(data.contact),
+    seo: {
+      title: trim(data.seo?.title),
+      description: trim(data.seo?.description),
+      ogImage: trim(data.seo?.ogImage),
+    },
   };
 }
 

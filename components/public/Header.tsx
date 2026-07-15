@@ -1,7 +1,6 @@
-import { getDesignerWebContent } from "@/lib/designer-web-settings";
+import type { DesignerWebContent } from "@/lib/designer-web-content";
 
-export default async function Header() {
-  const content = await getDesignerWebContent();
+export default function Header({ content }: { content: DesignerWebContent }) {
   const links = [
     ...(content.promos.length ? [{ href: "#dm", label: "活動 DM" }] : []),
     { href: "#services", label: "接髮介紹" },

@@ -1,6 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // viewport-fit=cover：讓 PWA 全螢幕時 safe-area inset 生效（側欄底部已使用）
+  viewportFit: "cover",
+  themeColor: "#171717",
+};
 
 const notoSansTC = Noto_Sans_TC({
   subsets: ["latin"],
@@ -24,6 +32,11 @@ export const metadata: Metadata = {
     siteName: "designer_web",
   },
   twitter: { card: "summary_large_image" },
+  appleWebApp: {
+    capable: true,
+    title: "Designer Web",
+    statusBarStyle: "black-translucent",
+  },
   verification: process.env.GOOGLE_SITE_VERIFICATION
     ? { google: process.env.GOOGLE_SITE_VERIFICATION }
     : undefined,
