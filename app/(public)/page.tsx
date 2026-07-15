@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
 import OnePage from "@/components/public/OnePage";
-import { getDesignerWebContent } from "@/lib/designer-web-settings";
+import { getHomeDisplayContent } from "@/lib/designer-web-settings";
+import { designerPageMetadata } from "@/lib/seo";
 
-// SEO title / description 跟著後台品牌設定走，不再硬編碼示範文案。
+// 首頁內容可在後台指定為某個子頁面；SEO 跟著實際顯示的內容走，canonical 維持 /。
 export async function generateMetadata(): Promise<Metadata> {
-  const { brand, hero } = await getDesignerWebContent();
-  return {
-    title: { absolute: `${brand.tagline}｜${brand.name}` },
-    description: hero.heading.replace(/\s*\n\s*/g, "，").slice(0, 150),
-    alternates: { canonical: "/" },
-  };
+  return designerPageMetadata(await getHomeDisplayContent(), "/");
 }
 
 export default async function HomePage() {
-  const content = await getDesignerWebContent();
+  const content = await getHomeDisplayContent();
   return <OnePage content={content} />;
 }

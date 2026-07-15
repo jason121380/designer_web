@@ -43,6 +43,11 @@ const normalized = normalizeDesignerWebContent({
   contact: {
     phone: "0900-000-000",
   },
+  seo: {
+    title: "  中壢接髮第一品牌  ",
+    description: "  廣告到達頁描述  ",
+    ogImage: " https://cdn.example.com/og.jpg ",
+  },
 });
 
 assert.equal(DESIGNER_WEB_SETTINGS_KEY, "designer_web_content");
@@ -77,6 +82,12 @@ assert.equal(normalized.contact.address, defaultDesignerWebContent.contact.addre
 // 完全沒有 contact 資料（示範狀態）→ 沿用預設示範聯絡資訊
 const demoNormalized = normalizeDesignerWebContent({});
 assert.deepEqual(demoNormalized.contact, defaultDesignerWebContent.contact);
+
+// SEO 設定：trim；舊資料沒有 seo 欄位時給空字串（＝自動產生），不可讓整頁 500
+assert.equal(normalized.seo.title, "中壢接髮第一品牌");
+assert.equal(normalized.seo.description, "廣告到達頁描述");
+assert.equal(normalized.seo.ogImage, "https://cdn.example.com/og.jpg");
+assert.deepEqual(demoNormalized.seo, { title: "", description: "", ogImage: "" });
 
 async function main() {
   const previousDatabaseUrl = process.env.DATABASE_URL;

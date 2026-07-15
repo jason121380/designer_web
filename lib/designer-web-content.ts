@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export const DESIGNER_WEB_SETTINGS_KEY = "designer_web_content";
 export const DESIGNER_WEB_SETTINGS_PREFIX = `${DESIGNER_WEB_SETTINGS_KEY}:`;
+// 首頁顯示哪個頁面（site_settings key；value 為子頁 slug，空/不存在 = 首頁自己的內容）
+export const DESIGNER_WEB_HOME_PAGE_KEY = "designer_web_home_page";
 
 // 首頁在後台以 `home` 呈現；其餘保留給既有路由，不可作為頁面後綴。
 export const HOME_PAGE_SLUG = "home";
@@ -79,6 +81,11 @@ export const designerWebContentSchema = z.object({
     facebook: nullableString,
     mapEmbedUrl: nullableString,
   }).optional(),
+  seo: z.object({
+    title: nullableString,
+    description: nullableString,
+    ogImage: nullableString,
+  }).optional(),
 });
 
 export interface PageService {
@@ -111,6 +118,8 @@ export interface DesignerWebContent {
     facebook: string;
     mapEmbedUrl: string;
   };
+  /** 每頁獨立 SEO；空字串代表自動使用品牌與主標題產生。 */
+  seo: { title: string; description: string; ogImage: string };
 }
 
 export const defaultDesignerWebContent: DesignerWebContent = {
@@ -194,6 +203,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
     facebook: "",
     mapEmbedUrl: "",
   },
+  seo: { title: "", description: "", ogImage: "" },
 };
 
 type RawContent = z.infer<typeof designerWebContentSchema>;
@@ -293,6 +303,11 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
     pricing: pricing.length ? pricing : defaultDesignerWebContent.pricing,
     environment,
     contact: normalizeContact(data.contact),
+    seo: {
+      title: trim(data.seo?.title),
+      description: trim(data.seo?.description),
+      ogImage: trim(data.seo?.ogImage),
+    },
   };
 }
 

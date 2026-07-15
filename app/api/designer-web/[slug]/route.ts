@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import {
+  DESIGNER_WEB_HOME_PAGE_KEY,
   defaultDesignerWebContent,
   isValidPageSlug,
   normalizeDesignerWebContent,
@@ -86,5 +87,9 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
   } catch {
     return NextResponse.json({ error: "頁面不存在" }, { status: 404 });
   }
+  // 首頁顯示設定若指向被刪除的頁面，一併清除（首頁回到自己的內容）
+  await prisma.siteSettings.deleteMany({
+    where: { key: DESIGNER_WEB_HOME_PAGE_KEY, value: slug },
+  });
   return NextResponse.json({ ok: true });
 }

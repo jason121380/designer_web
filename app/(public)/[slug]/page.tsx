@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import OnePage from "@/components/public/OnePage";
 import { isValidPageSlug } from "@/lib/designer-web-content";
 import { getDesignerWebPageContent } from "@/lib/designer-web-settings";
+import { designerPageMetadata } from "@/lib/seo";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -16,11 +17,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const content = await loadPage(params);
   if (!content) return {};
-  return {
-    title: { absolute: `${content.brand.tagline}｜${content.brand.name}` },
-    description: content.hero.heading.replace(/\s*\n\s*/g, "，").slice(0, 150),
-    alternates: { canonical: `/${slug}` },
-  };
+  return designerPageMetadata(content, `/${slug}`);
 }
 
 export default async function DesignerPage({ params }: PageProps) {

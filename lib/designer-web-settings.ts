@@ -1,7 +1,9 @@
 import { cache } from "react";
 import {
+  DESIGNER_WEB_HOME_PAGE_KEY,
   DESIGNER_WEB_SETTINGS_PREFIX,
   defaultDesignerWebContent,
+  isValidPageSlug,
   pageContentKey,
   parseDesignerWebContent,
   type DesignerWebContent,
@@ -45,6 +47,31 @@ export const getDesignerWebPageContent = cache(
 export const listDesignerWebPageSlugs = cache(async (): Promise<string[]> => {
   return (await listDesignerWebPages()).map((page) => page.slug);
 });
+
+/** 首頁顯示設定：回傳指定的子頁 slug；未設定或值無效時回傳 null（＝首頁自己的內容）。 */
+export const getHomeDisplaySlug = cache(async (): Promise<string | null> => {
+  if (!process.env.DATABASE_URL) return null;
+
+  try {
+    const row = await prisma.siteSettings.findUnique({
+      where: { key: DESIGNER_WEB_HOME_PAGE_KEY },
+    });
+    const slug = row?.value?.trim() ?? "";
+    return isValidPageSlug(slug) ? slug : null;
+  } catch {
+    return null;
+  }
+});
+
+/** 首頁實際要呈現的內容：優先使用「首頁顯示」指定的子頁，該頁不存在時回退首頁自己的內容。 */
+export async function getHomeDisplayContent(): Promise<DesignerWebContent> {
+  const slug = await getHomeDisplaySlug();
+  if (slug) {
+    const content = await getDesignerWebPageContent(slug);
+    if (content) return content;
+  }
+  return getDesignerWebContent();
+}
 
 export interface DesignerWebPageSummary {
   slug: string;

@@ -17,6 +17,7 @@ for (const title of [
   "價目表",
   "環境介紹",
   "聯絡資訊",
+  "SEO 設定",
 ]) {
   assert.match(source, new RegExp(title));
 }

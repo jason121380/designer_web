@@ -50,6 +50,10 @@ PageManagementForm
 
 頁面後綴規則：小寫英數與連字號、1-50 字、頭尾不可為連字號；`home`、`admin`、`api`、`uploads` 為保留字。後台的首頁編輯路徑是 `/admin/page-management/home`。
 
+首頁顯示設定：`site_settings` key `designer_web_home_page`（value 為子頁 slug）。設定後 `/` 直接呈現該子頁內容（canonical 仍為 `/`）；未設定或該頁被刪除時回到首頁自己的內容。由頁面列表的「首頁顯示」下拉與 `PATCH /api/designer-web`（body `{ homePageSlug }`）管理。
+
+每頁 SEO：合約內 `seo { title, description, ogImage }`，空字串＝自動以品牌標語＋名稱與主標題產生。metadata 統一由 `lib/seo.ts` 的 `designerPageMetadata()` 輸出（title/description/canonical/og/twitter），廣告到達頁（Google Ads）依賴此設定，修改時必須保持每頁獨立。
+
 修改資料結構時必須同步更新 schema、TypeScript interface、default、normalize、表單、前台與測試。對舊 DB JSON 保持容錯，不要讓缺少新欄位造成整頁 500。
 
 ## 驗證與授權
@@ -135,7 +139,8 @@ npm run build:verify
 - `public-content-source.test.ts`：前台只使用 DB 設定讀取層。
 - `public-section-anchors.test.ts`：前台 section id 與導覽。
 - `page-management-editor.test.ts`：十個頁面管理區塊。
-- `multi-page.test.ts`：slug 驗證、內容 key、多頁面 API 與後台列表/編輯器。
+- `multi-page.test.ts`：slug 驗證、內容 key、多頁面 API、首頁顯示設定與後台列表/編輯器。
+- `page-seo.test.ts`：每頁 metadata 輸出（自動 fallback 與後台 SEO 設定優先）。
 - `admin-navigation.test.ts`：單一後台入口、品牌與媒體庫移除。
 - `auth-login.test.ts`：登入帳號相容處理。
 - `cloudflare-media.test.ts`：R2/Stream helper。

@@ -133,6 +133,16 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
             {([['地址', 'address'], ['Google Maps 連結', 'mapUrl'], ['電話', 'phone'], ['Email', 'email'], ['LINE 連結', 'line'], ['Instagram 連結', 'instagram'], ['Facebook 連結', 'facebook'], ['Google Map 嵌入 URL', 'mapEmbedUrl']] as const).map(([label, key]) => <Field key={key} label={label} value={content.contact[key]} onChange={(value) => setContent({ ...content, contact: { ...content.contact, [key]: value } })} />)}
           </div>
         </PageSectionPanel>
+
+        <PageSectionPanel title="SEO 設定" description="此頁在搜尋結果與廣告到達頁的標題、描述與分享圖；未填時自動使用品牌與主標題">
+          <Field label="SEO 標題（搜尋結果與分頁標題）" value={content.seo.title} placeholder={`${content.brand.tagline}｜${content.brand.name}`} onChange={(title) => setContent({ ...content, seo: { ...content.seo, title } })} />
+          <div className="mt-4">
+            <TextArea label="SEO 描述（搜尋結果摘要，建議 80-150 字）" value={content.seo.description} onChange={(description) => setContent({ ...content, seo: { ...content.seo, description } })} />
+          </div>
+          <div className="mt-4">
+            <ImageUpload label="社群分享圖（og:image，建議 1200x630）" value={content.seo.ogImage} onChange={(ogImage) => setContent({ ...content, seo: { ...content.seo, ogImage } })} />
+          </div>
+        </PageSectionPanel>
       </div>
     </div>
   );

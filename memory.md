@@ -41,6 +41,8 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16。新工作
 - value：完整 `DesignerWebContent` JSON。
 - slug 規則：小寫英數與連字號、1-50 字；保留字 `home`、`admin`、`api`、`uploads`。
 - 前台子頁面不存在回 404；首頁 fallback 示範內容。
+- 首頁顯示設定：key `designer_web_home_page`（value = 子頁 slug）；設定後 `/` 呈現該子頁內容，刪除該頁時自動清除設定。
+- 每頁 SEO：合約 `seo { title, description, ogImage }`；metadata 由 `designerPageMetadata()` 統一輸出。
 - `lib/designer-web-content.ts` 負責 Zod 驗證、清理、預設值與舊資料相容。
 - 若 DB 不可用或 JSON 損壞，前台 fallback 到 KIMEKO 示範內容。
 

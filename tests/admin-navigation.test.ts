@@ -40,7 +40,7 @@ const middleware = read("middleware.ts");
 assert.match(middleware, /legacyAdminPrefixes/);
 assert.match(middleware, /\/admin\/page-management/);
 // manifest 必須繞過登入保護，否則後台 PWA 無法安裝
-assert.match(middleware, /manifest\\\.webmanifest/);
+assert.ok(middleware.includes("manifest\\\\.webmanifest"), "middleware matcher 必須排除 manifest");
 
 // 側欄收合不可寫入 localStorage：曾造成誤觸收合後，之後每次進後台側欄都消失
 const adminShell = read("components/admin/AdminShell.tsx");

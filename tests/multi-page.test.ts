@@ -59,3 +59,13 @@ assert.match(editorSource, /notFound\(\)/);
 
 const formSource = read("components/admin/PageManagementForm.tsx");
 assert.match(formSource, /slug \? `\/api\/designer-web\/\$\{slug\}` : "\/api\/designer-web"/, "表單需依 slug 決定儲存 API");
+
+// 首頁顯示設定：PATCH API 與列表選單
+const homeApiSource = read("app/api/designer-web/route.ts");
+assert.match(homeApiSource, /export async function PATCH/);
+assert.match(homeApiSource, /homePageSlug/);
+assert.match(homeApiSource, /DESIGNER_WEB_HOME_PAGE_KEY/);
+assert.match(listSource, /首頁顯示/);
+assert.match(listSource, /首頁自己的內容/);
+// 刪除頁面時要清掉指向它的首頁顯示設定
+assert.match(apiSource, /DESIGNER_WEB_HOME_PAGE_KEY/);
