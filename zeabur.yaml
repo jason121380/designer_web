@@ -1,10 +1,10 @@
 apiVersion: zeabur.com/v1
 kind: ZeaburSpec
 metadata:
-  name: luxe-magazine
+  name: designer-web
 spec:
   services:
-    - name: luxe-magazine
+    - name: designer-web
       template: NODEJS
       spec:
         source:
