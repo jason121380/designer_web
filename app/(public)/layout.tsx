@@ -1,6 +1,5 @@
 import Header from "@/components/public/Header";
 import Footer from "@/components/public/Footer";
-import Tracker from "@/components/public/Tracker";
 import { jsonLdGraph, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +13,6 @@ export default async function PublicLayout({ children }: { children: React.React
           __html: jsonLdGraph(organizationJsonLd(), websiteJsonLd()),
         }}
       />
-      <Tracker />
       <Header />
       <main className="min-h-screen">{children}</main>
       <Footer />
