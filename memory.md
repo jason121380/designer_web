@@ -1,6 +1,6 @@
 # memory.md
 
-Designer Web 的跨 session 專案記錄。最後更新：2026-07-16。新工作階段先讀 `README.md`、`STYLE.md`、`CLAUDE.md`，再以目前程式碼與 Git 狀態校正本檔。
+Designer Web 的跨 session 專案記錄。最後更新：2026-07-16（後續 repo review：移除舊資料表、死碼清理、上傳 MIME 修正）。新工作階段先讀 `README.md`、`STYLE.md`、`CLAUDE.md`，再以目前程式碼與 Git 狀態校正本檔。
 
 ## 目前狀態
 
@@ -81,10 +81,12 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16。新工作
 ## 相容性與技術債
 
 - 2026-07 清理：舊 CMS 的 admin 頁面、公開文章/分類/搜尋頁、文章/分類/標籤/媒體/用戶/AI/追蹤/維護 API、對應 lib 與 components、TipTap/OpenAI/sanitize-html/slugify 等依賴已全部移除。
-- Prisma schema 仍保留 Article、Category、Tag、ArticleTag、PageView 模型與資料表；程式碼已無任何引用，僅為避免破壞性 migration 造成資料遺失。確認不再需要舊資料後，以有 rollback 計畫的 migration 移除。
+- 舊資料表（articles、article_tags、categories、tags、page_views）與對應 Prisma model 已於 2026-07 移除（migration `20260715000000_drop_legacy_cms`，檔內附 rollback DDL）。Prisma schema 現只保留 `User`、`Media`、`SiteSettings`。
+- 死碼清理：已刪除 `types/index.ts`（全為舊 CMS 型別）與 `lib/rate-limit.ts` 未使用的 `debounce`／`getClientIp`。
+- 上傳副檔名改由實際 MIME 推導（不再信任使用者檔名），`/uploads` 靜態服務白名單收斂為點陣圖類型（移除 svg/txt，避免 XSS）。
 - `lib/auth.ts` 仍保留舊管理員 email alias（`admin` -> `admin@mifaso.com`），讓現有帳號可用 `admin` 登入；這是內部相容，不是品牌顯示。
 - Cloudflare Stream direct-upload API 已存在，但頁面管理 UI 尚未串接，影片欄位仍手動填播放 URL。
-- 首頁 SEO title/description 已改為由 `generateMetadata` 讀取品牌名稱、標語與主標題；社群分享圖尚未納入頁面設定。
+- 每頁 SEO title/description/og:image 皆已納入頁面設定（`PageManagementForm` 的 SEO 區塊），未填時由 `designerPageMetadata()` 自動以品牌與主標題產生。
 - 聯絡資訊的連結欄位（地圖、Email、LINE、IG、FB）清空即隱藏，不再被 normalize 回填示範連結；地址與電話仍保留預設避免區塊空白。
 
 ## 下一步建議
@@ -92,9 +94,8 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16。新工作
 1. 在 Zeabur 設定 R2 與 Stream 環境變數，確認圖片實際回傳 Cloudflare 公開 URL。
 2. 從頁面管理上傳首屏、服務、DM 與環境素材，替換空白示範素材。
 3. 串接 Cloudflare Stream direct-upload UI，避免手動貼影片 URL。
-4. 將社群分享圖（og:image）納入頁面設定。
-5. 確認舊文章資料不再需要後，以 migration 分階段移除 Article/Category/Tag/ArticleTag/PageView 資料表與模型。
-6. 部署到 Zeabur 後重跑登入、儲存、R2 上傳、前台更新與手機版 smoke test。
+4. 部署到 Zeabur 後重跑 `prisma migrate deploy`（會套用移除舊資料表的 migration），並重跑登入、儲存、R2 上傳、前台更新與手機版 smoke test。
+5. `zeabur.yaml` 服務名仍為舊專案 `luxe-magazine`；改名前需確認不會讓 Zeabur 建立新服務而脫鉤既有 Volume/DB。
 
 ## 工作守則
 

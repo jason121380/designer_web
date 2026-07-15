@@ -15,7 +15,7 @@
 - PostgreSQL 儲存登入使用者、媒體資料與完整頁面 JSON。
 - Auth.js Credentials + JWT 保護後台與寫入 API。
 - 首頁 SEO 標題與描述跟隨後台的品牌名稱、標語與主標題設定。
-- 舊 CMS 程式碼（文章、分類、標籤、媒體庫、流量分析、用戶、工程工具與 AI 產文）已移除；舊後台網址仍會導向頁面管理。資料庫中的舊資料表暫時保留，待確認後再以 migration 移除。
+- 舊 CMS 程式碼（文章、分類、標籤、媒體庫、流量分析、用戶、工程工具與 AI 產文）已移除；舊後台網址仍會導向頁面管理。舊資料表（articles、article_tags、categories、tags、page_views）已由 migration `20260715000000_drop_legacy_cms` 移除，資料庫僅保留 `users`、`media`、`site_settings`。
 
 ## 架構
 
