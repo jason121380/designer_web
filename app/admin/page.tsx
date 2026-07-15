@@ -1,2 +1,2 @@
 import { redirect } from "next/navigation";
-export default function AdminRoot() { redirect("/admin/dashboard"); }
+export default function AdminRoot() { redirect("/admin/page-management"); }

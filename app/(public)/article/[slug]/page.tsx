@@ -40,8 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const keywords = [
     ...tagNames,
     article.category?.name,
-    "MIFASO",
-    "迷髮所",
+    "Designer Web",
   ].filter(Boolean) as string[];
   return {
     title: article.metaTitle ?? article.title,

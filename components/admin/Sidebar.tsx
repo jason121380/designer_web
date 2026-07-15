@@ -1,41 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard,
-  FileText,
-  FolderOpen,
-  Tag,
-  ImageIcon,
-  Users,
   LogOut,
   ExternalLink,
   ChevronRight,
   X,
-  BarChart3,
-  Wrench,
   PanelsTopLeft,
 } from "lucide-react";
 
 const navItems: {
   href: string;
   label: string;
-  icon: typeof LayoutDashboard;
-  adminOnly?: boolean;
+  icon: typeof PanelsTopLeft;
 }[] = [
-  { href: "/admin/dashboard", label: "總覽", icon: LayoutDashboard },
-  { href: "/admin/designer-web", label: "前台內容", icon: PanelsTopLeft },
-  { href: "/admin/articles", label: "文章管理", icon: FileText },
-  { href: "/admin/categories", label: "分類管理", icon: FolderOpen },
-  { href: "/admin/tags", label: "標籤管理", icon: Tag },
-  { href: "/admin/media", label: "媒體庫", icon: ImageIcon },
-  { href: "/admin/analytics", label: "流量分析", icon: BarChart3 },
-  { href: "/admin/users", label: "用戶管理", icon: Users },
-  { href: "/admin/tools", label: "工程工具", icon: Wrench, adminOnly: true },
+  { href: "/admin/page-management", label: "頁面管理", icon: PanelsTopLeft },
 ];
 
 const ROLE_MAP: Record<string, string> = {
@@ -54,6 +36,7 @@ interface SidebarProps {
 
 export default function Sidebar({ userName, userRole, open = false, collapsed = false, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const displayName = userName.replace(/mifaso|迷髮所/gi, "").trim() || "管理員";
 
   return (
     <aside
@@ -63,12 +46,9 @@ export default function Sidebar({ userName, userRole, open = false, collapsed = 
         collapsed ? "md:-translate-x-full" : "md:translate-x-0"
       )}
     >
-      {/* Logo */}
       <div className="px-5 py-4 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <span className="flex items-center">
-            <Image src="/logo.png" alt="mifaso 迷髮所" width={120} height={48} className="h-10 w-auto object-contain brightness-0" priority />
-          </span>
+          <span className="text-base font-semibold text-gray-900">Designer Web</span>
           <div className="flex items-center gap-3">
             <Link href="/" target="_blank" className="text-gray-300 hover:text-gray-500 transition-colors">
               <ExternalLink size={14} />
@@ -85,13 +65,10 @@ export default function Sidebar({ userName, userRole, open = false, collapsed = 
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-3 mb-2">主選單</p>
         <div className="space-y-0.5">
-          {navItems
-            .filter((item) => !item.adminOnly || userRole === "ADMIN")
-            .map((item) => {
+          {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             const Icon = item.icon;
             return (
@@ -121,14 +98,13 @@ export default function Sidebar({ userName, userRole, open = false, collapsed = 
         </div>
       </nav>
 
-      {/* User section */}
       <div className="px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-gray-100 flex-shrink-0">
         <div className="flex items-center gap-3 px-3 py-2.5">
           <div className="w-8 h-8 rounded-full bg-rose-brand flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
-            {userName?.[0]?.toUpperCase() ?? "A"}
+            {displayName[0]?.toUpperCase() ?? "A"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{displayName}</p>
             <p className="text-xs text-gray-400">{ROLE_MAP[userRole] ?? userRole}</p>
           </div>
           <button

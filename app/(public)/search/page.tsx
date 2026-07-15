@@ -8,7 +8,7 @@ interface Props { searchParams: Promise<{ q?: string; tag?: string; page?: strin
 
 export const metadata: Metadata = {
   title: "搜尋文章",
-  description: "搜尋 MIFASO 迷髮所所有美髮美妝時尚相關文章",
+  description: "搜尋 Designer Web 的網站內容",
 };
 
 export const dynamic = "force-dynamic";

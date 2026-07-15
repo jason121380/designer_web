@@ -5,15 +5,7 @@ import Link from "next/link";
 import { ChevronRight, Menu } from "lucide-react";
 
 const breadcrumbMap: Record<string, string> = {
-  dashboard: "總覽",
-  articles: "文章管理",
-  categories: "分類管理",
-  tags: "標籤管理",
-  media: "媒體庫",
-  analytics: "流量分析",
-  users: "用戶管理",
-  tools: "工程工具",
-  new: "新增文章",
+  "page-management": "頁面管理",
 };
 
 export default function AdminHeader({
@@ -54,7 +46,7 @@ export default function AdminHeader({
         >
           <Menu size={20} />
         </button>
-        <Link href="/admin/dashboard" className="text-gray-400 hover:text-gray-700 transition-colors">
+        <Link href="/admin/page-management" className="text-gray-400 hover:text-gray-700 transition-colors">
           後台
         </Link>
         {crumbs.map((crumb, i) => (

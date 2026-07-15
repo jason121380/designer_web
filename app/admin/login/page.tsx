@@ -2,9 +2,8 @@
 
 import { useState, FormEvent } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
-import Image from "next/image";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -12,7 +11,6 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   async function handleSubmit(e: FormEvent) {
@@ -24,7 +22,7 @@ export default function LoginPage() {
 
     if (result?.ok) {
       const cb = searchParams.get("callbackUrl") ?? "";
-      const safe = /^\/(?!\/)[^\s]*$/.test(cb) ? cb : "/admin/dashboard";
+      const safe = /^\/(?!\/)[^\s]*$/.test(cb) ? cb : "/admin/page-management";
       // 全頁導向(非 router.push):強制 server 端重新渲染 admin layout,
       // 否則登入後第一次進來側邊選單不會出現,要重新整理才有。
       window.location.href = safe;
@@ -42,13 +40,10 @@ export default function LoginPage() {
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-lg shadow-gray-100 border border-gray-100 p-8">
 
-          {/* Logo */}
           <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <Image src="/logo.png" alt="mifaso 迷髮所" width={160} height={64} className="h-14 w-auto object-contain brightness-0" priority />
-            </div>
+            <p className="mb-3 text-2xl font-semibold text-gray-900">Designer Web</p>
             <h1 className="text-xl font-bold text-gray-900">內容管理後台</h1>
-            <p className="text-sm text-gray-400 mt-1">登入以管理 mifaso 迷髮所的內容</p>
+            <p className="text-sm text-gray-400 mt-1">登入以管理一頁式網站內容</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -116,7 +111,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-gray-300 mt-6">
-          MIFASO 迷髮所 © {new Date().getFullYear()}
+          Designer Web © {new Date().getFullYear()}
         </p>
       </div>
     </div>

@@ -10,7 +10,7 @@ const notoSansTC = Noto_Sans_TC({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.SITE_URL ?? "https://mifaso.co"),
+  metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
   manifest: "/manifest.webmanifest",
   title: {
     default: "designer_web｜設計師一頁式品牌網站",

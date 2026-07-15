@@ -1,9 +1,11 @@
 .env
 .env.local
 .next/
+.next-verify/
 node_modules/
 public/uploads/
 *.log
+tsconfig.tsbuildinfo
 .DS_Store
 
 # Local SQLite dev database (project uses PostgreSQL in all environments)

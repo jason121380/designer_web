@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
     // 這台機器記憶體很小，next/image 的 sharp 即時壓縮是主要 OOM 來源。
     // 關閉伺服器端最佳化，圖片直接輸出，記憶體大幅下降。
@@ -11,7 +12,6 @@ const nextConfig: NextConfig = {
     ],
     localPatterns: [
       { pathname: "/uploads/**" },
-      { pathname: "/logo.png" },
     ],
     minimumCacheTTL: 2592000,
   },

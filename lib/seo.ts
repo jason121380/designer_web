@@ -1,11 +1,10 @@
-export const SITE_URL = (process.env.SITE_URL ?? "https://mifaso.co").replace(
+export const SITE_URL = (process.env.SITE_URL ?? "http://localhost:3000").replace(
   /\/$/,
   ""
 );
-export const SITE_NAME = "MIFASO 迷髮所";
+export const SITE_NAME = "Designer Web";
 export const SITE_DESC =
-  "MIFASO 迷髮所，提供最前沿的美髮造型趨勢、彩妝保養與生活美學內容。";
-export const SITE_LOGO = `${SITE_URL}/logo.png`;
+  "Designer Web 一頁式品牌網站與內容管理系統。";
 
 export function abs(path: string): string {
   if (!path) return SITE_URL;
@@ -19,10 +18,6 @@ export function organizationJsonLd() {
     "@id": `${SITE_URL}/#organization`,
     name: SITE_NAME,
     url: SITE_URL,
-    logo: {
-      "@type": "ImageObject",
-      url: SITE_LOGO,
-    },
   };
 }
 
@@ -78,9 +73,9 @@ export function articleJsonLd(a: ArticleInput) {
     "@id": `${url}#article`,
     headline: a.title,
     description: a.description,
-    image: a.image
-      ? { "@type": "ImageObject", url: abs(a.image), caption: a.imageAlt ?? a.title }
-      : SITE_LOGO,
+    ...(a.image
+      ? { image: { "@type": "ImageObject", url: abs(a.image), caption: a.imageAlt ?? a.title } }
+      : {}),
     datePublished: (a.publishedAt ?? a.updatedAt).toISOString(),
     dateModified: a.updatedAt.toISOString(),
     inLanguage: "zh-TW",

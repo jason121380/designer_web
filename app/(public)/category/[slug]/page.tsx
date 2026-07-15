@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cat = await prisma.category.findUnique({ where: { slug } });
   if (!cat) return { title: "分類不存在" };
   const description =
-    cat.description ?? `探索 MIFASO 迷髮所「${cat.name}」相關的精選美髮、時尚與生活美學文章。`;
+    cat.description ?? `探索 Designer Web「${cat.name}」相關內容。`;
   const path = `/category/${cat.slug}`;
   return {
     title: cat.name,

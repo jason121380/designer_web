@@ -2,19 +2,14 @@ export const dynamic = "force-static";
 
 export function GET() {
   const manifest = {
-    name: "MIFASO 迷髮所",
-    short_name: "MIFASO",
-    description: "時尚・美髮・生活美學",
+    name: "Designer Web",
+    short_name: "Designer Web",
+    description: "一頁式品牌網站",
     start_url: "/",
     scope: "/",
     display: "standalone",
     background_color: "#C4837A",
     theme_color: "#C4837A",
-    icons: [
-      { src: "/icon.png", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/icon.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-      { src: "/apple-icon.png", sizes: "180x180", type: "image/png" },
-    ],
   };
   return new Response(JSON.stringify(manifest), {
     headers: {
