@@ -24,26 +24,31 @@ Designer Web 是設計師品牌的一頁式網站，不是文章 CMS。
 
 ## 內容資料流
 
+支援多頁面：首頁（`/`）沿用既有 key，子頁面（`/jason`、`/kimiko` 等）各自獨立一份內容。
+
 ```txt
 PageManagementForm
-  -> PUT /api/designer-web
+  -> PUT /api/designer-web（首頁）或 /api/designer-web/{slug}（子頁面）
   -> normalizeDesignerWebContent()
-  -> site_settings(key = designer_web_content, value = JSON)
+  -> site_settings(key = designer_web_content 或 designer_web_content:{slug})
 
-Public page / Header / Footer
-  -> getDesignerWebContent()
+前台 /（首頁）與 /{slug}（子頁面）
+  -> getDesignerWebContent() / getDesignerWebPageContent(slug)
   -> site_settings
   -> parseDesignerWebContent()
-  -> normalized content or default demo fallback
+  -> OnePage（Header + 十區塊 + Footer，props 驅動）
+  -> 首頁 fallback 示範內容；子頁面不存在則 404
 ```
 
 來源真相：
 
-- 合約與預設內容：`lib/designer-web-content.ts`
-- DB 讀取與 fallback：`lib/designer-web-settings.ts`
-- 寫入 API：`app/api/designer-web/route.ts`
-- 後台表單：`components/admin/PageManagementForm.tsx`
-- 前台輸出：`app/(public)/page.tsx`
+- 合約、預設內容與 slug 驗證：`lib/designer-web-content.ts`
+- DB 讀取、頁面列表與 fallback：`lib/designer-web-settings.ts`
+- 寫入 API：`app/api/designer-web/route.ts`（首頁）、`app/api/designer-web/[slug]/route.ts`（子頁面 CRUD）
+- 後台列表：`components/admin/PageList.tsx`；編輯器：`components/admin/PageManagementForm.tsx`
+- 前台輸出：`components/public/OnePage.tsx`（`app/(public)/page.tsx` 與 `app/(public)/[slug]/page.tsx` 共用）
+
+頁面後綴規則：小寫英數與連字號、1-50 字、頭尾不可為連字號；`home`、`admin`、`api`、`uploads` 為保留字。後台的首頁編輯路徑是 `/admin/page-management/home`。
 
 修改資料結構時必須同步更新 schema、TypeScript interface、default、normalize、表單、前台與測試。對舊 DB JSON 保持容錯，不要讓缺少新欄位造成整頁 500。
 
@@ -130,6 +135,7 @@ npm run build:verify
 - `public-content-source.test.ts`：前台只使用 DB 設定讀取層。
 - `public-section-anchors.test.ts`：前台 section id 與導覽。
 - `page-management-editor.test.ts`：十個頁面管理區塊。
+- `multi-page.test.ts`：slug 驗證、內容 key、多頁面 API 與後台列表/編輯器。
 - `admin-navigation.test.ts`：單一後台入口、品牌與媒體庫移除。
 - `auth-login.test.ts`：登入帳號相容處理。
 - `cloudflare-media.test.ts`：R2/Stream helper。

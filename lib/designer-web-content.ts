@@ -1,6 +1,23 @@
 import { z } from "zod";
 
 export const DESIGNER_WEB_SETTINGS_KEY = "designer_web_content";
+export const DESIGNER_WEB_SETTINGS_PREFIX = `${DESIGNER_WEB_SETTINGS_KEY}:`;
+
+// 首頁在後台以 `home` 呈現；其餘保留給既有路由，不可作為頁面後綴。
+export const HOME_PAGE_SLUG = "home";
+export const RESERVED_PAGE_SLUGS = [HOME_PAGE_SLUG, "admin", "api", "uploads"];
+
+// 頁面後綴：小寫英數與連字號，1-50 字，頭尾不可為連字號。
+const PAGE_SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,48}[a-z0-9])?$/;
+
+export function isValidPageSlug(slug: string): boolean {
+  return PAGE_SLUG_PATTERN.test(slug) && !RESERVED_PAGE_SLUGS.includes(slug);
+}
+
+/** slug 省略時回傳首頁（`/`）使用的既有 key，維持舊資料相容。 */
+export function pageContentKey(slug?: string | null): string {
+  return slug ? `${DESIGNER_WEB_SETTINGS_PREFIX}${slug}` : DESIGNER_WEB_SETTINGS_KEY;
+}
 
 const nullableString = z.string().optional().nullable();
 const nullableStringList = z.array(z.string()).optional().nullable();

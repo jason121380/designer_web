@@ -5,7 +5,8 @@
 ## 目前功能
 
 - 一頁式響應式前台，預設內容為 KIMEKO HAIR 示範版型。
-- 後台單一入口：`/admin/page-management`。
+- 多頁面：首頁（`/`）之外可建立任意數量的獨立頁面（`/jason`、`/kimiko`…），每頁有自己的品牌、內容、主色與 SEO。
+- 後台單一入口：`/admin/page-management`（頁面列表 → 各頁獨立編輯器）。
 - 可編輯品牌、首屏、活動 DM、接髮介紹、其他服務、作品影片、分期、價目表、環境與聯絡資訊。
 - 圖片上傳時驗證格式與大小；JPEG/PNG 會縮至最多 1600px 並轉為 WebP。
 - 設定 Cloudflare R2 後圖片存入 R2；未設定時才退回本機 `public/uploads`。
@@ -114,12 +115,17 @@ npm run build:verify
 
 | 路徑 | 責任 |
 |---|---|
-| `app/(public)/page.tsx` | 一頁式前台區塊 |
-| `app/admin/page-management/page.tsx` | 後台頁面管理入口 |
+| `components/public/OnePage.tsx` | 一頁式前台輸出（首頁與子頁面共用） |
+| `app/(public)/page.tsx` | 首頁（`/`） |
+| `app/(public)/[slug]/page.tsx` | 子頁面（`/jason` 等） |
+| `app/admin/page-management/page.tsx` | 後台頁面列表（新增/刪除） |
+| `app/admin/page-management/[slug]/page.tsx` | 各頁面獨立編輯器（首頁為 `home`） |
+| `components/admin/PageList.tsx` | 頁面列表 UI |
 | `components/admin/PageManagementForm.tsx` | 完整頁面設定表單 |
-| `lib/designer-web-content.ts` | 資料合約、預設內容與正規化 |
-| `lib/designer-web-settings.ts` | PostgreSQL 設定讀取與 fallback |
-| `app/api/designer-web/route.ts` | 頁面設定 GET/PUT API |
+| `lib/designer-web-content.ts` | 資料合約、預設內容、正規化與 slug 驗證 |
+| `lib/designer-web-settings.ts` | PostgreSQL 設定讀取、頁面列表與 fallback |
+| `app/api/designer-web/route.ts` | 首頁設定 GET/PUT API |
+| `app/api/designer-web/[slug]/route.ts` | 子頁面 GET/POST/PUT/DELETE API |
 | `app/api/upload/route.ts` | 圖片處理、R2/本機儲存與媒體紀錄 |
 | `lib/cloudflare-media.ts` | R2 與 Stream API helper |
 | `middleware.ts` | 後台登入保護與舊路由導向 |

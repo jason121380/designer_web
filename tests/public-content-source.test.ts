@@ -6,16 +6,30 @@ import path from "node:path";
 const testsDir = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(testsDir, "..");
 const read = (file: string) => readFileSync(path.join(root, file), "utf8");
-const pageSource = read("app/(public)/page.tsx");
-const headerSource = read("components/public/Header.tsx");
-const footerSource = read("components/public/Footer.tsx");
 
-assert.doesNotMatch(pageSource, /frontendDemo/);
-assert.match(pageSource, /content\.services/);
-assert.match(pageSource, /content\.otherServices/);
-assert.match(pageSource, /content\.videos/);
-assert.match(pageSource, /content\.installment/);
-assert.match(headerSource, /getDesignerWebContent/);
-assert.doesNotMatch(headerSource, /frontendDemo/);
-assert.match(footerSource, /getDesignerWebContent/);
-assert.doesNotMatch(footerSource, /frontendDemo|Powered by LURE/);
+// 首頁與子頁面都只透過 DB 設定讀取層取得內容
+const homeSource = read("app/(public)/page.tsx");
+assert.match(homeSource, /getDesignerWebContent/);
+assert.doesNotMatch(homeSource, /frontendDemo/);
+
+const slugSource = read("app/(public)/[slug]/page.tsx");
+assert.match(slugSource, /getDesignerWebPageContent/);
+assert.match(slugSource, /isValidPageSlug/);
+assert.match(slugSource, /notFound\(\)/);
+
+// OnePage 為共用輸出元件，內容一律來自 props，不自行讀取或硬編碼
+const onePageSource = read("components/public/OnePage.tsx");
+assert.match(onePageSource, /content\.services/);
+assert.match(onePageSource, /content\.otherServices/);
+assert.match(onePageSource, /content\.videos/);
+assert.match(onePageSource, /content\.installment/);
+assert.doesNotMatch(onePageSource, /frontendDemo|getDesignerWebContent/);
+
+// Header 與 Footer 都是 props 驅動，跟著各頁面的內容走
+const headerSource = read("components/public/Header.tsx");
+assert.match(headerSource, /content: DesignerWebContent/);
+assert.doesNotMatch(headerSource, /frontendDemo|getDesignerWebContent/);
+
+const footerSource = read("components/public/Footer.tsx");
+assert.match(footerSource, /content: DesignerWebContent/);
+assert.doesNotMatch(footerSource, /frontendDemo|Powered by LURE|getDesignerWebContent/);

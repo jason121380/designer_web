@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, Plus, Save, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, ExternalLink, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { DesignerWebContent, PageService } from "@/lib/designer-web-content";
 import ImageUpload from "./ImageUpload";
@@ -48,14 +49,17 @@ function ServiceRows({ items, onChange }: { items: PageService[]; onChange: (ite
   </div>)}</>;
 }
 
-export default function PageManagementForm({ initialContent }: { initialContent: DesignerWebContent }) {
+export default function PageManagementForm({ initialContent, slug }: { initialContent: DesignerWebContent; slug?: string }) {
   const [content, setContent] = useState(initialContent);
   const [saving, setSaving] = useState(false);
+  // slug 省略時編輯首頁（既有 /api/designer-web 與 / 路徑）
+  const apiPath = slug ? `/api/designer-web/${slug}` : "/api/designer-web";
+  const previewPath = slug ? `/${slug}` : "/";
 
   async function save() {
     setSaving(true);
     try {
-      const response = await fetch("/api/designer-web", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(content) });
+      const response = await fetch(apiPath, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(content) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "儲存失敗");
       setContent(body);
@@ -69,10 +73,11 @@ export default function PageManagementForm({ initialContent }: { initialContent:
 
   return (
     <div className="mx-auto max-w-5xl pb-20">
+      <Link href="/admin/page-management" className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800"><ArrowLeft size={15} />回頁面列表</Link>
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div><h1 className="text-2xl font-bold text-gray-900">頁面管理</h1><p className="mt-1 text-sm text-gray-400">依照前台順序編輯各區塊內容。</p></div>
+        <div><h1 className="text-2xl font-bold text-gray-900">編輯頁面：{previewPath}</h1><p className="mt-1 text-sm text-gray-400">依照前台順序編輯各區塊內容。</p></div>
         <div className="flex gap-2">
-          <a href="/" target="_blank" className="inline-flex items-center gap-2 border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600"><ExternalLink size={15} />預覽前台</a>
+          <a href={previewPath} target="_blank" className="inline-flex items-center gap-2 border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600"><ExternalLink size={15} />預覽前台</a>
           <button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 bg-rose-brand px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Save size={15} />{saving ? "儲存中" : "儲存設定"}</button>
         </div>
       </div>

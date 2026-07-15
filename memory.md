@@ -10,7 +10,8 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16。新工作
 - 本機前台：`http://localhost:3000/`。
 - 本機後台：`http://localhost:3000/admin/page-management`。
 - 前台目前是 KIMEKO HAIR 示範內容；正式素材與文字應由後台更新。
-- 後台側欄只剩「頁面管理」。
+- 後台側欄只剩「頁面管理」；入口為頁面列表，支援多頁面（`/{slug}`），每頁獨立編輯。
+- 多頁面已通過本機 PostgreSQL E2E：登入 → 建立/編輯/刪除頁面 → 前台獨立呈現與 404。
 - 桌機 1280 x 720 與手機 390 x 844 已驗證無水平溢出。
 - 前後台瀏覽器 console 已驗證無 error。
 - 核心測試、TypeScript 與 `npm run build:verify` 已通過。
@@ -32,9 +33,12 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16。新工作
 ### PostgreSQL
 
 - 使用 Zeabur PostgreSQL，連線由 `DATABASE_URL` 提供。
-- 頁面設定存於 `site_settings`。
-- 固定 key：`designer_web_content`。
+- 頁面設定存於 `site_settings`，支援多頁面：
+  - 首頁（`/`）：key `designer_web_content`（沿用舊 key，向下相容）。
+  - 子頁面（`/jason` 等）：key `designer_web_content:{slug}`。
 - value：完整 `DesignerWebContent` JSON。
+- slug 規則：小寫英數與連字號、1-50 字；保留字 `home`、`admin`、`api`、`uploads`。
+- 前台子頁面不存在回 404；首頁 fallback 示範內容。
 - `lib/designer-web-content.ts` 負責 Zod 驗證、清理、預設值與舊資料相容。
 - 若 DB 不可用或 JSON 損壞，前台 fallback 到 KIMEKO 示範內容。
 
