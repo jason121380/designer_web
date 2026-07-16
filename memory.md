@@ -18,6 +18,15 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16（後續 re
 - 前後台瀏覽器 console 已驗證無 error。
 - 核心測試、TypeScript 與 `npm run build:verify` 已通過。
 
+### repo review 後續調整（2026-07-16，分支 claude/repo-review-fegvlg，已合併 main）
+
+- 首頁 `/`：未設定內容時顯示維護頁 `MaintenancePage`（`isHomeConfigured()` 判斷），不再退回內建示範內容並標記 noindex。
+- 用戶管理：側欄新增「用戶管理」（僅 ADMIN），`/admin/users` 表格列出登入帳號，`PATCH /api/users/[id]` 重設密碼（至少 6 字、bcrypt、限速、不回傳密碼）。
+- 新增頁面：改右上角按鈕 + 彈窗（設計師名稱 + 後綴）；`POST /api/designer-web/[slug]` 接受 `{ name }`。
+- 視覺：全站移除陰影（shadow）、所有卡片/按鈕/輸入框/彈窗/表格改小圓角 `rounded-lg`（對齊側欄）。
+- 側欄品牌字改「MLG 設計師一頁式網站後台」，移除右側外連 icon。
+- 部署：合併到 main 會觸發 Zeabur 重新部署並跑 `prisma migrate deploy`（含移除舊資料表的 migration）。UI/前台改動需部署後才在線上生效。
+
 以上是 2026-07-16 本機與該 commit 的狀態，不代表 Zeabur 最新部署一定已更新；部署狀態需到 Zeabur 或正式網域重新確認。
 
 ## 已確定架構

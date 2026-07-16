@@ -1,14 +1,15 @@
 # Designer Web
 
-以 Next.js 製作的一頁式設計師品牌網站。前台依 PostgreSQL 中的頁面設定呈現，後台只保留「頁面管理」，圖片可直接上傳到 Cloudflare R2，影片使用 Cloudflare Stream 播放網址。
+以 Next.js 製作的一頁式設計師品牌網站。前台依 PostgreSQL 中的頁面設定呈現，後台以「頁面管理」為主、另有僅 ADMIN 可用的「用戶管理」，圖片可直接上傳到 Cloudflare R2，影片使用 Cloudflare Stream 播放網址。
 
 ## 目前功能
 
-- 一頁式響應式前台，預設內容為 KIMEKO HAIR 示範版型。
+- 一頁式響應式前台；根網址 `/` 未設定內容時顯示維護頁（不顯示內建示範內容），公開內容可放在子頁。
 - 多頁面：首頁（`/`）之外可建立任意數量的獨立頁面（`/jason`、`/kimiko`…），每頁有自己的品牌、內容、主色與 SEO。
+- 新增頁面採右上角按鈕 + 彈窗，輸入「設計師名稱」與「網址後綴」即建立。
 - 首頁顯示設定：可在後台指定首頁直接呈現某個子頁面的內容，隨時可切換或還原。
 - 每頁獨立 SEO 設定：標題、描述與社群分享圖（og:image），未填時自動使用品牌與主標題；適合對各分頁投放 Google Ads。
-- 後台單一入口：`/admin/page-management`（頁面列表 → 各頁獨立編輯器）。
+- 後台入口：「頁面管理」`/admin/page-management`（頁面列表 → 各頁獨立編輯器）與「用戶管理」`/admin/users`（僅 ADMIN，列出登入帳號並可重設密碼）。
 - 可編輯品牌、首屏、活動 DM、接髮介紹、其他服務、作品影片、分期、價目表、環境與聯絡資訊。
 - 圖片上傳時驗證格式與大小；JPEG/PNG 會縮至最多 1600px 並轉為 WebP。
 - 設定 Cloudflare R2 後圖片存入 R2；未設定時才退回本機 `public/uploads`。
@@ -118,15 +119,19 @@ npm run build:verify
 | 路徑 | 責任 |
 |---|---|
 | `components/public/OnePage.tsx` | 一頁式前台輸出（首頁與子頁面共用） |
-| `app/(public)/page.tsx` | 首頁（`/`） |
+| `components/public/MaintenancePage.tsx` | 首頁未設定內容時的維護頁 |
+| `app/(public)/page.tsx` | 首頁（`/`），未設定內容時顯示維護頁 |
 | `app/(public)/[slug]/page.tsx` | 子頁面（`/jason` 等） |
-| `app/admin/page-management/page.tsx` | 後台頁面列表（新增/刪除） |
+| `app/admin/page-management/page.tsx` | 後台頁面列表 |
 | `app/admin/page-management/[slug]/page.tsx` | 各頁面獨立編輯器（首頁為 `home`） |
-| `components/admin/PageList.tsx` | 頁面列表 UI |
+| `components/admin/PageList.tsx` | 頁面列表 UI 與新增頁面彈窗 |
 | `components/admin/PageManagementForm.tsx` | 完整頁面設定表單 |
+| `app/admin/users/page.tsx` | 用戶管理頁（僅 ADMIN） |
+| `components/admin/UserList.tsx` | 帳號表格與變更密碼彈窗 |
+| `app/api/users/[id]/route.ts` | 重設密碼 API（僅 ADMIN，PATCH） |
 | `lib/designer-web-content.ts` | 資料合約、預設內容、正規化與 slug 驗證 |
-| `lib/designer-web-settings.ts` | PostgreSQL 設定讀取、頁面列表與 fallback |
-| `app/api/designer-web/route.ts` | 首頁設定 GET/PUT API |
+| `lib/designer-web-settings.ts` | PostgreSQL 設定讀取、頁面列表、首頁維護頁判斷與 fallback |
+| `app/api/designer-web/route.ts` | 首頁設定 GET/PUT/PATCH API |
 | `app/api/designer-web/[slug]/route.ts` | 子頁面 GET/POST/PUT/DELETE API |
 | `app/api/upload/route.ts` | 圖片處理、R2/本機儲存與媒體紀錄 |
 | `lib/cloudflare-media.ts` | R2 與 Stream API helper |

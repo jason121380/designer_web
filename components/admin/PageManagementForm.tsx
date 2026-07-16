@@ -8,7 +8,7 @@ import type { DesignerWebContent, PageService } from "@/lib/designer-web-content
 import ImageUpload from "./ImageUpload";
 import PageSectionPanel from "./PageSectionPanel";
 
-const inputClass = "w-full border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light";
+const inputClass = "w-full border border-gray-200 bg-white rounded-lg px-3 py-2.5 text-sm outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light";
 const textareaClass = `${inputClass} min-h-24 resize-y`;
 const rowClass = "space-y-4 border-b border-gray-100 py-5 first:pt-0 last:border-b-0 last:pb-0";
 
@@ -77,12 +77,12 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div><h1 className="text-2xl font-bold text-gray-900">編輯頁面：{previewPath}</h1><p className="mt-1 text-sm text-gray-400">依照前台順序編輯各區塊內容。</p></div>
         <div className="flex gap-2">
-          <a href={previewPath} target="_blank" className="inline-flex items-center gap-2 border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600"><ExternalLink size={15} />預覽前台</a>
-          <button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 bg-rose-brand px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Save size={15} />{saving ? "儲存中" : "儲存設定"}</button>
+          <a href={previewPath} target="_blank" className="inline-flex items-center gap-2 border border-gray-200 bg-white rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600"><ExternalLink size={15} />預覽前台</a>
+          <button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 bg-rose-brand rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Save size={15} />{saving ? "儲存中" : "儲存設定"}</button>
         </div>
       </div>
 
-      <div className="overflow-hidden border border-gray-200 bg-white">
+      <div className="overflow-hidden border border-gray-200 bg-white rounded-lg">
         <PageSectionPanel title="品牌與導覽" description="品牌名稱、標語與主色" defaultOpen>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="品牌名稱" value={content.brand.name} onChange={(name) => setContent({ ...content, brand: { ...content.brand, name } })} />

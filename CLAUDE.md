@@ -15,7 +15,7 @@ Designer Web 是設計師品牌的一頁式網站，不是文章 CMS。
 
 ## 不可破壞的產品決策
 
-1. 後台側欄只保留「頁面管理」。不要重新加入總覽、文章、分類、標籤、媒體庫、流量分析、用戶或工程工具。
+1. 後台側欄只保留「頁面管理」與「用戶管理」兩個入口（用戶管理僅 ADMIN 可見，功能限「列出帳號 + 重設密碼」）。不要重新加入總覽、文章、分類、標籤、媒體庫、流量分析或工程工具，也不要把用戶管理擴充成新增/刪除帳號或角色管理。
 2. 頁面管理區塊順序必須跟前台一致。
 3. 所有可編輯前台內容都應進入 `DesignerWebContent` 合約並存入 PostgreSQL，不要另建散落的常數或第二份設定來源。
 4. 圖片從各區塊內直接上傳，不顯示獨立媒體庫功能。
@@ -37,8 +37,10 @@ PageManagementForm
   -> site_settings
   -> parseDesignerWebContent()
   -> OnePage（Header + 十區塊 + Footer，props 驅動）
-  -> 首頁 fallback 示範內容；子頁面不存在則 404
+  -> 首頁未設定內容（無首頁顯示覆寫且首頁自己未存過內容）時顯示維護頁並 noindex；子頁面不存在則 404
 ```
+
+首頁維護頁：`isHomeConfigured()`（`lib/designer-web-settings.ts`）判斷首頁是否有實際內容，無則 `app/(public)/page.tsx` 改渲染 `MaintenancePage`，不再退回內建示範內容。示範內容（`defaultDesignerWebContent`）現只作為新頁面起始值與 DB 讀取異常時的容錯，不會公開顯示在 `/`。
 
 來源真相：
 
@@ -61,6 +63,7 @@ PageManagementForm
 - Auth.js 使用 Credentials provider 與 JWT session。
 - `/admin/*` 由 `middleware.ts` 保護，`/admin/login` 除外。
 - `PUT /api/designer-web` 只允許 `ADMIN` 與 `EDITOR`。
+- 用戶管理：`/admin/users` 與 `PATCH /api/users/[id]`（重設密碼）僅 `ADMIN`，非 ADMIN 進頁面會被導回頁面管理；密碼至少 6 字、bcrypt 雜湊，API 不回傳任何密碼欄位並有限速。
 - `POST /api/upload` 要求登入使用者，並有每位使用者上傳限速。
 - 登入後使用全頁導向，確保 server-rendered admin layout 取得新 session。
 - `callbackUrl` 只能使用站內絕對路徑，避免 open redirect。
@@ -141,7 +144,7 @@ npm run build:verify
 - `page-management-editor.test.ts`：十個頁面管理區塊。
 - `multi-page.test.ts`：slug 驗證、內容 key、多頁面 API、首頁顯示設定與後台列表/編輯器。
 - `page-seo.test.ts`：每頁 metadata 輸出（自動 fallback 與後台 SEO 設定優先）。
-- `admin-navigation.test.ts`：單一後台入口、品牌與媒體庫移除。
+- `admin-navigation.test.ts`：後台入口（頁面管理＋用戶管理）、品牌與媒體庫移除。
 - `auth-login.test.ts`：登入帳號相容處理。
 - `cloudflare-media.test.ts`：R2/Stream helper。
 

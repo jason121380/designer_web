@@ -34,7 +34,7 @@ npm run dev
 - 後台：<http://localhost:3000/admin/page-management>
 
 **登入帳號：**`db:seed` 預設建立 `admin`（密碼 `admin123456`，對應 email `admin@mifaso.com`）。
-正式環境請先設定 `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` / `SEED_ADMIN_NAME` 再執行 seed，或登入後更換密碼。
+正式環境請先設定 `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` / `SEED_ADMIN_NAME` 再執行 seed；或登入後於後台「用戶管理」（側欄，僅 ADMIN）重設密碼。
 
 ---
 
