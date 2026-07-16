@@ -79,6 +79,27 @@ export async function PUT(req: NextRequest, context: RouteContext) {
   return NextResponse.json(content);
 }
 
+/** 切換頁面啟用狀態：{ active: false } 停用（前台回 404）、{ active: true } 重新啟用。 */
+export async function PATCH(req: NextRequest, context: RouteContext) {
+  const forbidden = await requireEditor();
+  if (forbidden) return forbidden;
+
+  const slug = await resolveSlug(context);
+  if (!slug) return NextResponse.json({ error: "無效的頁面後綴" }, { status: 400 });
+
+  const row = await prisma.siteSettings.findUnique({ where: { key: pageContentKey(slug) } });
+  if (!row) return NextResponse.json({ error: "頁面不存在" }, { status: 404 });
+
+  const body = (await req.json().catch(() => ({}))) as { active?: boolean };
+  const content = parseDesignerWebContent(row.value);
+  content.active = body.active === true;
+  await prisma.siteSettings.update({
+    where: { key: pageContentKey(slug) },
+    data: { value: JSON.stringify(content) },
+  });
+  return NextResponse.json({ active: content.active });
+}
+
 export async function DELETE(_req: NextRequest, context: RouteContext) {
   const forbidden = await requireEditor();
   if (forbidden) return forbidden;

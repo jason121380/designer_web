@@ -10,7 +10,9 @@ type PageProps = { params: Promise<{ slug: string }> };
 async function loadPage(params: PageProps["params"]) {
   const { slug } = await params;
   if (!isValidPageSlug(slug)) return null;
-  return getDesignerWebPageContent(slug);
+  const content = await getDesignerWebPageContent(slug);
+  // 停用的頁面對外視為不存在（404）
+  return content && content.active ? content : null;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

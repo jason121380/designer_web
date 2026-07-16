@@ -45,7 +45,9 @@ assert.match(apiSource, /需要管理員或編輯身分/);
 const listSource = read("components/admin/PageList.tsx");
 assert.match(listSource, /新增頁面/);
 assert.match(listSource, /首頁/);
-assert.match(listSource, /確認刪除/, "刪除需要二段式確認");
+// 子頁面以「停用/啟用」切換取代刪除；停用後前台回 404
+assert.match(listSource, /停用/, "子頁面需提供停用切換");
+assert.match(listSource, /啟用/, "停用後可重新啟用");
 assert.doesNotMatch(listSource, /window\.confirm|window\.alert/);
 
 const adminListPage = read("app/admin/page-management/page.tsx");
