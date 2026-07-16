@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Home, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Eye, EyeOff, ExternalLink, Home, Pencil, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { HOME_PAGE_SLUG, isValidPageSlug } from "@/lib/designer-web-content";
 
 export interface PageListItem {
   slug: string;
   brandName: string;
+  active: boolean;
 }
 
 const inputClass = "w-full border border-gray-200 bg-white rounded-lg px-3 py-2.5 text-sm outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light";
@@ -28,8 +29,7 @@ export default function PageList({
   const [newName, setNewName] = useState("");
   const [newSlug, setNewSlug] = useState("");
   const [creating, setCreating] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [togglingSlug, setTogglingSlug] = useState<string | null>(null);
   const [savingHomeDisplay, setSavingHomeDisplay] = useState(false);
 
   // 彈窗開啟時：Esc 關閉、鎖住背景捲動
@@ -100,19 +100,22 @@ export default function PageList({
     }
   }
 
-  async function deletePage(slug: string) {
-    setDeleting(true);
+  async function toggleActive(slug: string, active: boolean) {
+    setTogglingSlug(slug);
     try {
-      const response = await fetch(`/api/designer-web/${slug}`, { method: "DELETE" });
+      const response = await fetch(`/api/designer-web/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active }),
+      });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error || "刪除失敗");
-      toast.success(`已刪除頁面 /${slug}`);
-      setConfirmingDelete(null);
+      if (!response.ok) throw new Error(body.error || "操作失敗");
+      toast.success(active ? `已啟用 /${slug}` : `已停用 /${slug}（前台將顯示 404）`);
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "刪除失敗");
+      toast.error(error instanceof Error ? error.message : "操作失敗");
     } finally {
-      setDeleting(false);
+      setTogglingSlug(null);
     }
   }
 
@@ -169,19 +172,19 @@ export default function PageList({
         {pages.map((page) => (
           <div key={page.slug} className={rowClass}>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-gray-900">{page.brandName}</p>
+              <div className="flex items-center gap-2">
+                <p className="truncate text-sm font-semibold text-gray-900">{page.brandName}</p>
+                {!page.active && <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-500">已停用</span>}
+              </div>
               <p className="text-xs text-gray-400">/{page.slug}</p>
             </div>
             <div className="flex flex-shrink-0 items-center gap-2">
               <a href={`/${page.slug}`} target="_blank" className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600" title="預覽前台"><ExternalLink size={13} />預覽</a>
               <Link href={`/admin/page-management/${page.slug}`} className="inline-flex items-center gap-1.5 bg-rose-brand rounded-lg px-4 py-2 text-xs font-semibold text-white"><Pencil size={13} />編輯</Link>
-              {confirmingDelete === page.slug ? (
-                <>
-                  <button type="button" disabled={deleting} onClick={() => deletePage(page.slug)} className="inline-flex items-center gap-1.5 bg-red-600 rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"><Trash2 size={13} />{deleting ? "刪除中" : "確認刪除"}</button>
-                  <button type="button" onClick={() => setConfirmingDelete(null)} className="px-2 py-2 text-xs font-medium text-gray-500">取消</button>
-                </>
+              {page.active ? (
+                <button type="button" disabled={togglingSlug === page.slug} onClick={() => toggleActive(page.slug, false)} aria-label={`停用 /${page.slug}`} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-red-500 disabled:opacity-50"><EyeOff size={13} />{togglingSlug === page.slug ? "處理中" : "停用"}</button>
               ) : (
-                <button type="button" onClick={() => setConfirmingDelete(page.slug)} aria-label={`刪除 /${page.slug}`} className="inline-flex items-center gap-1.5 px-2 py-2 text-xs font-medium text-red-500"><Trash2 size={13} />刪除</button>
+                <button type="button" disabled={togglingSlug === page.slug} onClick={() => toggleActive(page.slug, true)} aria-label={`啟用 /${page.slug}`} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-emerald-600 disabled:opacity-50"><Eye size={13} />{togglingSlug === page.slug ? "處理中" : "啟用"}</button>
               )}
             </div>
           </div>

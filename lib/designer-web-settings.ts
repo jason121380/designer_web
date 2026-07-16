@@ -43,9 +43,9 @@ export const getDesignerWebPageContent = cache(
   }
 );
 
-/** 所有子頁面的 slug（不含首頁），依字母排序。 */
+/** 對外可見（啟用中）子頁面的 slug（不含首頁），供 sitemap 使用。 */
 export const listDesignerWebPageSlugs = cache(async (): Promise<string[]> => {
-  return (await listDesignerWebPages()).map((page) => page.slug);
+  return (await listDesignerWebPages()).filter((page) => page.active).map((page) => page.slug);
 });
 
 /** 首頁顯示設定：回傳指定的子頁 slug；未設定或值無效時回傳 null（＝首頁自己的內容）。 */
@@ -98,9 +98,10 @@ export const isHomeConfigured = cache(async (): Promise<boolean> => {
 export interface DesignerWebPageSummary {
   slug: string;
   brandName: string;
+  active: boolean;
 }
 
-/** 所有子頁面的 slug 與品牌名稱（後台列表用），依 slug 排序。 */
+/** 所有子頁面的 slug、品牌名稱與啟用狀態（後台列表用），依 slug 排序。 */
 export const listDesignerWebPages = cache(async (): Promise<DesignerWebPageSummary[]> => {
   if (!process.env.DATABASE_URL) return [];
 
@@ -110,10 +111,14 @@ export const listDesignerWebPages = cache(async (): Promise<DesignerWebPageSumma
       select: { key: true, value: true },
       orderBy: { key: "asc" },
     });
-    return rows.map((row) => ({
-      slug: row.key.slice(DESIGNER_WEB_SETTINGS_PREFIX.length),
-      brandName: parseDesignerWebContent(row.value).brand.name,
-    }));
+    return rows.map((row) => {
+      const content = parseDesignerWebContent(row.value);
+      return {
+        slug: row.key.slice(DESIGNER_WEB_SETTINGS_PREFIX.length),
+        brandName: content.brand.name,
+        active: content.active,
+      };
+    });
   } catch {
     return [];
   }

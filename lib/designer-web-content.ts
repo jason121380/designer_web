@@ -86,6 +86,8 @@ export const designerWebContentSchema = z.object({
     description: nullableString,
     ogImage: nullableString,
   }).optional(),
+  // 子頁面是否啟用；false＝停用，前台該 slug 回 404（不刪除內容）。缺欄位＝啟用（向下相容）。
+  active: z.boolean().optional().nullable(),
 });
 
 export interface PageService {
@@ -120,6 +122,8 @@ export interface DesignerWebContent {
   };
   /** 每頁獨立 SEO；空字串代表自動使用品牌與主標題產生。 */
   seo: { title: string; description: string; ogImage: string };
+  /** 子頁面是否啟用；false＝停用（前台該 slug 回 404）。首頁不使用此欄位。 */
+  active: boolean;
 }
 
 export const defaultDesignerWebContent: DesignerWebContent = {
@@ -204,6 +208,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
     mapEmbedUrl: "",
   },
   seo: { title: "", description: "", ogImage: "" },
+  active: true,
 };
 
 type RawContent = z.infer<typeof designerWebContentSchema>;
@@ -307,6 +312,8 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
       description: trim(data.seo?.description),
       ogImage: trim(data.seo?.ogImage),
     },
+    // 只有明確為 false 才停用；缺欄位或其他值一律視為啟用（向下相容舊資料）。
+    active: data.active !== false,
   };
 }
 
