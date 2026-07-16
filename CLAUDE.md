@@ -40,7 +40,7 @@ PageManagementForm
   -> 首頁未設定內容（無首頁顯示覆寫且首頁自己未存過內容）時顯示維護頁並 noindex；子頁面不存在則 404
 ```
 
-首頁維護頁：`isHomeConfigured()`（`lib/designer-web-settings.ts`）判斷首頁是否有實際內容，無則 `app/(public)/page.tsx` 改渲染 `MaintenancePage`，不再退回內建示範內容。示範內容（`defaultDesignerWebContent`）現只作為新頁面起始值與 DB 讀取異常時的容錯，不會公開顯示在 `/`。
+首頁維護頁：`isHomeConfigured()`（`lib/designer-web-settings.ts`）判斷首頁是否有實際內容，無則 `app/(public)/page.tsx` 改渲染 `MaintenancePage`，不再退回內建示範內容。示範內容（`defaultDesignerWebContent`）現只作為新頁面起始值與 DB 讀取異常時的容錯，不會公開顯示在 `/`。注意：首頁只要按過「儲存設定」就會建立 `designer_web_content` row，`/` 便顯示該內容而非維護頁；後台頁面列表首頁列提供「改維護頁」（`DELETE /api/designer-web`，兩段式確認）清除該 row 讓 `/` 回到維護頁。
 
 來源真相：
 

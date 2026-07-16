@@ -20,7 +20,7 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16（後續 re
 
 ### repo review 後續調整（2026-07-16，分支 claude/repo-review-fegvlg，已合併 main）
 
-- 首頁 `/`：未設定內容時顯示維護頁 `MaintenancePage`（`isHomeConfigured()` 判斷），不再退回內建示範內容並標記 noindex。
+- 首頁 `/`：未設定內容時顯示維護頁 `MaintenancePage`（`isHomeConfigured()` 判斷），不再退回內建示範內容並標記 noindex。首頁按過儲存會建立 row 而顯示內容；頁面列表首頁列的「改維護頁」按鈕（`DELETE /api/designer-web`）可清除 row 回到維護頁。
 - 用戶管理：側欄新增「用戶管理」（僅 ADMIN），`/admin/users` 表格列出登入帳號，`PATCH /api/users/[id]` 重設密碼（至少 6 字、bcrypt、限速、不回傳密碼）。
 - 新增頁面：改右上角按鈕 + 彈窗（設計師名稱 + 後綴）；`POST /api/designer-web/[slug]` 接受 `{ name }`。
 - 子頁面停用取代刪除：合約新增 `active`（向下相容），`PATCH /api/designer-web/[slug]` 切換；停用後前台 slug 回 404、sitemap 不收錄、列表顯示「已停用」。`DELETE` API 保留但 UI 不用。

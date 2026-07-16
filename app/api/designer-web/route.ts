@@ -16,6 +16,17 @@ export async function GET() {
   return NextResponse.json(await getDesignerWebContent());
 }
 
+/** 清除首頁自己的內容，讓 `/` 回到維護頁（不影響子頁面與首頁顯示設定）。 */
+export async function DELETE() {
+  const session = await auth();
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (!session?.user || (role !== "ADMIN" && role !== "EDITOR")) {
+    return NextResponse.json({ error: "需要管理員或編輯身分" }, { status: 403 });
+  }
+  await prisma.siteSettings.deleteMany({ where: { key: DESIGNER_WEB_SETTINGS_KEY } });
+  return NextResponse.json({ ok: true });
+}
+
 export async function PUT(req: NextRequest) {
   const session = await auth();
   const role = (session?.user as { role?: string } | undefined)?.role;
