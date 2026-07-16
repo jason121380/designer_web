@@ -6,7 +6,6 @@ import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import {
   LogOut,
-  ExternalLink,
   ChevronRight,
   X,
   PanelsTopLeft,
@@ -47,21 +46,16 @@ export default function Sidebar({ userName, userRole, open = false, collapsed = 
       )}
     >
       <div className="px-5 py-4 border-b border-gray-100">
-        <div className="flex items-center justify-between">
-          <span className="text-base font-semibold text-gray-900">Designer Web</span>
-          <div className="flex items-center gap-3">
-            <Link href="/" target="_blank" className="text-gray-300 hover:text-gray-500 transition-colors">
-              <ExternalLink size={14} />
-            </Link>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="關閉選單"
-              className="md:hidden text-gray-400 hover:text-gray-700 transition-colors"
-            >
-              <X size={20} />
-            </button>
-          </div>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-semibold text-gray-900">MLG 設計師一頁式網站後台</span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="關閉選單"
+            className="md:hidden shrink-0 text-gray-400 hover:text-gray-700 transition-colors"
+          >
+            <X size={20} />
+          </button>
         </div>
       </div>
 
@@ -79,7 +73,7 @@ export default function Sidebar({ userName, userRole, open = false, collapsed = 
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group",
                   isActive
-                    ? "bg-rose-brand text-white shadow-sm"
+                    ? "bg-rose-brand text-white"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 )}
               >

@@ -281,6 +281,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
       image: trim(item.image),
       alt: trim(item.alt),
     }));
+  const installment = stringList(data.installment);
 
   return {
     brand: {
@@ -297,9 +298,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
     services: normalizeServices(data.services, defaultDesignerWebContent.services),
     otherServices: normalizeServices(data.otherServices, defaultDesignerWebContent.otherServices),
     videos,
-    installment: stringList(data.installment).length
-      ? stringList(data.installment)
-      : defaultDesignerWebContent.installment,
+    installment: installment.length ? installment : defaultDesignerWebContent.installment,
     pricing: pricing.length ? pricing : defaultDesignerWebContent.pricing,
     environment,
     contact: normalizeContact(data.contact),

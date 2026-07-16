@@ -37,8 +37,8 @@ export async function GET(_req: NextRequest, context: RouteContext) {
   return NextResponse.json(parseDesignerWebContent(row.value));
 }
 
-/** 建立新頁面：以示範內容起始；已存在時回 409，避免覆寫。 */
-export async function POST(_req: NextRequest, context: RouteContext) {
+/** 建立新頁面：以示範內容起始，可帶入設計師名稱設為品牌名；已存在時回 409，避免覆寫。 */
+export async function POST(req: NextRequest, context: RouteContext) {
   const forbidden = await requireEditor();
   if (forbidden) return forbidden;
 
@@ -54,7 +54,11 @@ export async function POST(_req: NextRequest, context: RouteContext) {
   const existing = await prisma.siteSettings.findUnique({ where: { key } });
   if (existing) return NextResponse.json({ error: "頁面已存在" }, { status: 409 });
 
+  const body = (await req.json().catch(() => ({}))) as { name?: string };
+  const name = typeof body?.name === "string" ? body.name.trim() : "";
+
   const content = structuredClone(defaultDesignerWebContent);
+  if (name) content.brand.name = name;
   await prisma.siteSettings.create({ data: { key, value: JSON.stringify(content) } });
   return NextResponse.json(content, { status: 201 });
 }

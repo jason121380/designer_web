@@ -82,7 +82,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
         </div>
       </div>
 
-      <div className="overflow-hidden border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-hidden border border-gray-200 bg-white">
         <PageSectionPanel title="品牌與導覽" description="品牌名稱、標語與主色" defaultOpen>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="品牌名稱" value={content.brand.name} onChange={(name) => setContent({ ...content, brand: { ...content.brand, name } })} />

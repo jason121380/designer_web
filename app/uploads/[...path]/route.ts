@@ -7,6 +7,9 @@ export const dynamic = "force-dynamic";
 // 與 upload / localize 寫入路徑一致（Zeabur runtime cwd = /src）
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
+// 只服務上傳白名單允許的點陣圖類型（與 /api/upload 一致）。
+// 不含 svg/txt：SVG 可夾帶腳本，作為使用者上傳目錄的靜態服務有 XSS 風險，
+// 且上傳流程本就不會產生這些檔案。
 const TYPES: Record<string, string> = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
@@ -14,8 +17,6 @@ const TYPES: Record<string, string> = {
   ".webp": "image/webp",
   ".gif": "image/gif",
   ".avif": "image/avif",
-  ".svg": "image/svg+xml",
-  ".txt": "text/plain; charset=utf-8",
 };
 
 export async function GET(
