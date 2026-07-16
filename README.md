@@ -4,11 +4,10 @@
 
 ## 目前功能
 
-- 一頁式響應式前台；根網址 `/` 未設定內容時顯示維護頁（不顯示內建示範內容），公開內容可放在子頁。
+- 根網址 `/` 固定為維護頁（noindex、不對外呈現內容）；公開內容一律放在子頁面。
 - 多頁面：首頁（`/`）之外可建立任意數量的獨立頁面（`/jason`、`/kimiko`…），每頁有自己的品牌、內容、主色與 SEO。
 - 新增頁面採右上角按鈕 + 彈窗，輸入「設計師名稱」與「網址後綴」即建立。
 - 子頁面以「停用／啟用」切換取代刪除：停用後前台該網址回 404、不進 sitemap，內容保留可隨時再啟用。
-- 首頁顯示設定：可在後台指定首頁直接呈現某個子頁面的內容，隨時可切換或還原。
 - 每頁獨立 SEO 設定：標題、描述與社群分享圖（og:image），未填時自動使用品牌與主標題；適合對各分頁投放 Google Ads。
 - 後台入口：「頁面管理」`/admin/page-management`（頁面列表 → 各頁獨立編輯器）與「用戶管理」`/admin/users`（僅 ADMIN，列出登入帳號並可重設密碼）。
 - 可編輯品牌、首屏、活動 DM、接髮介紹、其他服務、作品影片、分期、價目表、環境與聯絡資訊。
@@ -120,8 +119,8 @@ npm run build:verify
 | 路徑 | 責任 |
 |---|---|
 | `components/public/OnePage.tsx` | 一頁式前台輸出（首頁與子頁面共用） |
-| `components/public/MaintenancePage.tsx` | 首頁未設定內容時的維護頁 |
-| `app/(public)/page.tsx` | 首頁（`/`），未設定內容時顯示維護頁 |
+| `components/public/MaintenancePage.tsx` | 根網址 `/` 的固定維護頁 |
+| `app/(public)/page.tsx` | 首頁（`/`），固定渲染維護頁 |
 | `app/(public)/[slug]/page.tsx` | 子頁面（`/jason` 等） |
 | `app/admin/page-management/page.tsx` | 後台頁面列表 |
 | `app/admin/page-management/[slug]/page.tsx` | 各頁面獨立編輯器（首頁為 `home`） |
