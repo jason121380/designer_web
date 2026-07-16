@@ -51,7 +51,7 @@ PageManagementForm
 
 - 合約、預設內容與 slug 驗證：`lib/designer-web-content.ts`
 - DB 讀取、頁面列表與 fallback：`lib/designer-web-settings.ts`
-- 寫入 API：`app/api/designer-web/[slug]/route.ts`（子頁面 CRUD；`POST` 建立、`PUT` 儲存、`PATCH` 切換 `active` 停用/啟用、`DELETE` 保留但 UI 不用）
+- 寫入 API：`app/api/designer-web/[slug]/route.ts`（子頁面 CRUD；`POST` 建立、`PUT` 儲存、`PATCH` 兩用：`{ active }` 切換停用/啟用、`{ slug }` 變更後綴（搬移 site_settings key，內容不變、新後綴重複回 409）、`DELETE` 保留但 UI 不用）
 - 子頁面停用：合約新增 `active`（缺欄位＝啟用、向下相容），`false` 時前台該 slug 回 404、sitemap 不收錄；後台列表以「停用／啟用」切換（取代刪除，內容不刪除）。`DELETE` API 仍保留但 UI 不再使用。
 - 後台列表：`components/admin/PageList.tsx`；編輯器：`components/admin/PageManagementForm.tsx`
 - 前台輸出：`components/public/OnePage.tsx`（`app/(public)/page.tsx` 與 `app/(public)/[slug]/page.tsx` 共用）

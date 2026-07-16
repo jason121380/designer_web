@@ -78,7 +78,11 @@ export async function PUT(req: NextRequest, context: RouteContext) {
   return NextResponse.json(content);
 }
 
-/** 切換頁面啟用狀態：{ active: false } 停用（前台回 404）、{ active: true } 重新啟用。 */
+/**
+ * 兩用：
+ * - { slug: "新後綴" } 變更網址後綴（搬移 site_settings key，內容不變）。
+ * - { active: boolean } 切換啟用/停用（停用後前台回 404）。
+ */
 export async function PATCH(req: NextRequest, context: RouteContext) {
   const forbidden = await requireEditor();
   if (forbidden) return forbidden;
@@ -89,7 +93,30 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   const row = await prisma.siteSettings.findUnique({ where: { key: pageContentKey(slug) } });
   if (!row) return NextResponse.json({ error: "頁面不存在" }, { status: 404 });
 
-  const body = (await req.json().catch(() => ({}))) as { active?: boolean };
+  const body = (await req.json().catch(() => ({}))) as { active?: boolean; slug?: string };
+
+  // 變更後綴：搬移 key（建立新 key、刪除舊 key），內容原封不動
+  if (typeof body.slug === "string") {
+    const newSlug = body.slug.trim().toLowerCase();
+    if (!isValidPageSlug(newSlug)) {
+      return NextResponse.json({ error: "後綴限小寫英數與連字號（1-50 字），且不可使用保留字" }, { status: 400 });
+    }
+    if (newSlug === slug) return NextResponse.json({ slug });
+
+    const exists = await prisma.siteSettings.findUnique({
+      where: { key: pageContentKey(newSlug) },
+      select: { id: true },
+    });
+    if (exists) return NextResponse.json({ error: "此後綴已被使用" }, { status: 409 });
+
+    await prisma.$transaction([
+      prisma.siteSettings.create({ data: { key: pageContentKey(newSlug), value: row.value } }),
+      prisma.siteSettings.delete({ where: { key: pageContentKey(slug) } }),
+    ]);
+    return NextResponse.json({ slug: newSlug });
+  }
+
+  // 切換啟用狀態
   const content = parseDesignerWebContent(row.value);
   content.active = body.active === true;
   await prisma.siteSettings.update({
