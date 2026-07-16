@@ -1,29 +1,15 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import OnePage from "@/components/public/OnePage";
+import { notFound, redirect } from "next/navigation";
 import { isValidPageSlug } from "@/lib/designer-web-content";
 import { getDesignerWebPageContent } from "@/lib/designer-web-settings";
-import { designerPageMetadata } from "@/lib/seo";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-async function loadPage(params: PageProps["params"]) {
+// 設計師根網址（/{slug}）導向一頁式網站 /{slug}/web。
+// 頁面不存在或已停用則 404。
+export default async function DesignerRootPage({ params }: PageProps) {
   const { slug } = await params;
-  if (!isValidPageSlug(slug)) return null;
+  if (!isValidPageSlug(slug)) notFound();
   const content = await getDesignerWebPageContent(slug);
-  // 停用的頁面對外視為不存在（404）
-  return content && content.active ? content : null;
-}
-
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const content = await loadPage(params);
-  if (!content) return {};
-  return designerPageMetadata(content, `/${slug}`);
-}
-
-export default async function DesignerPage({ params }: PageProps) {
-  const content = await loadPage(params);
-  if (!content) notFound();
-  return <OnePage content={content} />;
+  if (!content || !content.active) notFound();
+  redirect(`/${slug}/web`);
 }
