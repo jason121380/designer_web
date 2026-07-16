@@ -15,7 +15,7 @@ Designer Web 是設計師品牌的一頁式網站，不是文章 CMS。
 
 ## 不可破壞的產品決策
 
-1. 後台側欄只保留「頁面管理」與「用戶管理」兩個入口（用戶管理僅 ADMIN 可見，功能限「列出帳號 + 重設密碼」）。不要重新加入總覽、文章、分類、標籤、媒體庫、流量分析或工程工具，也不要把用戶管理擴充成新增/刪除帳號或角色管理。
+1. 後台側欄只保留「頁面管理」與「用戶管理」兩個入口（用戶管理僅 ADMIN 可見，功能限「列出帳號 + 編輯帳號（登入帳號/名稱/密碼）」）。不要重新加入總覽、文章、分類、標籤、媒體庫、流量分析或工程工具，也不要把用戶管理擴充成新增/刪除帳號或角色管理。
 2. 頁面管理區塊順序必須跟前台一致。
 3. 所有可編輯前台內容都應進入 `DesignerWebContent` 合約並存入 PostgreSQL，不要另建散落的常數或第二份設定來源。
 4. 圖片從各區塊內直接上傳，不顯示獨立媒體庫功能。
@@ -69,7 +69,7 @@ PageManagementForm
 - Auth.js 使用 Credentials provider 與 JWT session。
 - `/admin/*` 由 `middleware.ts` 保護，`/admin/login` 除外。
 - `PUT /api/designer-web` 只允許 `ADMIN` 與 `EDITOR`。
-- 用戶管理：`/admin/users` 與 `PATCH /api/users/[id]`（重設密碼）僅 `ADMIN`，非 ADMIN 進頁面會被導回頁面管理；密碼至少 6 字、bcrypt 雜湊，API 不回傳任何密碼欄位並有限速。
+- 用戶管理：`/admin/users` 與 `PATCH /api/users/[id]`（編輯登入帳號 email／名稱／密碼）僅 `ADMIN`，非 ADMIN 進頁面會被導回頁面管理；只更新有帶入的欄位、密碼留空＝不變更、密碼至少 6 字並 bcrypt 雜湊、email 重複回 409、API 不回傳任何密碼欄位並有限速。
 - `POST /api/upload` 要求登入使用者，並有每位使用者上傳限速。
 - 登入後使用全頁導向，確保 server-rendered admin layout 取得新 session。
 - `callbackUrl` 只能使用站內絕對路徑，避免 open redirect。
