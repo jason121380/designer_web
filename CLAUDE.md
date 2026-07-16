@@ -35,13 +35,15 @@ PageManagementForm
 前台 /（首頁）＝固定維護頁
   -> app/(public)/page.tsx 一律渲染 MaintenancePage（noindex），不讀 DB、不對外呈現內容
 
-前台 /{slug}（子頁面）
-  -> getDesignerWebPageContent(slug)
-  -> site_settings
-  -> parseDesignerWebContent()
-  -> OnePage（Header + 十區塊 + Footer，props 驅動）
-  -> 子頁面不存在或已停用（active=false）則 404
+前台 /{slug}（子頁面，一份內容記錄＝兩個對外頁）
+  -> getDesignerWebPageContent(slug) -> parseDesignerWebContent()
+  -> /{slug}         導向 /{slug}/web（app/(public)/[slug]/page.tsx）
+  -> /{slug}/web     OnePage（一頁式網站，Header + 十區塊 + Footer）
+  -> /{slug}/links   LinksPage（linktree 風格個人連結頁；讀 content.links + brand + contact）
+  -> 子頁面不存在或已停用（active=false）則各路由 404
 ```
+
+一份子頁面內容（`DesignerWebContent`）同時驅動兩個對外頁：`/{slug}/web`（一頁式）與 `/{slug}/links`（連結頁）。連結頁內容在合約的 `links { avatar, bio, items[] }`，名稱／主色／社群沿用 `brand` 與 `contact`。根 `/{slug}` 只做導向到 `/{slug}/web`。
 
 首頁固定維護頁：`app/(public)/page.tsx` 一律渲染 `components/public/MaintenancePage.tsx`，根網址 `/` 不提供任何設定、不對外呈現內容。公開內容一律放在子頁面（`/{slug}`）。後台頁面列表不再顯示「首頁」列，也沒有「首頁顯示」設定。示範內容（`defaultDesignerWebContent`）只作為新子頁起始值與 DB 讀取異常時的容錯。
 
@@ -53,8 +55,8 @@ PageManagementForm
 - DB 讀取、頁面列表與 fallback：`lib/designer-web-settings.ts`
 - 寫入 API：`app/api/designer-web/[slug]/route.ts`（子頁面 CRUD；`POST` 建立、`PUT` 儲存、`PATCH` 兩用：`{ active }` 切換停用/啟用、`{ slug }` 變更後綴（搬移 site_settings key，內容不變、新後綴重複回 409）、`DELETE` 保留但 UI 不用）
 - 子頁面停用：合約新增 `active`（缺欄位＝啟用、向下相容），`false` 時前台該 slug 回 404、sitemap 不收錄；後台列表以「停用／啟用」切換（取代刪除，內容不刪除）。`DELETE` API 仍保留但 UI 不再使用。
-- 後台列表：`components/admin/PageList.tsx`；編輯器：`components/admin/PageManagementForm.tsx`
-- 前台輸出：`components/public/OnePage.tsx`（`app/(public)/page.tsx` 與 `app/(public)/[slug]/page.tsx` 共用）
+- 後台列表：`components/admin/PageList.tsx`（每列有「一頁式」與「連結頁」兩個編輯入口）；一頁式編輯器：`components/admin/PageManagementForm.tsx`（`/admin/page-management/{slug}`）；連結頁編輯器：`components/admin/LinksManagementForm.tsx`（`/admin/page-management/{slug}/links`，存回同一筆內容的 `links`）
+- 前台輸出：一頁式 `components/public/OnePage.tsx`（`app/(public)/[slug]/web/page.tsx`）；連結頁 `components/public/LinksPage.tsx`（`app/(public)/[slug]/links/page.tsx`）；連結頁 SEO 用 `lib/seo.ts` 的 `linksPageMetadata()`
 
 頁面後綴規則：小寫英數與連字號、1-50 字、頭尾不可為連字號；`home`、`admin`、`api`、`uploads` 為保留字。
 

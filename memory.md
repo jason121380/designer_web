@@ -21,6 +21,7 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16（後續 re
 ### repo review 後續調整（2026-07-16，分支 claude/repo-review-fegvlg，已合併 main）
 
 - 首頁 `/`：**固定為維護頁** `MaintenancePage`（noindex、不讀 DB、不對外呈現內容）。頁面管理**不再有首頁列與首頁顯示設定**；公開內容一律放子頁。
+- 設計師雙頁（2026-07）：每個子頁面一份 `DesignerWebContent` 同時驅動兩個對外頁——`/{slug}/web`（一頁式 OnePage）與 `/{slug}/links`（linktree 風格 LinksPage）；根 `/{slug}` 導向 `/{slug}/web`。連結頁內容在合約 `links { avatar, bio, items[] }`，名稱/主色/社群沿用 brand 與 contact。後台頁面列每列有「一頁式」「連結頁」兩個編輯入口；連結頁編輯器 `LinksManagementForm` 存回同一筆內容。sitemap 收 `/web` 與 `/links`。
 - 死碼清理（2026-07）：舊「首頁內容／首頁顯示」後端全數刪除——`app/api/designer-web/route.ts`、`getDesignerWebContent`／`getHomeDisplaySlug`／`getHomeDisplayContent`／`isHomeConfigured`、`DESIGNER_WEB_HOME_PAGE_KEY`、後台首頁編輯器分支、PageManagementForm 的 home 模式。DB 舊列（`designer_web_content`／`designer_web_home_page`）不影響運作，可日後手動清。
 - 用戶管理：側欄新增「用戶管理」（僅 ADMIN），`/admin/users` 表格列出登入帳號，`PATCH /api/users/[id]` 重設密碼（至少 6 字、bcrypt、限速、不回傳密碼）。
 - 新增頁面：改右上角按鈕 + 彈窗（設計師名稱 + 後綴）；`POST /api/designer-web/[slug]` 接受 `{ name }`。

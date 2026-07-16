@@ -6,11 +6,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const slugs = await listDesignerWebPageSlugs();
   return [
     { url: SITE_URL, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
-    ...slugs.map((slug) => ({
-      url: `${SITE_URL}/${slug}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    })),
+    ...slugs.flatMap((slug) => [
+      {
+        url: `${SITE_URL}/${slug}/web`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      },
+      {
+        url: `${SITE_URL}/${slug}/links`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      },
+    ]),
   ];
 }

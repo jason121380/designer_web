@@ -84,6 +84,16 @@ export const designerWebContentSchema = z.object({
     description: nullableString,
     ogImage: nullableString,
   }).optional(),
+  // 個人連結頁（linktree 風格）：頭像、簡介與連結按鈕清單。
+  links: z.object({
+    avatar: nullableString,
+    bio: nullableString,
+    items: z.array(z.object({
+      id: nullableString,
+      label: nullableString,
+      url: nullableString,
+    })).optional(),
+  }).optional(),
   // 子頁面是否啟用；false＝停用，前台該 slug 回 404（不刪除內容）。缺欄位＝啟用（向下相容）。
   active: z.boolean().optional().nullable(),
 });
@@ -120,6 +130,8 @@ export interface DesignerWebContent {
   };
   /** 每頁獨立 SEO；空字串代表自動使用品牌與主標題產生。 */
   seo: { title: string; description: string; ogImage: string };
+  /** 個人連結頁（`/{slug}/links`，linktree 風格）內容。 */
+  links: { avatar: string; bio: string; items: { id: string; label: string; url: string }[] };
   /** 子頁面是否啟用；false＝停用（前台該 slug 回 404）。首頁不使用此欄位。 */
   active: boolean;
 }
@@ -206,6 +218,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
     mapEmbedUrl: "",
   },
   seo: { title: "", description: "", ogImage: "" },
+  links: { avatar: "", bio: "", items: [] },
   active: true,
 };
 
@@ -285,6 +298,13 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
       alt: trim(item.alt),
     }));
   const installment = stringList(data.installment);
+  const linkItems = (data.links?.items ?? [])
+    .filter((item) => trim(item.url) && trim(item.label))
+    .map((item, index) => ({
+      id: itemId(item.id, "link", index),
+      label: trim(item.label),
+      url: trim(item.url),
+    }));
 
   return {
     brand: {
@@ -309,6 +329,11 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
       title: trim(data.seo?.title),
       description: trim(data.seo?.description),
       ogImage: trim(data.seo?.ogImage),
+    },
+    links: {
+      avatar: trim(data.links?.avatar),
+      bio: trim(data.links?.bio),
+      items: linkItems,
     },
     // 只有明確為 false 才停用；缺欄位或其他值一律視為啟用（向下相容舊資料）。
     active: data.active !== false,

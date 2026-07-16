@@ -64,6 +64,38 @@ export function designerPageMetadata(content: DesignerWebContent, path: string):
   };
 }
 
+/** 個人連結頁（`/{slug}/links`）的 SEO metadata。標題用品牌名、描述優先用連結頁簡介。 */
+export function linksPageMetadata(content: DesignerWebContent, path: string): Metadata {
+  const title = content.seo.title || `${content.brand.name}｜連結`;
+  const description =
+    content.links.bio || content.seo.description || content.brand.tagline || content.brand.name;
+  const ogImage =
+    content.links.avatar ||
+    content.seo.ogImage ||
+    (content.hero.mediaType === "image" ? content.hero.mediaUrl : "");
+
+  return {
+    title: { absolute: title },
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "website",
+      url: path,
+      title,
+      description,
+      siteName: content.brand.name,
+      locale: "zh_TW",
+      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
+  };
+}
+
 export function jsonLdGraph(...nodes: object[]) {
   return JSON.stringify({
     "@context": "https://schema.org",

@@ -5,7 +5,8 @@
 ## 目前功能
 
 - 根網址 `/` 固定為維護頁（noindex、不對外呈現內容）；公開內容一律放在子頁面。
-- 多頁面：首頁（`/`）之外可建立任意數量的獨立頁面（`/jason`、`/kimiko`…），每頁有自己的品牌、內容、主色與 SEO。
+- 多頁面：首頁（`/`）之外可建立任意數量的設計師頁面（`/jason`、`/kimiko`…），每頁有自己的品牌、內容、主色與 SEO。
+- 每個設計師頁面有兩個對外頁：`/{slug}/web`（一頁式網站）與 `/{slug}/links`（linktree 風格個人連結頁）；根網址 `/{slug}` 自動導向 `/{slug}/web`。後台兩頁都能編輯。
 - 新增頁面採右上角按鈕 + 彈窗，輸入「設計師名稱」與「網址後綴」即建立。
 - 子頁面以「停用／啟用」切換取代刪除：停用後前台該網址回 404、不進 sitemap，內容保留可隨時再啟用。
 - 每頁獨立 SEO 設定：標題、描述與社群分享圖（og:image），未填時自動使用品牌與主標題；適合對各分頁投放 Google Ads。
@@ -118,7 +119,9 @@ npm run build:verify
 
 | 路徑 | 責任 |
 |---|---|
-| `components/public/OnePage.tsx` | 一頁式前台輸出（首頁與子頁面共用） |
+| `components/public/OnePage.tsx` | 一頁式前台輸出（`/{slug}/web`） |
+| `components/public/LinksPage.tsx` | linktree 風格連結頁（`/{slug}/links`） |
+| `components/admin/LinksManagementForm.tsx` | 連結頁編輯器（頭像/簡介/連結按鈕） |
 | `components/public/MaintenancePage.tsx` | 根網址 `/` 的固定維護頁 |
 | `app/(public)/page.tsx` | 首頁（`/`），固定渲染維護頁 |
 | `app/(public)/[slug]/page.tsx` | 子頁面（`/jason` 等） |

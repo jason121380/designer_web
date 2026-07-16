@@ -162,9 +162,10 @@ export default function PageList({ pages }: { pages: PageListItem[] }) {
               <p className="text-xs text-gray-400">/{page.slug}</p>
             </div>
             <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
-              <a href={`/${page.slug}`} target="_blank" className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600" title="預覽前台"><ExternalLink size={13} />預覽</a>
-              <Link href={`/admin/page-management/${page.slug}`} className="inline-flex items-center gap-1.5 bg-rose-brand rounded-lg px-4 py-2 text-xs font-semibold text-white"><Pencil size={13} />編輯頁面</Link>
-              <button type="button" onClick={() => openRename(page)} className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600" title="變更網址後綴"><Link2 size={13} />編輯後綴</button>
+              <a href={`/${page.slug}/web`} target="_blank" className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600" title="預覽一頁式"><ExternalLink size={13} />預覽</a>
+              <Link href={`/admin/page-management/${page.slug}`} className="inline-flex items-center gap-1.5 bg-rose-brand rounded-lg px-4 py-2 text-xs font-semibold text-white"><Pencil size={13} />一頁式</Link>
+              <Link href={`/admin/page-management/${page.slug}/links`} className="inline-flex items-center gap-1.5 bg-rose-brand rounded-lg px-4 py-2 text-xs font-semibold text-white"><Link2 size={13} />連結頁</Link>
+              <button type="button" onClick={() => openRename(page)} className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600" title="變更網址後綴"><Pencil size={13} />後綴</button>
               {page.active ? (
                 <button type="button" disabled={togglingSlug === page.slug} onClick={() => toggleActive(page.slug, false)} aria-label={`停用 /${page.slug}`} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-red-500 disabled:opacity-50"><EyeOff size={13} />{togglingSlug === page.slug ? "處理中" : "停用"}</button>
               ) : (
