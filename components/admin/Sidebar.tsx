@@ -79,7 +79,7 @@ export default function Sidebar({ userName, userRole, open = false, collapsed = 
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group",
                   isActive
-                    ? "bg-rose-brand text-white shadow-sm"
+                    ? "bg-rose-brand text-white"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 )}
               >

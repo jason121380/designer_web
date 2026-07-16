@@ -96,7 +96,7 @@ export default function PageList({
         <p className="mt-1 text-sm text-gray-400">每個頁面有獨立網址與內容，點「編輯」進入該頁的區塊設定。</p>
       </div>
 
-      <div className="overflow-hidden border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-hidden border border-gray-200 bg-white">
         {/* 首頁固定第一列，不可刪除 */}
         <div className={rowClass}>
           <div className="flex min-w-0 items-center gap-3">

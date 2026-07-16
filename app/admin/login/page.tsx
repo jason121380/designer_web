@@ -38,7 +38,7 @@ export default function LoginPage() {
       <div className="w-full max-w-[420px]">
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-lg shadow-gray-100 border border-gray-100 p-8">
+        <div className="bg-white rounded-2xl border border-gray-100 p-8">
 
           <div className="text-center mb-8">
             <p className="mb-3 text-2xl font-semibold text-gray-900">Designer Web</p>
@@ -98,7 +98,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-rose-brand text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-rose-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2 shadow-sm"
+              className="w-full bg-rose-brand text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-rose-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
