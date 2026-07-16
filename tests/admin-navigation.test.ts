@@ -41,6 +41,8 @@ assert.doesNotMatch(imageUpload, /MediaPicker|媒體庫/);
 const middleware = read("middleware.ts");
 assert.match(middleware, /legacyAdminPrefixes/);
 assert.match(middleware, /\/admin\/page-management/);
+// /admin/users 是現行用戶管理頁，不可再被當成舊路徑導回頁面管理
+assert.doesNotMatch(middleware, /"\/admin\/users"/, "用戶管理路徑不可列入 legacyAdminPrefixes");
 // manifest 必須繞過登入保護，否則後台 PWA 無法安裝
 assert.ok(middleware.includes("manifest\\\\.webmanifest"), "middleware matcher 必須排除 manifest");
 
