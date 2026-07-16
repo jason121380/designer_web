@@ -8,6 +8,9 @@ const read = (file: string) => readFileSync(path.join(root, file), "utf8");
 
 const sidebar = read("components/admin/Sidebar.tsx");
 assert.match(sidebar, /href: "\/admin\/page-management", label: "頁面管理"/);
+// 用戶管理為 ADMIN 專用入口（列表 + 改密碼）
+assert.match(sidebar, /href: "\/admin\/users", label: "用戶管理"/);
+// 舊 CMS 模組入口不得復活
 for (const removed of [
   "總覽",
   "前台內容",
@@ -16,7 +19,6 @@ for (const removed of [
   "標籤管理",
   "媒體庫",
   "流量分析",
-  "用戶管理",
   "工程工具",
 ]) {
   assert.doesNotMatch(sidebar, new RegExp(removed));

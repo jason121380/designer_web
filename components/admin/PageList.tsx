@@ -12,7 +12,7 @@ export interface PageListItem {
   brandName: string;
 }
 
-const inputClass = "w-full border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light";
+const inputClass = "w-full border border-gray-200 bg-white rounded-lg px-3 py-2.5 text-sm outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light";
 
 export default function PageList({
   homeBrandName,
@@ -128,13 +128,13 @@ export default function PageList({
         <button
           type="button"
           onClick={openCreate}
-          className="inline-flex shrink-0 items-center justify-center gap-2 bg-rose-brand px-5 py-2.5 text-sm font-semibold text-white"
+          className="inline-flex shrink-0 items-center justify-center gap-2 bg-rose-brand rounded-lg px-5 py-2.5 text-sm font-semibold text-white"
         >
           <Plus size={15} />新增頁面
         </button>
       </div>
 
-      <div className="overflow-hidden border border-gray-200 bg-white">
+      <div className="overflow-hidden border border-gray-200 bg-white rounded-lg">
         {/* 首頁固定第一列，不可刪除 */}
         <div className={rowClass}>
           <div className="flex min-w-0 items-center gap-3">
@@ -150,7 +150,7 @@ export default function PageList({
             <label className="flex items-center gap-1.5 text-xs text-gray-500">
               首頁顯示
               <select
-                className="border border-gray-200 bg-white px-2 py-2 text-xs outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light"
+                className="border border-gray-200 bg-white rounded-lg px-2 py-2 text-xs outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light"
                 value={homeDisplaySlug ?? ""}
                 disabled={savingHomeDisplay}
                 onChange={(event) => changeHomeDisplay(event.target.value)}
@@ -161,8 +161,8 @@ export default function PageList({
                 ))}
               </select>
             </label>
-            <a href="/" target="_blank" className="inline-flex items-center gap-1.5 border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600" title="預覽前台"><ExternalLink size={13} />預覽</a>
-            <Link href={`/admin/page-management/${HOME_PAGE_SLUG}`} className="inline-flex items-center gap-1.5 bg-rose-brand px-4 py-2 text-xs font-semibold text-white"><Pencil size={13} />編輯</Link>
+            <a href="/" target="_blank" className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600" title="預覽前台"><ExternalLink size={13} />預覽</a>
+            <Link href={`/admin/page-management/${HOME_PAGE_SLUG}`} className="inline-flex items-center gap-1.5 bg-rose-brand rounded-lg px-4 py-2 text-xs font-semibold text-white"><Pencil size={13} />編輯</Link>
           </div>
         </div>
 
@@ -173,11 +173,11 @@ export default function PageList({
               <p className="text-xs text-gray-400">/{page.slug}</p>
             </div>
             <div className="flex flex-shrink-0 items-center gap-2">
-              <a href={`/${page.slug}`} target="_blank" className="inline-flex items-center gap-1.5 border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600" title="預覽前台"><ExternalLink size={13} />預覽</a>
-              <Link href={`/admin/page-management/${page.slug}`} className="inline-flex items-center gap-1.5 bg-rose-brand px-4 py-2 text-xs font-semibold text-white"><Pencil size={13} />編輯</Link>
+              <a href={`/${page.slug}`} target="_blank" className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600" title="預覽前台"><ExternalLink size={13} />預覽</a>
+              <Link href={`/admin/page-management/${page.slug}`} className="inline-flex items-center gap-1.5 bg-rose-brand rounded-lg px-4 py-2 text-xs font-semibold text-white"><Pencil size={13} />編輯</Link>
               {confirmingDelete === page.slug ? (
                 <>
-                  <button type="button" disabled={deleting} onClick={() => deletePage(page.slug)} className="inline-flex items-center gap-1.5 bg-red-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"><Trash2 size={13} />{deleting ? "刪除中" : "確認刪除"}</button>
+                  <button type="button" disabled={deleting} onClick={() => deletePage(page.slug)} className="inline-flex items-center gap-1.5 bg-red-600 rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"><Trash2 size={13} />{deleting ? "刪除中" : "確認刪除"}</button>
                   <button type="button" onClick={() => setConfirmingDelete(null)} className="px-2 py-2 text-xs font-medium text-gray-500">取消</button>
                 </>
               ) : (
@@ -202,7 +202,7 @@ export default function PageList({
             role="dialog"
             aria-modal="true"
             aria-label="新增頁面"
-            className="w-full max-w-md border border-gray-200 bg-white p-6"
+            className="w-full max-w-md border border-gray-200 bg-white rounded-lg p-6"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-start justify-between gap-4">
@@ -241,8 +241,8 @@ export default function PageList({
             </div>
 
             <div className="mt-6 flex justify-end gap-2">
-              <button type="button" onClick={closeCreate} disabled={creating} className="border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 disabled:opacity-50">取消</button>
-              <button type="button" onClick={createPage} disabled={creating} className="inline-flex items-center justify-center gap-2 bg-rose-brand px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+              <button type="button" onClick={closeCreate} disabled={creating} className="border border-gray-200 bg-white rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 disabled:opacity-50">取消</button>
+              <button type="button" onClick={createPage} disabled={creating} className="inline-flex items-center justify-center gap-2 bg-rose-brand rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
                 <Plus size={15} />{creating ? "建立中" : "建立頁面"}
               </button>
             </div>

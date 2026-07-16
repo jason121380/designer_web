@@ -6,6 +6,7 @@ import { ChevronRight, Menu } from "lucide-react";
 
 const breadcrumbMap: Record<string, string> = {
   "page-management": "頁面管理",
+  "users": "用戶管理",
 };
 
 export default function AdminHeader({

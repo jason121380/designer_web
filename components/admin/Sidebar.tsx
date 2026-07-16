@@ -9,14 +9,17 @@ import {
   ChevronRight,
   X,
   PanelsTopLeft,
+  Users,
 } from "lucide-react";
 
 const navItems: {
   href: string;
   label: string;
   icon: typeof PanelsTopLeft;
+  adminOnly?: boolean;
 }[] = [
   { href: "/admin/page-management", label: "頁面管理", icon: PanelsTopLeft },
+  { href: "/admin/users", label: "用戶管理", icon: Users, adminOnly: true },
 ];
 
 const ROLE_MAP: Record<string, string> = {
@@ -62,7 +65,7 @@ export default function Sidebar({ userName, userRole, open = false, collapsed = 
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-3 mb-2">主選單</p>
         <div className="space-y-0.5">
-          {navItems.map((item) => {
+          {navItems.filter((item) => !item.adminOnly || userRole === "ADMIN").map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             const Icon = item.icon;
             return (

@@ -64,7 +64,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
               <SectionHeading en="DM" zh="活動 DM" />
               <div className="grid gap-5 md:grid-cols-2">
                 {content.promos.map((promo) => (
-                  <figure key={promo.id} className="overflow-hidden bg-white">
+                  <figure key={promo.id} className="overflow-hidden bg-white rounded-lg">
                     <img src={promo.image} alt={promo.caption || "活動 DM"} className="h-auto w-full object-cover" loading="lazy" />
                     {!!promo.caption && <figcaption className="p-4 text-sm text-neutral-600">{promo.caption}</figcaption>}
                   </figure>
@@ -79,7 +79,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
             <SectionHeading en="Services" zh="接髮介紹" />
             <div className="space-y-8">
               {content.services.map((service) => (
-                <article key={service.id} className="overflow-hidden bg-white md:grid md:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]">
+                <article key={service.id} className="overflow-hidden bg-white rounded-lg md:grid md:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]">
                   <div className="p-6 md:p-8">
                     <h3 className="mb-3 text-xl font-bold text-neutral-800">{service.title}</h3>
                     <p className="mb-4 whitespace-pre-line leading-relaxed text-neutral-600">{service.description}</p>
@@ -98,7 +98,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
             <SectionHeading en="Other Services" zh="其他服務" />
             <div className="grid gap-6 md:grid-cols-2">
               {content.otherServices.map((service) => (
-                <article key={service.id} className="overflow-hidden bg-white">
+                <article key={service.id} className="overflow-hidden bg-white rounded-lg">
                   {!!service.image && <img src={service.image} alt={service.title} className="aspect-video w-full object-cover" loading="lazy" />}
                   <div className="p-6">
                     <h3 className="mb-3 text-lg font-bold text-neutral-800">{service.title}</h3>
@@ -118,7 +118,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
               <SectionHeading en="Works" zh="作品影片" />
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {content.videos.map((item) => (
-                  <figure key={item.id} className="overflow-hidden bg-white">
+                  <figure key={item.id} className="overflow-hidden bg-white rounded-lg">
                     <video src={item.video} controls playsInline preload="metadata" className="aspect-[9/16] w-full bg-black object-cover" />
                     {!!item.caption && <figcaption className="p-4 text-sm text-neutral-600">{item.caption}</figcaption>}
                   </figure>
@@ -130,7 +130,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
 
         <section id="pay" className="scroll-mt-14 py-14 md:py-20" style={lightSectionStyle}>
           <div className="mx-auto max-w-3xl px-4">
-            <div className="overflow-hidden bg-white">
+            <div className="overflow-hidden bg-white rounded-lg">
               <h3 className="py-4 text-center text-lg font-bold text-white" style={{ backgroundColor: "var(--brand)" }}>
                 分期介紹
               </h3>
@@ -151,7 +151,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
             <SectionHeading en="Pricing" zh="價目表" />
             <div className="grid gap-6 md:grid-cols-3">
               {content.pricing.map((item, index) => (
-                <article key={`${item.name}-${index}`} className="border border-black/5 bg-white p-6">
+                <article key={`${item.name}-${index}`} className="border border-black/5 bg-white rounded-lg p-6">
                   <p className="mb-2 text-sm font-semibold text-neutral-500">{item.name}</p>
                   <h3 className="mb-4 text-2xl font-bold text-neutral-900">{item.price}</h3>
                   <p className="mb-5 leading-relaxed text-neutral-600">{item.description}</p>
@@ -170,7 +170,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
               <SectionHeading en="Environment" zh="環境介紹" />
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {content.environment.map((item, index) => (
-                  <figure key={item.id} className="overflow-hidden bg-white">
+                  <figure key={item.id} className="overflow-hidden bg-white rounded-lg">
                     <img src={item.image} alt={item.alt || `店內環境 ${index + 1}`} className="aspect-[4/3] w-full object-cover" loading="lazy" />
                   </figure>
                 ))}
