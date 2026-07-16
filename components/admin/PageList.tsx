@@ -19,10 +19,12 @@ export default function PageList({
   homeBrandName,
   pages,
   homeDisplaySlug,
+  homeConfigured,
 }: {
   homeBrandName: string;
   pages: PageListItem[];
   homeDisplaySlug: string | null;
+  homeConfigured: boolean;
 }) {
   const router = useRouter();
   const [showCreate, setShowCreate] = useState(false);
@@ -31,6 +33,8 @@ export default function PageList({
   const [creating, setCreating] = useState(false);
   const [togglingSlug, setTogglingSlug] = useState<string | null>(null);
   const [savingHomeDisplay, setSavingHomeDisplay] = useState(false);
+  const [confirmingClearHome, setConfirmingClearHome] = useState(false);
+  const [clearingHome, setClearingHome] = useState(false);
 
   // 彈窗開啟時：Esc 關閉、鎖住背景捲動
   useEffect(() => {
@@ -100,6 +104,22 @@ export default function PageList({
     }
   }
 
+  async function clearHomeContent() {
+    setClearingHome(true);
+    try {
+      const response = await fetch("/api/designer-web", { method: "DELETE" });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "清除失敗");
+      toast.success("首頁已改為維護頁（可隨時再編輯首頁內容還原）");
+      setConfirmingClearHome(false);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "清除失敗");
+    } finally {
+      setClearingHome(false);
+    }
+  }
+
   async function toggleActive(slug: string, active: boolean) {
     setTogglingSlug(slug);
     try {
@@ -143,9 +163,16 @@ export default function PageList({
           <div className="flex min-w-0 items-center gap-3">
             <Home size={16} className="flex-shrink-0 text-gray-400" />
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-gray-900">
-                {homeDisplaySlug ? `顯示 /${homeDisplaySlug} 的內容` : homeBrandName}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="truncate text-sm font-semibold text-gray-900">
+                  {homeDisplaySlug
+                    ? `顯示 /${homeDisplaySlug} 的內容`
+                    : homeConfigured
+                      ? homeBrandName
+                      : "維護頁（首頁未設定內容）"}
+                </p>
+                {!homeDisplaySlug && !homeConfigured && <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-500">維護頁</span>}
+              </div>
               <p className="text-xs text-gray-400">/（首頁）</p>
             </div>
           </div>
@@ -166,6 +193,17 @@ export default function PageList({
             </label>
             <a href="/" target="_blank" className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600" title="預覽前台"><ExternalLink size={13} />預覽</a>
             <Link href={`/admin/page-management/${HOME_PAGE_SLUG}`} className="inline-flex items-center gap-1.5 bg-rose-brand rounded-lg px-4 py-2 text-xs font-semibold text-white"><Pencil size={13} />編輯</Link>
+            {/* 首頁有自己的內容且沒指定顯示子頁時，可清除內容改回維護頁 */}
+            {!homeDisplaySlug && homeConfigured && (
+              confirmingClearHome ? (
+                <>
+                  <button type="button" disabled={clearingHome} onClick={clearHomeContent} className="inline-flex items-center gap-1.5 bg-red-600 rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"><EyeOff size={13} />{clearingHome ? "處理中" : "確認改維護頁"}</button>
+                  <button type="button" onClick={() => setConfirmingClearHome(false)} className="px-2 py-2 text-xs font-medium text-gray-500">取消</button>
+                </>
+              ) : (
+                <button type="button" onClick={() => setConfirmingClearHome(true)} aria-label="首頁改為維護頁" className="inline-flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-red-500"><EyeOff size={13} />改維護頁</button>
+              )
+            )}
           </div>
         </div>
 
