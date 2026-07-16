@@ -57,7 +57,6 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="admin"
                   className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-rose-brand focus:ring-2 focus:ring-rose-light transition-all placeholder:text-gray-300"
                 />
               </div>
@@ -73,7 +72,6 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder="••••••••"
                   className="w-full pl-10 pr-11 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-rose-brand focus:ring-2 focus:ring-rose-light transition-all placeholder:text-gray-300"
                 />
                 <button
