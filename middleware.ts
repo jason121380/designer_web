@@ -11,7 +11,6 @@ const legacyAdminPrefixes = [
   "/admin/tags",
   "/admin/media",
   "/admin/analytics",
-  "/admin/users",
   "/admin/tools",
 ];
 
