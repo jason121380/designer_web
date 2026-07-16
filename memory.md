@@ -20,7 +20,8 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16（後續 re
 
 ### repo review 後續調整（2026-07-16，分支 claude/repo-review-fegvlg，已合併 main）
 
-- 首頁 `/`：**固定為維護頁** `MaintenancePage`（noindex、不讀 DB、不對外呈現內容）。頁面管理**不再有首頁列與首頁顯示設定**；公開內容一律放子頁。舊「首頁內容／首頁顯示」後端（`designer_web_content`、`designer_web_home_page`、`getHomeDisplay*`、`isHomeConfigured`、`/api/designer-web` 的 PATCH/DELETE、`/admin/page-management/home` 編輯器）已無 UI 使用，屬待清理相容殘留。
+- 首頁 `/`：**固定為維護頁** `MaintenancePage`（noindex、不讀 DB、不對外呈現內容）。頁面管理**不再有首頁列與首頁顯示設定**；公開內容一律放子頁。
+- 死碼清理（2026-07）：舊「首頁內容／首頁顯示」後端全數刪除——`app/api/designer-web/route.ts`、`getDesignerWebContent`／`getHomeDisplaySlug`／`getHomeDisplayContent`／`isHomeConfigured`、`DESIGNER_WEB_HOME_PAGE_KEY`、後台首頁編輯器分支、PageManagementForm 的 home 模式。DB 舊列（`designer_web_content`／`designer_web_home_page`）不影響運作，可日後手動清。
 - 用戶管理：側欄新增「用戶管理」（僅 ADMIN），`/admin/users` 表格列出登入帳號，`PATCH /api/users/[id]` 重設密碼（至少 6 字、bcrypt、限速、不回傳密碼）。
 - 新增頁面：改右上角按鈕 + 彈窗（設計師名稱 + 後綴）；`POST /api/designer-web/[slug]` 接受 `{ name }`。
 - 子頁面停用取代刪除：合約新增 `active`（向下相容），`PATCH /api/designer-web/[slug]` 切換；停用後前台 slug 回 404、sitemap 不收錄、列表顯示「已停用」。`DELETE` API 保留但 UI 不用。
@@ -51,7 +52,7 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16（後續 re
 - value：完整 `DesignerWebContent` JSON。
 - slug 規則：小寫英數與連字號、1-50 字；保留字 `home`、`admin`、`api`、`uploads`。
 - 前台子頁面不存在回 404；首頁 fallback 示範內容。
-- 首頁顯示設定（已移除）：`/` 固定維護頁，不再由 `designer_web_home_page` 指定子頁；相關後端為相容殘留。
+- 首頁顯示設定（已移除）：`/` 固定維護頁，不再由 `designer_web_home_page` 指定子頁；相關後端已刪除。
 - 每頁 SEO：合約 `seo { title, description, ogImage }`；metadata 由 `designerPageMetadata()` 統一輸出。
 - `lib/designer-web-content.ts` 負責 Zod 驗證、清理、預設值與舊資料相容。
 - 若 DB 不可用或 JSON 損壞，前台 fallback 到 KIMEKO 示範內容。

@@ -28,7 +28,7 @@ Designer Web 是設計師品牌的一頁式網站，不是文章 CMS。
 
 ```txt
 PageManagementForm
-  -> PUT /api/designer-web（首頁）或 /api/designer-web/{slug}（子頁面）
+  -> PUT /api/designer-web/{slug}（子頁面）
   -> normalizeDesignerWebContent()
   -> site_settings(key = designer_web_content 或 designer_web_content:{slug})
 
@@ -45,20 +45,20 @@ PageManagementForm
 
 首頁固定維護頁：`app/(public)/page.tsx` 一律渲染 `components/public/MaintenancePage.tsx`，根網址 `/` 不提供任何設定、不對外呈現內容。公開內容一律放在子頁面（`/{slug}`）。後台頁面列表不再顯示「首頁」列，也沒有「首頁顯示」設定。示範內容（`defaultDesignerWebContent`）只作為新子頁起始值與 DB 讀取異常時的容錯。
 
-（相容備註：`designer_web_content`／`designer_web_home_page` 相關的舊「首頁內容／首頁顯示」後端 API 與 `lib/designer-web-settings.ts` 的 `getHomeDisplay*`／`isHomeConfigured` 目前已無 UI 使用，屬待清理的相容殘留。）
+（2026-07 已清理：舊「首頁內容／首頁顯示」後端全數移除——刪除 `app/api/designer-web/route.ts`、`getDesignerWebContent`／`getHomeDisplay*`／`isHomeConfigured`、`DESIGNER_WEB_HOME_PAGE_KEY` 與後台首頁編輯器分支。DB 內若殘留 `designer_web_content`／`designer_web_home_page` 舊列不影響運作，可日後手動清除。）
 
 來源真相：
 
 - 合約、預設內容與 slug 驗證：`lib/designer-web-content.ts`
 - DB 讀取、頁面列表與 fallback：`lib/designer-web-settings.ts`
-- 寫入 API：`app/api/designer-web/route.ts`（首頁）、`app/api/designer-web/[slug]/route.ts`（子頁面 CRUD；`PATCH` 切換 `active` 停用/啟用）
+- 寫入 API：`app/api/designer-web/[slug]/route.ts`（子頁面 CRUD；`POST` 建立、`PUT` 儲存、`PATCH` 切換 `active` 停用/啟用、`DELETE` 保留但 UI 不用）
 - 子頁面停用：合約新增 `active`（缺欄位＝啟用、向下相容），`false` 時前台該 slug 回 404、sitemap 不收錄；後台列表以「停用／啟用」切換（取代刪除，內容不刪除）。`DELETE` API 仍保留但 UI 不再使用。
 - 後台列表：`components/admin/PageList.tsx`；編輯器：`components/admin/PageManagementForm.tsx`
 - 前台輸出：`components/public/OnePage.tsx`（`app/(public)/page.tsx` 與 `app/(public)/[slug]/page.tsx` 共用）
 
 頁面後綴規則：小寫英數與連字號、1-50 字、頭尾不可為連字號；`home`、`admin`、`api`、`uploads` 為保留字。
 
-（已移除）首頁顯示設定：舊版可用 `designer_web_home_page` 指定 `/` 呈現某子頁；現在 `/` 固定維護頁，此功能已從 UI 移除，相關後端 key 與 API 僅為相容殘留、待清理。
+（已移除）首頁顯示設定：舊版可用 `designer_web_home_page` 指定 `/` 呈現某子頁；現在 `/` 固定維護頁，此功能連同後端 key、API 與讀取函式已全數刪除。
 
 每頁 SEO：合約內 `seo { title, description, ogImage }`，空字串＝自動以品牌標語＋名稱與主標題產生。metadata 統一由 `lib/seo.ts` 的 `designerPageMetadata()` 輸出（title/description/canonical/og/twitter），廣告到達頁（Google Ads）依賴此設定，修改時必須保持每頁獨立。
 

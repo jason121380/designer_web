@@ -49,12 +49,11 @@ function ServiceRows({ items, onChange }: { items: PageService[]; onChange: (ite
   </div>)}</>;
 }
 
-export default function PageManagementForm({ initialContent, slug }: { initialContent: DesignerWebContent; slug?: string }) {
+export default function PageManagementForm({ initialContent, slug }: { initialContent: DesignerWebContent; slug: string }) {
   const [content, setContent] = useState(initialContent);
   const [saving, setSaving] = useState(false);
-  // slug 省略時編輯首頁（既有 /api/designer-web 與 / 路徑）
-  const apiPath = slug ? `/api/designer-web/${slug}` : "/api/designer-web";
-  const previewPath = slug ? `/${slug}` : "/";
+  const apiPath = `/api/designer-web/${slug}`;
+  const previewPath = `/${slug}`;
 
   async function save() {
     setSaving(true);

@@ -2,10 +2,8 @@ import { z } from "zod";
 
 export const DESIGNER_WEB_SETTINGS_KEY = "designer_web_content";
 export const DESIGNER_WEB_SETTINGS_PREFIX = `${DESIGNER_WEB_SETTINGS_KEY}:`;
-// 首頁顯示哪個頁面（site_settings key；value 為子頁 slug，空/不存在 = 首頁自己的內容）
-export const DESIGNER_WEB_HOME_PAGE_KEY = "designer_web_home_page";
 
-// 首頁在後台以 `home` 呈現；其餘保留給既有路由，不可作為頁面後綴。
+// `home` 為保留字（不可作為頁面後綴），與 admin/api/uploads 一同保留給既有路由。
 export const HOME_PAGE_SLUG = "home";
 export const RESERVED_PAGE_SLUGS = [HOME_PAGE_SLUG, "admin", "api", "uploads"];
 

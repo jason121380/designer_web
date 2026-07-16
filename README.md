@@ -131,8 +131,7 @@ npm run build:verify
 | `app/api/users/[id]/route.ts` | 重設密碼 API（僅 ADMIN，PATCH） |
 | `lib/designer-web-content.ts` | 資料合約、預設內容、正規化與 slug 驗證 |
 | `lib/designer-web-settings.ts` | PostgreSQL 設定讀取、頁面列表、首頁維護頁判斷與 fallback |
-| `app/api/designer-web/route.ts` | 首頁設定 GET/PUT/PATCH API |
-| `app/api/designer-web/[slug]/route.ts` | 子頁面 GET/POST/PUT/DELETE API |
+| `app/api/designer-web/[slug]/route.ts` | 子頁面 API（GET/POST/PUT/PATCH 停用切換/DELETE） |
 | `app/api/upload/route.ts` | 圖片處理、R2/本機儲存與媒體紀錄 |
 | `lib/cloudflare-media.ts` | R2 與 Stream API helper |
 | `middleware.ts` | 後台登入保護與舊路由導向 |
