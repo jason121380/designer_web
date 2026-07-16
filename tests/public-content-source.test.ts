@@ -7,10 +7,10 @@ const testsDir = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(testsDir, "..");
 const read = (file: string) => readFileSync(path.join(root, file), "utf8");
 
-// 首頁與子頁面都只透過 DB 設定讀取層取得內容；首頁支援「顯示指定子頁」設定
+// 首頁 / 固定為維護頁（不對外呈現內容）；子頁面透過 DB 設定讀取層取得內容
 const homeSource = read("app/(public)/page.tsx");
-assert.match(homeSource, /getHomeDisplayContent/);
-assert.doesNotMatch(homeSource, /frontendDemo/);
+assert.match(homeSource, /MaintenancePage/);
+assert.doesNotMatch(homeSource, /frontendDemo|getDesignerWebContent/);
 
 const slugSource = read("app/(public)/[slug]/page.tsx");
 assert.match(slugSource, /getDesignerWebPageContent/);

@@ -32,15 +32,20 @@ PageManagementForm
   -> normalizeDesignerWebContent()
   -> site_settings(key = designer_web_content 或 designer_web_content:{slug})
 
-前台 /（首頁）與 /{slug}（子頁面）
-  -> getDesignerWebContent() / getDesignerWebPageContent(slug)
+前台 /（首頁）＝固定維護頁
+  -> app/(public)/page.tsx 一律渲染 MaintenancePage（noindex），不讀 DB、不對外呈現內容
+
+前台 /{slug}（子頁面）
+  -> getDesignerWebPageContent(slug)
   -> site_settings
   -> parseDesignerWebContent()
   -> OnePage（Header + 十區塊 + Footer，props 驅動）
-  -> 首頁未設定內容（無首頁顯示覆寫且首頁自己未存過內容）時顯示維護頁並 noindex；子頁面不存在則 404
+  -> 子頁面不存在或已停用（active=false）則 404
 ```
 
-首頁維護頁：`isHomeConfigured()`（`lib/designer-web-settings.ts`）判斷首頁是否有實際內容，無則 `app/(public)/page.tsx` 改渲染 `MaintenancePage`，不再退回內建示範內容。示範內容（`defaultDesignerWebContent`）現只作為新頁面起始值與 DB 讀取異常時的容錯，不會公開顯示在 `/`。注意：首頁只要按過「儲存設定」就會建立 `designer_web_content` row，`/` 便顯示該內容而非維護頁；後台頁面列表首頁列提供「改維護頁」（`DELETE /api/designer-web`，兩段式確認）清除該 row 讓 `/` 回到維護頁。
+首頁固定維護頁：`app/(public)/page.tsx` 一律渲染 `components/public/MaintenancePage.tsx`，根網址 `/` 不提供任何設定、不對外呈現內容。公開內容一律放在子頁面（`/{slug}`）。後台頁面列表不再顯示「首頁」列，也沒有「首頁顯示」設定。示範內容（`defaultDesignerWebContent`）只作為新子頁起始值與 DB 讀取異常時的容錯。
+
+（相容備註：`designer_web_content`／`designer_web_home_page` 相關的舊「首頁內容／首頁顯示」後端 API 與 `lib/designer-web-settings.ts` 的 `getHomeDisplay*`／`isHomeConfigured` 目前已無 UI 使用，屬待清理的相容殘留。）
 
 來源真相：
 
@@ -51,9 +56,9 @@ PageManagementForm
 - 後台列表：`components/admin/PageList.tsx`；編輯器：`components/admin/PageManagementForm.tsx`
 - 前台輸出：`components/public/OnePage.tsx`（`app/(public)/page.tsx` 與 `app/(public)/[slug]/page.tsx` 共用）
 
-頁面後綴規則：小寫英數與連字號、1-50 字、頭尾不可為連字號；`home`、`admin`、`api`、`uploads` 為保留字。後台的首頁編輯路徑是 `/admin/page-management/home`。
+頁面後綴規則：小寫英數與連字號、1-50 字、頭尾不可為連字號；`home`、`admin`、`api`、`uploads` 為保留字。
 
-首頁顯示設定：`site_settings` key `designer_web_home_page`（value 為子頁 slug）。設定後 `/` 直接呈現該子頁內容（canonical 仍為 `/`）；未設定或該頁被刪除時回到首頁自己的內容。由頁面列表的「首頁顯示」下拉與 `PATCH /api/designer-web`（body `{ homePageSlug }`）管理。
+（已移除）首頁顯示設定：舊版可用 `designer_web_home_page` 指定 `/` 呈現某子頁；現在 `/` 固定維護頁，此功能已從 UI 移除，相關後端 key 與 API 僅為相容殘留、待清理。
 
 每頁 SEO：合約內 `seo { title, description, ogImage }`，空字串＝自動以品牌標語＋名稱與主標題產生。metadata 統一由 `lib/seo.ts` 的 `designerPageMetadata()` 輸出（title/description/canonical/og/twitter），廣告到達頁（Google Ads）依賴此設定，修改時必須保持每頁獨立。
 
@@ -143,7 +148,7 @@ npm run build:verify
 - `public-content-source.test.ts`：前台只使用 DB 設定讀取層。
 - `public-section-anchors.test.ts`：前台 section id 與導覽。
 - `page-management-editor.test.ts`：十個頁面管理區塊。
-- `multi-page.test.ts`：slug 驗證、內容 key、多頁面 API、首頁顯示設定與後台列表/編輯器。
+- `multi-page.test.ts`：slug 驗證、內容 key、多頁面 API 與後台列表/編輯器。
 - `page-seo.test.ts`：每頁 metadata 輸出（自動 fallback 與後台 SEO 設定優先）。
 - `admin-navigation.test.ts`：後台入口（頁面管理＋用戶管理）、品牌與媒體庫移除。
 - `auth-login.test.ts`：登入帳號相容處理。
