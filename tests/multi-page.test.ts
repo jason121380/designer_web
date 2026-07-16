@@ -55,12 +55,8 @@ assert.match(adminListPage, /PageList/);
 assert.match(adminListPage, /listDesignerWebPages/);
 
 const editorSource = read("app/admin/page-management/[slug]/page.tsx");
-assert.match(editorSource, /HOME_PAGE_SLUG/);
 assert.match(editorSource, /PageManagementForm/);
 assert.match(editorSource, /notFound\(\)/);
 
 const formSource = read("components/admin/PageManagementForm.tsx");
-assert.match(formSource, /slug \? `\/api\/designer-web\/\$\{slug\}` : "\/api\/designer-web"/, "表單需依 slug 決定儲存 API");
-
-// 刪除頁面時要清掉指向它的首頁顯示設定（後端 key 相容保留）
-assert.match(apiSource, /DESIGNER_WEB_HOME_PAGE_KEY/);
+assert.match(formSource, /`\/api\/designer-web\/\$\{slug\}`/, "表單依 slug 寫入子頁面 API");

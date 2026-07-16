@@ -3,8 +3,8 @@ import {
   DESIGNER_WEB_SETTINGS_KEY,
   defaultDesignerWebContent,
   normalizeDesignerWebContent,
+  parseDesignerWebContent,
 } from "../lib/designer-web-content";
-import { getDesignerWebContent } from "../lib/designer-web-settings";
 
 const normalized = normalizeDesignerWebContent({
   brand: {
@@ -89,12 +89,6 @@ assert.equal(normalized.seo.description, "廣告到達頁描述");
 assert.equal(normalized.seo.ogImage, "https://cdn.example.com/og.jpg");
 assert.deepEqual(demoNormalized.seo, { title: "", description: "", ogImage: "" });
 
-async function main() {
-  const previousDatabaseUrl = process.env.DATABASE_URL;
-  delete process.env.DATABASE_URL;
-  const fallback = await getDesignerWebContent();
-  assert.equal(fallback.hero.heading, defaultDesignerWebContent.hero.heading);
-  if (previousDatabaseUrl) process.env.DATABASE_URL = previousDatabaseUrl;
-}
-
-main();
+// 內容缺失/損壞時 fallback 到示範內容（子頁面讀取層與 API 均依賴此容錯）
+assert.equal(parseDesignerWebContent(null).hero.heading, defaultDesignerWebContent.hero.heading);
+assert.equal(parseDesignerWebContent("{ bad json").hero.heading, defaultDesignerWebContent.hero.heading);
