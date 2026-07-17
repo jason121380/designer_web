@@ -232,7 +232,18 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "沒有圖片時前台自動隱藏",
       body: (
         <>
-          {content.promos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RowTools index={index} total={content.promos.length} onMove={(dir) => setContent({ ...content, promos: moveAt(content.promos, index, dir) })} onRemove={() => setContent({ ...content, promos: removeAt(content.promos, index) })} /></div><MediaUpload label={`DM 圖片或影片 ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, promos: updateAt(content.promos, index, { image }) })} /><Field label="圖片說明" value={item.caption} onChange={(caption) => setContent({ ...content, promos: updateAt(content.promos, index, { caption }) })} /></div>)}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {content.promos.map((item, index) => {
+              const label = content.sections.find((section) => section.key === "dm")?.zh || "活動 DM";
+              return (
+                <div key={item.id} className="space-y-3 border border-gray-100 rounded-lg p-3">
+                  <MediaUpload aspect="aspect-square" label={`${label} ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, promos: updateAt(content.promos, index, { image }) })} />
+                  <Field label="圖片說明" value={item.caption} onChange={(caption) => setContent({ ...content, promos: updateAt(content.promos, index, { caption }) })} />
+                  <div className="flex justify-end"><RowTools index={index} total={content.promos.length} onMove={(dir) => setContent({ ...content, promos: moveAt(content.promos, index, dir) })} onRemove={() => setContent({ ...content, promos: removeAt(content.promos, index) })} /></div>
+                </div>
+              );
+            })}
+          </div>
           <AddButton label="新增 DM" onClick={() => setContent({ ...content, promos: [...content.promos, { id: makeId("dm"), image: "", caption: "" }] })} />
         </>
       ),
@@ -330,12 +341,14 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
             <p className="text-xs text-gray-500">依本頁內容用 AI 自動產生 SEO 標題與描述</p>
             <button type="button" onClick={generateSeo} disabled={aiLoading} className="inline-flex shrink-0 items-center gap-1.5 bg-rose-brand rounded-lg px-3.5 py-2 text-xs font-semibold text-white disabled:opacity-50"><Sparkles size={14} />{aiLoading ? "AI 產生中…" : "AI 自動填寫"}</button>
           </div>
-          <Field label="SEO 標題（搜尋結果與分頁標題）" value={content.seo.title} placeholder={content.brand.name} onChange={(title) => setContent({ ...content, seo: { ...content.seo, title } })} />
-          <div className="mt-4">
-            <TextArea label="SEO 描述（搜尋結果摘要，建議 80-150 字）" value={content.seo.description} onChange={(description) => setContent({ ...content, seo: { ...content.seo, description } })} />
-          </div>
-          <div className="mt-4">
-            <ImageUpload label="社群分享圖（og:image，建議 1200x630）" value={content.seo.ogImage} onChange={(ogImage) => setContent({ ...content, seo: { ...content.seo, ogImage } })} />
+          <div className="grid gap-5 md:grid-cols-2">
+            <div>
+              <ImageUpload label="社群分享圖（og:image，建議 1200x630）" aspect="aspect-[1200/630]" value={content.seo.ogImage} onChange={(ogImage) => setContent({ ...content, seo: { ...content.seo, ogImage } })} />
+            </div>
+            <div className="space-y-4">
+              <Field label="SEO 標題（搜尋結果與分頁標題）" value={content.seo.title} placeholder={content.brand.name} onChange={(title) => setContent({ ...content, seo: { ...content.seo, title } })} />
+              <TextArea label="SEO 描述（搜尋結果摘要，建議 80-150 字）" value={content.seo.description} onChange={(description) => setContent({ ...content, seo: { ...content.seo, description } })} />
+            </div>
           </div>
         </>
       ),
