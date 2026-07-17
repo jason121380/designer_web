@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import type { DesignerWebContent, PageService } from "@/lib/designer-web-content";
 import ImageUpload from "./ImageUpload";
 import VideoUpload from "./VideoUpload";
+import ColorSelect from "./ColorSelect";
 import PageSectionPanel from "./PageSectionPanel";
 
 const inputClass = "w-full border border-gray-200 bg-white rounded-lg px-3 py-2.5 text-sm outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light";
@@ -87,7 +88,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="品牌名稱" value={content.brand.name} onChange={(name) => setContent({ ...content, brand: { ...content.brand, name } })} />
             <Field label="品牌標語" value={content.brand.tagline} onChange={(tagline) => setContent({ ...content, brand: { ...content.brand, tagline } })} />
-            <Field label="主色" type="color" value={content.brand.themeColor} onChange={(themeColor) => setContent({ ...content, brand: { ...content.brand, themeColor } })} />
+            <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">主色</span><ColorSelect value={content.brand.themeColor} onChange={(themeColor) => setContent({ ...content, brand: { ...content.brand, themeColor } })} /></label>
           </div>
         </PageSectionPanel>
 
