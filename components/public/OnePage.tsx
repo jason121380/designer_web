@@ -2,6 +2,7 @@ import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import type { DesignerWebContent } from "@/lib/designer-web-content";
 import Header from "@/components/public/Header";
 import Footer from "@/components/public/Footer";
+import { externalHref } from "@/lib/utils";
 
 const sectionStyle = { backgroundColor: "var(--cream-3)" };
 const lightSectionStyle = { backgroundColor: "var(--cream-1)" };
@@ -187,16 +188,16 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
                 <p className="flex items-center gap-2">
                   <MapPin size={18} style={{ color: "var(--brand)" }} />
                   {content.contact.mapUrl ? (
-                    <a href={content.contact.mapUrl} target="_blank" rel="noreferrer" className="hover:underline">{content.contact.address}</a>
+                    <a href={externalHref(content.contact.mapUrl)} target="_blank" rel="noreferrer" className="hover:underline">{content.contact.address}</a>
                   ) : (
                     <span>{content.contact.address}</span>
                   )}
                 </p>
                 <p className="flex items-center gap-2"><Phone size={18} style={{ color: "var(--brand)" }} /><a href={`tel:${content.contact.phone}`} className="hover:underline">{content.contact.phone}</a></p>
                 {!!content.contact.email && <p className="flex items-center gap-2"><Mail size={18} style={{ color: "var(--brand)" }} /><a href={`mailto:${content.contact.email}`} className="hover:underline">{content.contact.email}</a></p>}
-                {!!content.contact.facebook && <p className="flex items-center gap-2"><span className="w-[18px] text-center text-sm font-bold" style={{ color: "var(--brand)" }}>f</span><a href={content.contact.facebook} target="_blank" rel="noreferrer" className="hover:underline">Facebook</a></p>}
-                {!!content.contact.instagram && <p className="flex items-center gap-2"><span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>IG</span><a href={content.contact.instagram} target="_blank" rel="noreferrer" className="hover:underline">Instagram</a></p>}
-                {!!content.contact.line && <p className="flex items-center gap-2"><MessageCircle size={18} style={{ color: "var(--brand)" }} /><a href={content.contact.line} target="_blank" rel="noreferrer" className="hover:underline">LINE</a></p>}
+                {!!content.contact.facebook && <p className="flex items-center gap-2"><span className="w-[18px] text-center text-sm font-bold" style={{ color: "var(--brand)" }}>f</span><a href={externalHref(content.contact.facebook)} target="_blank" rel="noreferrer" className="hover:underline">Facebook</a></p>}
+                {!!content.contact.instagram && <p className="flex items-center gap-2"><span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>IG</span><a href={externalHref(content.contact.instagram)} target="_blank" rel="noreferrer" className="hover:underline">Instagram</a></p>}
+                {!!content.contact.line && <p className="flex items-center gap-2"><MessageCircle size={18} style={{ color: "var(--brand)" }} /><a href={externalHref(content.contact.line)} target="_blank" rel="noreferrer" className="hover:underline">LINE</a></p>}
               </div>
               {!!content.contact.mapEmbedUrl && <iframe src={content.contact.mapEmbedUrl} title="店家位置" className="h-72 w-full border-0" loading="lazy" />}
             </div>
