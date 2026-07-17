@@ -15,6 +15,7 @@ export default function VideoUpload({ value, onChange, label = "影片" }: Props
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [manualUrl, setManualUrl] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -24,6 +25,8 @@ export default function VideoUpload({ value, onChange, label = "影片" }: Props
     if (file.size > MAX_SIZE) { setError("影片大小不得超過 200MB"); return; }
 
     setError("");
+    // .mov（QuickTime）在部分 Chrome/Android 可能無法播放，仍允許上傳但提醒改用 MP4。
+    setNotice(file.type === "video/quicktime" ? ".mov 在部分 Chrome／Android 可能無法播放，若前台無法播放建議改上傳 MP4（H.264）" : "");
     setUploading(true);
     setProgress(0);
     try {
@@ -105,6 +108,7 @@ export default function VideoUpload({ value, onChange, label = "影片" }: Props
       )}
 
       {!!error && <p className="mt-2 text-xs text-red-500">{error}</p>}
+      {!!notice && <p className="mt-2 text-xs text-amber-600">{notice}</p>}
 
       {/* 也可直接貼影片播放網址（例如 Cloudflare Stream） */}
       {!value && !uploading && (
