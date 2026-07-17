@@ -317,7 +317,15 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "沒有照片時前台自動隱藏",
       body: (
         <>
-          {content.environment.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RowTools index={index} total={content.environment.length} onMove={(dir) => setContent({ ...content, environment: moveAt(content.environment, index, dir) })} onRemove={() => setContent({ ...content, environment: removeAt(content.environment, index) })} /></div><MediaUpload label={`環境照片或影片 ${index + 1}`} value={item.image} onChange={(image) => setContent((prev) => ({ ...prev, environment: updateAt(prev.environment, index, { image }) }))} /><Field label="圖片說明" value={item.alt} onChange={(alt) => setContent({ ...content, environment: updateAt(content.environment, index, { alt }) })} /></div>)}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {content.environment.map((item, index) => (
+              <div key={item.id} className="space-y-3 border border-gray-100 rounded-lg p-3">
+                <MediaUpload aspect="aspect-square" label={`環境照片或影片 ${index + 1}`} value={item.image} onChange={(image) => setContent((prev) => ({ ...prev, environment: updateAt(prev.environment, index, { image }) }))} />
+                <Field label="圖片說明" value={item.alt} onChange={(alt) => setContent((prev) => ({ ...prev, environment: updateAt(prev.environment, index, { alt }) }))} />
+                <div className="flex justify-end"><RowTools index={index} total={content.environment.length} onMove={(dir) => setContent({ ...content, environment: moveAt(content.environment, index, dir) })} onRemove={() => setContent({ ...content, environment: removeAt(content.environment, index) })} /></div>
+              </div>
+            ))}
+          </div>
           <AddButton label="新增環境照片" onClick={() => setContent({ ...content, environment: [...content.environment, { id: makeId("environment"), image: "", alt: "" }] })} />
         </>
       ),
