@@ -121,6 +121,11 @@ Stream：
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_STREAM_API_TOKEN`
 
+AI SEO（選填，用於後台 SEO「AI 自動填寫」按鈕，未設定時該 API 回 503）：
+
+- `GEMINI_API_KEY`（Google Gemini API 金鑰）
+- `GEMINI_MODEL`（選填，預設 `gemini-3.1-flash-lite`）
+
 Zeabur 正式環境需讓 `NEXTAUTH_URL` 與 `SITE_URL` 使用同一個正式 HTTPS 網域。`lib/auth.config.ts` 的 `trustHost: true` 是反向代理環境必要設定。
 
 ## 開發與建置
