@@ -7,6 +7,8 @@ interface Props {
   value?: string;
   onChange: (url: string) => void;
   label?: string;
+  /** 預覽/上傳區長寬比 Tailwind class，預設 16:9；可傳 "aspect-square" 呈現 1:1。 */
+  aspect?: string;
 }
 
 const IMAGE_MAX = 10 * 1024 * 1024;
@@ -14,7 +16,7 @@ const VIDEO_MAX = 200 * 1024 * 1024;
 const VIDEO_ALLOWED = ["video/mp4", "video/webm", "video/quicktime"];
 
 /** 通用媒體上傳：圖片走 /api/upload（伺服器處理），影片走 presigned 直傳 R2（帶進度）。 */
-export default function MediaUpload({ value, onChange, label = "圖片或影片" }: Props) {
+export default function MediaUpload({ value, onChange, label = "圖片或影片", aspect = "aspect-video" }: Props) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
@@ -92,9 +94,9 @@ export default function MediaUpload({ value, onChange, label = "圖片或影片"
         <div className="space-y-2">
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-black">
             {isVideoUrl(value) ? (
-              <video src={value} controls playsInline preload="metadata" className="aspect-video w-full bg-black object-contain" />
+              <video src={value} controls playsInline preload="metadata" className={`${aspect} w-full bg-black object-contain`} />
             ) : (
-              <img src={value} alt="預覽" className="aspect-video w-full bg-gray-100 object-contain" />
+              <img src={value} alt="預覽" className={`${aspect} w-full bg-gray-100 object-contain`} />
             )}
           </div>
           <div className="flex items-center gap-3">
@@ -108,7 +110,7 @@ export default function MediaUpload({ value, onChange, label = "圖片或影片"
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           onClick={() => !uploading && inputRef.current?.click()}
-          className={`flex aspect-video cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed transition-colors ${
+          className={`flex ${aspect} cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed transition-colors ${
             isDragging ? "border-rose-brand bg-rose-brand/5" : "border-gray-200 hover:border-rose-brand"
           }`}
         >
