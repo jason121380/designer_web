@@ -62,6 +62,12 @@ export const designerWebContentSchema = z.object({
   hero: z.object({
     heading: nullableString,
     headingColor: nullableString,
+    // 新版：首屏可放最多兩個媒體（各自可為圖片或影片）。
+    media: z.array(z.object({
+      url: nullableString,
+      type: z.enum(["image", "video"]).optional().nullable(),
+    })).optional(),
+    // 舊版單一媒體欄位（向下相容，normalize 時遷移到 media）。
     mediaUrl: nullableString,
     mediaType: z.enum(["image", "video"]).optional().nullable(),
   }).optional(),
@@ -132,7 +138,7 @@ export interface PageService {
 
 export interface DesignerWebContent {
   brand: { name: string; tagline: string; themeColor: string };
-  hero: { heading: string; headingColor: string; mediaUrl: string; mediaType: "image" | "video" };
+  hero: { heading: string; headingColor: string; media: { url: string; type: "image" | "video" }[] };
   /** 前台區塊順序與中英標題（依此順序渲染，標題可自訂）。 */
   sections: { key: string; zh: string; en: string }[];
   promos: { id: string; image: string; caption: string }[];
@@ -170,8 +176,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
     heading:
       "中壢接髮推薦 KIMEKO HAIR\n極致零感羽毛接髮｜新縮毛鏡面燙｜歐美手刷染\n日韓系光線染｜5G 網狀纖維護髮｜特殊色白金髮",
     headingColor: "#ffffff",
-    mediaUrl: "",
-    mediaType: "image",
+    media: [],
   },
   promos: [],
   services: [
@@ -270,6 +275,22 @@ function normalizeServices(items: RawContent["services"], fallback: PageService[
   return normalized.length ? normalized : fallback;
 }
 
+/** 首屏媒體正規化：新版 media 陣列優先，否則遷移舊版單一 mediaUrl/mediaType；最多兩個、過濾空網址。 */
+function normalizeHeroMedia(hero: RawContent["hero"]): DesignerWebContent["hero"]["media"] {
+  const result: DesignerWebContent["hero"]["media"] = [];
+  for (const item of hero?.media ?? []) {
+    const url = trim(item?.url);
+    if (!url) continue;
+    result.push({ url, type: item?.type === "video" ? "video" : "image" });
+  }
+  // 舊資料只有單一媒體欄位時遷移過來。
+  if (!result.length) {
+    const url = trim(hero?.mediaUrl);
+    if (url) result.push({ url, type: hero?.mediaType === "video" ? "video" : "image" });
+  }
+  return result.slice(0, 2);
+}
+
 function normalizeSections(input: RawContent["sections"]): DesignerWebContent["sections"] {
   const seen = new Set<string>();
   const result: DesignerWebContent["sections"] = [];
@@ -359,8 +380,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
     hero: {
       heading: withDefault(data.hero?.heading, defaultDesignerWebContent.hero.heading),
       headingColor: withDefault(data.hero?.headingColor, defaultDesignerWebContent.hero.headingColor),
-      mediaUrl: trim(data.hero?.mediaUrl),
-      mediaType: data.hero?.mediaType ?? defaultDesignerWebContent.hero.mediaType,
+      media: normalizeHeroMedia(data.hero),
     },
     promos,
     services: normalizeServices(data.services, defaultDesignerWebContent.services),

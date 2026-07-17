@@ -30,8 +30,7 @@ assert.deepEqual((meta.twitter as { images?: unknown }).images, ["https://cdn.ex
 
 // 沒有 og 設定但首屏是圖片 → 用首屏圖當分享圖
 const heroFallback = structuredClone(defaultDesignerWebContent);
-heroFallback.hero.mediaUrl = "https://cdn.example.com/hero.webp";
-heroFallback.hero.mediaType = "image";
+heroFallback.hero.media = [{ url: "https://cdn.example.com/hero.webp", type: "image" }];
 const heroMeta = designerPageMetadata(heroFallback, "/");
 assert.deepEqual((heroMeta.openGraph as { images?: unknown }).images, [
   { url: "https://cdn.example.com/hero.webp" },

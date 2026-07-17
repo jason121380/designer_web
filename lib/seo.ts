@@ -39,8 +39,7 @@ export function designerPageMetadata(content: DesignerWebContent, path: string):
   const description =
     content.seo.description || content.hero.heading.replace(/\s*\n\s*/g, "，").slice(0, 150);
   const ogImage =
-    content.seo.ogImage ||
-    (content.hero.mediaType === "image" ? content.hero.mediaUrl : "");
+    content.seo.ogImage || content.hero.media.find((item) => item.type === "image")?.url || "";
 
   return {
     title: { absolute: title },
@@ -72,7 +71,8 @@ export function linksPageMetadata(content: DesignerWebContent, path: string): Me
   const ogImage =
     content.links.avatar ||
     content.seo.ogImage ||
-    (content.hero.mediaType === "image" ? content.hero.mediaUrl : "");
+    content.hero.media.find((item) => item.type === "image")?.url ||
+    "";
 
   return {
     title: { absolute: title },
