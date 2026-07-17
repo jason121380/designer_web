@@ -203,7 +203,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
       <main className="min-h-screen">
         <section id="top" className="scroll-mt-14" style={{ backgroundColor: content.hero.bgColor }}>
           {(content.hero.image || content.hero.video) && (
-            <div className={`mx-auto grid max-w-6xl gap-1 ${content.hero.image && content.hero.video ? "md:grid-cols-2" : "grid-cols-1"}`}>
+            <div className={`grid gap-1 ${content.hero.image && content.hero.video ? "md:grid-cols-2" : "grid-cols-1"}`}>
               {!!content.hero.image && (
                 <div className="overflow-hidden">
                   <img src={content.hero.image} alt={content.brand.name} className="aspect-square w-full object-cover" />
