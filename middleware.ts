@@ -10,7 +10,6 @@ const legacyAdminPrefixes = [
   "/admin/categories",
   "/admin/tags",
   "/admin/analytics",
-  "/admin/tools",
 ];
 
 export default auth((req) => {
