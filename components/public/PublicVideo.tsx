@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   src: string;
@@ -11,11 +11,34 @@ interface Props {
 }
 
 /**
- * 前台影片播放器：載入或解碼失敗（例如部分裝置無法播放 .mov）時，
- * 改顯示可點開的連結，避免影片整塊憑空消失。
+ * 前台影片播放器：
+ * - 進到視窗附近才載入並播放，離開視窗暫停（省頻寬、加快首屏）。
+ * - 載入或解碼失敗（例如部分裝置無法播放 .mov）時，改顯示可點開的連結，避免影片整塊消失。
  */
 export default function PublicVideo({ src, className = "", controls = false, autoPlay = false }: Props) {
   const [failed, setFailed] = useState(false);
+  const [active, setActive] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const element = videoRef.current;
+    if (!element) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActive(true);
+            if (autoPlay) element.play().catch(() => {});
+          } else {
+            element.pause();
+          }
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [autoPlay]);
 
   if (failed) {
     return (
@@ -29,13 +52,16 @@ export default function PublicVideo({ src, className = "", controls = false, aut
 
   return (
     <video
-      src={src}
+      ref={videoRef}
+      src={active ? src : undefined}
       className={className}
-      onError={() => setFailed(true)}
+      onError={() => { if (active) setFailed(true); }}
+      onLoadedData={() => { if (autoPlay) videoRef.current?.play().catch(() => {}); }}
       controls={controls}
       playsInline
-      preload="metadata"
-      {...(autoPlay ? { autoPlay: true, muted: true, loop: true } : {})}
+      preload={active ? "metadata" : "none"}
+      muted={autoPlay || undefined}
+      loop={autoPlay || undefined}
     />
   );
 }

@@ -206,7 +206,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
             <div className={`grid gap-1 ${content.hero.image && content.hero.video ? "md:grid-cols-2" : "grid-cols-1"}`}>
               {!!content.hero.image && (
                 <div className="overflow-hidden">
-                  <img src={content.hero.image} alt={content.brand.name} className="aspect-square w-full object-cover" />
+                  <img src={content.hero.image} alt={content.brand.name} fetchPriority="high" decoding="async" className="aspect-square w-full object-cover" />
                 </div>
               )}
               {!!content.hero.video && (
