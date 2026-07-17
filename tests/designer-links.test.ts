@@ -72,9 +72,9 @@ assert.match(adminLinks, /LinksManagementForm/);
 const linksForm = read("components/admin/LinksManagementForm.tsx");
 assert.match(linksForm, /`\/api\/designer-web\/\$\{slug\}`/, "連結頁存回同一筆子頁面內容");
 
-// 頁面列表提供一頁式與連結頁兩個編輯入口
+// 頁面列表提供一頁式與個人連結兩個編輯入口
 const listSource = read("components/admin/PageList.tsx");
-assert.match(listSource, /連結頁/);
+assert.match(listSource, /個人連結/);
 assert.match(listSource, /page-management\/\$\{page\.slug\}\/links/);
 
 console.log("designer-links.test.ts passed");
