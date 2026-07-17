@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronDown, ChevronUp, ExternalLink, Link2, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, ExternalLink, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { DesignerWebContent } from "@/lib/designer-web-content";
 import ImageUpload from "./ImageUpload";
@@ -104,9 +104,27 @@ export default function LinksManagementForm({ initialContent, slug }: { initialC
           <button type="button" onClick={() => setItems([...items, { id: makeId(), label: "", url: "" }])} className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-rose-brand"><Plus size={15} />新增連結按鈕</button>
         </PageSectionPanel>
 
-        <PageSectionPanel title="社群 icon" description="連結頁底部的社群圖示沿用一頁式的「聯絡資訊」（Instagram / Facebook / LINE / Email / 電話 / 地圖），在該頁編輯即可">
-          <p className="text-sm text-gray-400">前往「一頁式」編輯器的「聯絡資訊」區塊填寫，連結頁會自動帶入對應的社群圖示。</p>
-          <Link href={`/admin/page-management/${slug}`} className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-rose-brand"><Link2 size={14} />前往編輯聯絡資訊</Link>
+        <PageSectionPanel title="社群 icon" description="連結頁底部的社群圖示；與一頁式的「聯絡資訊」共用同一份，在任一邊修改都會同步。留空的項目不顯示。">
+          <div className="grid gap-4 md:grid-cols-2">
+            {([
+              ["Instagram 連結", "instagram"],
+              ["Facebook 連結", "facebook"],
+              ["LINE 連結", "line"],
+              ["Email", "email"],
+              ["電話", "phone"],
+              ["Google Maps 連結", "mapUrl"],
+            ] as const).map(([label, key]) => (
+              <label key={key} className="block">
+                <span className="mb-1.5 block text-xs font-medium text-gray-500">{label}</span>
+                <input
+                  className={inputClass}
+                  value={content.contact[key]}
+                  onChange={(event) => setContent({ ...content, contact: { ...content.contact, [key]: event.target.value } })}
+                />
+              </label>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-gray-400">網址免加 https://，前台會自動補上。這些欄位與一頁式「聯絡資訊」相同，儲存後兩頁一起更新。</p>
         </PageSectionPanel>
       </div>
     </div>
