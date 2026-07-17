@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronDown, ChevronUp, ExternalLink, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, GripVertical, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { SECTION_DEFS, type DesignerWebContent, type PageService } from "@/lib/designer-web-content";
 import ImageUpload from "./ImageUpload";
@@ -61,6 +61,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
   const [content, setContent] = useState(initialContent);
   const [saving, setSaving] = useState(false);
   const [active, setActive] = useState("brand");
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
   const apiPath = `/api/designer-web/${slug}`;
   const previewPath = `/${slug}`;
 
@@ -79,11 +80,11 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
     }
   }
 
-  function moveSection(index: number, dir: -1 | 1) {
-    const target = index + dir;
-    if (target < 0 || target >= content.sections.length) return;
+  function reorderSection(from: number, to: number) {
+    if (from === to || from < 0 || to < 0 || from >= content.sections.length || to >= content.sections.length) return;
     const next = [...content.sections];
-    [next[index], next[target]] = [next[target], next[index]];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
     setContent({ ...content, sections: next });
   }
   function updateSection(index: number, patch: Partial<DesignerWebContent["sections"][number]>) {
@@ -100,6 +101,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
           <Field label="網頁標題（瀏覽器分頁與 SEO 標題）" value={content.brand.name} onChange={(name) => setContent({ ...content, brand: { ...content.brand, name } })} />
           <Field label="標題設定（顯示於選單列左上）" value={content.brand.tagline} onChange={(tagline) => setContent({ ...content, brand: { ...content.brand, tagline } })} />
           <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">選單列底色（Header 底色）</span><ColorSelect value={content.brand.themeColor} onChange={(themeColor) => setContent({ ...content, brand: { ...content.brand, themeColor } })} /></label>
+          <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">選單列文字顏色</span><ColorSelect value={content.brand.headerTextColor} onChange={(headerTextColor) => setContent({ ...content, brand: { ...content.brand, headerTextColor } })} /></label>
         </div>
       ),
     },
@@ -110,8 +112,9 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       body: (
         <>
           <TextArea label="主標題（顯示於首屏，可自訂文字）" value={content.hero.heading} onChange={(heading) => setContent({ ...content, hero: { ...content.hero, heading } })} />
-          <div className="mt-4">
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
             <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">主標題文字顏色</span><ColorSelect value={content.hero.headingColor} onChange={(headingColor) => setContent({ ...content, hero: { ...content.hero, headingColor } })} /></label>
+            <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">Banner 底色</span><ColorSelect value={content.hero.bgColor} onChange={(bgColor) => setContent({ ...content, hero: { ...content.hero, bgColor } })} /></label>
           </div>
           <div className="mt-6 space-y-5">
             <p className="text-xs text-gray-400">固定一張圖片、一支影片；前台電腦版左圖右影、手機版上下排列。留空的不會顯示。</p>
@@ -126,27 +129,39 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       title: "區塊設定",
       description: "調整前台區塊的排列順序，並自訂各區塊的中英文標題與底色",
       body: (
-        <>
+        <div className="space-y-2">
+          <p className="text-xs text-gray-400">拖曳最前方把手可調整順序；每列可改中文、英文標題與區塊底色。</p>
+          <div className="hidden items-center gap-2 px-2 text-xs font-medium text-gray-400 md:flex">
+            <span className="w-4 shrink-0" />
+            <span className="min-w-[110px] flex-1">中文標題</span>
+            <span className="min-w-[110px] flex-1">英文標題（選填）</span>
+            <span className="min-w-[150px] flex-1">區塊底色</span>
+          </div>
           {content.sections.map((sec, index) => {
             const def = SECTION_DEFS.find((d) => d.key === sec.key);
             return (
-              <div key={sec.key} className={rowClass}>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-700">{def?.zh ?? sec.key}</p>
-                  <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => moveSection(index, -1)} disabled={index === 0} className="inline-flex h-8 w-8 items-center justify-center border border-gray-200 bg-white rounded-lg text-gray-600 transition hover:bg-gray-50 disabled:opacity-30" aria-label="上移"><ChevronUp size={15} /></button>
-                    <button type="button" onClick={() => moveSection(index, 1)} disabled={index === content.sections.length - 1} className="inline-flex h-8 w-8 items-center justify-center border border-gray-200 bg-white rounded-lg text-gray-600 transition hover:bg-gray-50 disabled:opacity-30" aria-label="下移"><ChevronDown size={15} /></button>
-                  </div>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="中文標題" value={sec.zh} onChange={(zh) => updateSection(index, { zh })} />
-                  <Field label="英文標題（選填）" value={sec.en} onChange={(en) => updateSection(index, { en })} />
-                </div>
-                <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">區塊底色</span><ColorSelect value={sec.bg} onChange={(bg) => updateSection(index, { bg })} /></label>
+              <div
+                key={sec.key}
+                onDragOver={(event) => { event.preventDefault(); if (dragIndex !== null && dragIndex !== index) { reorderSection(dragIndex, index); setDragIndex(index); } }}
+                className={`flex flex-wrap items-center gap-2 rounded-lg border border-gray-100 bg-white p-2 ${dragIndex === index ? "opacity-40" : ""}`}
+              >
+                <button
+                  type="button"
+                  draggable
+                  onDragStart={() => setDragIndex(index)}
+                  onDragEnd={() => setDragIndex(null)}
+                  aria-label={`拖曳排序：${def?.zh ?? sec.key}`}
+                  className="shrink-0 cursor-grab px-0.5 text-gray-400 hover:text-gray-600 active:cursor-grabbing"
+                >
+                  <GripVertical size={16} />
+                </button>
+                <div className="min-w-[110px] flex-1"><input className={inputClass} value={sec.zh} placeholder="中文標題" onChange={(event) => updateSection(index, { zh: event.target.value })} /></div>
+                <div className="min-w-[110px] flex-1"><input className={inputClass} value={sec.en} placeholder="英文（選填）" onChange={(event) => updateSection(index, { en: event.target.value })} /></div>
+                <div className="min-w-[150px] flex-1"><ColorSelect value={sec.bg} onChange={(bg) => updateSection(index, { bg })} /></div>
               </div>
             );
           })}
-        </>
+        </div>
       ),
     },
     {
@@ -172,11 +187,11 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
     },
     {
       id: "otherServices",
-      title: "其他服務",
+      title: "特色項目",
       body: (
         <>
           <ServiceRows items={content.otherServices} onChange={(otherServices) => setContent({ ...content, otherServices })} />
-          <AddButton label="新增其他服務" onClick={() => setContent({ ...content, otherServices: [...content.otherServices, { id: makeId("other"), title: "", description: "", features: [], suitableFor: [], image: "", price: "" }] })} />
+          <AddButton label="新增特色項目" onClick={() => setContent({ ...content, otherServices: [...content.otherServices, { id: makeId("other"), title: "", description: "", features: [], suitableFor: [], image: "", price: "" }] })} />
         </>
       ),
     },

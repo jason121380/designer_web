@@ -11,7 +11,7 @@ export const RESERVED_PAGE_SLUGS = [HOME_PAGE_SLUG, "admin", "api", "uploads"];
 export const SECTION_DEFS = [
   { key: "dm", anchor: "dm", zh: "活動 DM", en: "DM" },
   { key: "services", anchor: "services", zh: "接髮介紹", en: "Services" },
-  { key: "otherServices", anchor: "other-services", zh: "其他服務", en: "Other Services" },
+  { key: "otherServices", anchor: "other-services", zh: "特色項目", en: "Other Services" },
   { key: "videos", anchor: "hair-video", zh: "作品影片", en: "Works" },
   { key: "installment", anchor: "pay", zh: "分期介紹", en: "" },
   { key: "pricing", anchor: "pricing", zh: "價目表", en: "Pricing" },
@@ -61,10 +61,12 @@ export const designerWebContentSchema = z.object({
     name: nullableString,
     tagline: nullableString,
     themeColor: nullableString,
+    headerTextColor: nullableString,
   }).optional(),
   hero: z.object({
     heading: nullableString,
     headingColor: nullableString,
+    bgColor: nullableString,
     // 新版：固定一張圖片、一張影片。
     image: nullableString,
     video: nullableString,
@@ -143,8 +145,8 @@ export interface PageService {
 }
 
 export interface DesignerWebContent {
-  brand: { name: string; tagline: string; themeColor: string };
-  hero: { heading: string; headingColor: string; image: string; video: string };
+  brand: { name: string; tagline: string; themeColor: string; headerTextColor: string };
+  hero: { heading: string; headingColor: string; bgColor: string; image: string; video: string };
   /** 前台區塊順序、中英標題與底色（依此順序渲染，標題與底色可自訂）。 */
   sections: { key: string; zh: string; en: string; bg: string }[];
   promos: { id: string; image: string; caption: string }[];
@@ -177,11 +179,13 @@ export const defaultDesignerWebContent: DesignerWebContent = {
     name: "KIMEKO HAIR（示範）",
     tagline: "中壢接髮推薦",
     themeColor: "#d9bf77",
+    headerTextColor: "#ffffff",
   },
   hero: {
     heading:
       "中壢接髮推薦 KIMEKO HAIR\n極致零感羽毛接髮｜新縮毛鏡面燙｜歐美手刷染\n日韓系光線染｜5G 網狀纖維護髮｜特殊色白金髮",
     headingColor: "#ffffff",
+    bgColor: "#171717",
     image: "",
     video: "",
   },
@@ -394,10 +398,12 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
       name: withDefault(data.brand?.name, defaultDesignerWebContent.brand.name),
       tagline: withDefault(data.brand?.tagline, defaultDesignerWebContent.brand.tagline),
       themeColor: withDefault(data.brand?.themeColor, defaultDesignerWebContent.brand.themeColor),
+      headerTextColor: withDefault(data.brand?.headerTextColor, defaultDesignerWebContent.brand.headerTextColor),
     },
     hero: {
       heading: withDefault(data.hero?.heading, defaultDesignerWebContent.hero.heading),
       headingColor: withDefault(data.hero?.headingColor, defaultDesignerWebContent.hero.headingColor),
+      bgColor: withDefault(data.hero?.bgColor, defaultDesignerWebContent.hero.bgColor),
       ...normalizeHeroMedia(data.hero),
     },
     promos,

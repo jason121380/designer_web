@@ -21,10 +21,10 @@ export default function Header({ content }: { content: DesignerWebContent }) {
     .map((sec) => ({ href: `#${SECTION_ANCHOR[sec.key]}`, label: sec.zh }));
 
   return (
-    <nav className="sticky top-0 z-50 text-white backdrop-blur" style={{ backgroundColor: content.brand.themeColor }}>
+    <nav className="sticky top-0 z-50 backdrop-blur" style={{ backgroundColor: content.brand.themeColor, color: content.brand.headerTextColor }}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <a href="#top" className="font-semibold tracking-wide" onClick={() => setOpen(false)}>{title}</a>
-        <ul className="hidden items-center gap-6 text-sm text-white/90 md:flex">
+        <ul className="hidden items-center gap-6 text-sm md:flex">
           {links.map((link) => (
             <li key={link.href}><a href={link.href} className="transition-opacity hover:opacity-100 opacity-90">{link.label}</a></li>
           ))}
@@ -34,18 +34,18 @@ export default function Header({ content }: { content: DesignerWebContent }) {
           onClick={() => setOpen((value) => !value)}
           aria-label={open ? "關閉選單" : "開啟選單"}
           aria-expanded={open}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-white transition-colors hover:bg-white/10 md:hidden"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 md:hidden"
         >
           {open ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
       {open && (
-        <div className="border-t border-white/15 md:hidden" style={{ backgroundColor: content.brand.themeColor }}>
+        <div className="border-t border-black/10 md:hidden" style={{ backgroundColor: content.brand.themeColor, color: content.brand.headerTextColor }}>
           <ul className="mx-auto max-w-6xl px-4 py-2">
             {links.map((link) => (
               <li key={link.href}>
-                <a href={link.href} onClick={() => setOpen(false)} className="block rounded-lg px-2 py-3 text-sm text-white/90 transition-colors hover:bg-white/10">{link.label}</a>
+                <a href={link.href} onClick={() => setOpen(false)} className="block rounded-lg px-2 py-3 text-sm transition-colors hover:bg-black/10">{link.label}</a>
               </li>
             ))}
           </ul>

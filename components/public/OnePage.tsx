@@ -207,7 +207,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
     <div style={{ ["--brand" as string]: content.brand.themeColor }}>
       <Header content={content} />
       <main className="min-h-screen">
-        <section id="top" className="scroll-mt-14 bg-neutral-900">
+        <section id="top" className="scroll-mt-14" style={{ backgroundColor: content.hero.bgColor }}>
           {(content.hero.image || content.hero.video) && (
             <div className={`mx-auto grid max-w-6xl gap-1 ${content.hero.image && content.hero.video ? "md:grid-cols-2" : "grid-cols-1"}`}>
               {!!content.hero.image && (
