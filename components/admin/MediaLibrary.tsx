@@ -11,6 +11,8 @@ export interface MediaItem {
   originalName: string;
   size: number;
   createdAt: string;
+  /** 此媒體被引用的位置（例如「monica · 作品影片 1」）。 */
+  usages: string[];
 }
 
 const isVideo = (item: MediaItem) => item.mimeType.startsWith("video/");
@@ -32,6 +34,9 @@ export default function MediaLibrary({ initialMedia }: { initialMedia: MediaItem
     if (filter === "video") return media.filter(isVideo);
     return media;
   }, [media, filter]);
+
+  const totalBytes = useMemo(() => media.reduce((sum, m) => sum + (m.size || 0), 0), [media]);
+  const usedSpace = totalBytes ? (totalBytes < 1024 * 1024 ? `${Math.max(1, Math.round(totalBytes / 1024))} KB` : `${(totalBytes / 1024 / 1024).toFixed(1)} MB`) : "0 MB";
 
   async function copyUrl(url: string) {
     try {
@@ -70,9 +75,12 @@ export default function MediaLibrary({ initialMedia }: { initialMedia: MediaItem
 
   return (
     <div className="mx-auto max-w-6xl pb-20">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">媒體庫</h1>
-        <p className="mt-1 text-sm text-gray-400">所有已上傳的圖片與影片；共 {media.length} 筆。可複製網址或刪除。</p>
+      <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">媒體庫</h1>
+          <p className="mt-1 text-sm text-gray-400">所有已上傳的圖片與影片；共 {media.length} 筆。可複製網址或刪除。</p>
+        </div>
+        <p className="text-sm text-gray-500">已使用空間 <span className="font-semibold text-gray-800">{usedSpace}</span></p>
       </div>
 
       <div className="mb-5 flex flex-wrap gap-2">
@@ -105,9 +113,23 @@ export default function MediaLibrary({ initialMedia }: { initialMedia: MediaItem
                 </div>
               </div>
 
+              <div className="px-2 pb-2">
+                {item.usages.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {item.usages.slice(0, 3).map((usage, usageIndex) => (
+                      <span key={usageIndex} className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500" title={usage}>{usage}</span>
+                    ))}
+                    {item.usages.length > 3 && <span className="text-[10px] text-gray-400">+{item.usages.length - 3}</span>}
+                  </div>
+                ) : (
+                  <span className="text-[10px] text-gray-300">未被引用</span>
+                )}
+              </div>
+
               {confirmId === item.id && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70 p-3 text-center">
                   <p className="text-xs text-white">確定刪除這個媒體？</p>
+                  {item.usages.length > 0 && <p className="text-[11px] text-amber-300">仍被 {item.usages.length} 處使用，刪除後那些位置會失效</p>}
                   <div className="flex gap-2">
                     <button type="button" disabled={deletingId === item.id} onClick={() => remove(item.id)} className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">{deletingId === item.id ? "刪除中" : "刪除"}</button>
                     <button type="button" onClick={() => setConfirmId(null)} className="rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-gray-700">取消</button>
