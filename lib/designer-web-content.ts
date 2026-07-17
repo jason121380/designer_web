@@ -96,6 +96,7 @@ export const designerWebContentSchema = z.object({
     id: nullableString,
     video: nullableString,
     caption: nullableString,
+    category: nullableString,
   })).optional(),
   installment: z.array(z.string()).optional(),
   pricing: z.array(pricingSchema).optional(),
@@ -152,7 +153,7 @@ export interface DesignerWebContent {
   promos: { id: string; image: string; caption: string }[];
   services: PageService[];
   otherServices: PageService[];
-  videos: { id: string; video: string; caption: string }[];
+  videos: { id: string; video: string; caption: string; category: string }[];
   installment: string[];
   pricing: { name: string; price: string; description: string; features: string[] }[];
   environment: { id: string; image: string; alt: string }[];
@@ -368,6 +369,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
       id: itemId(item.id, "video", index),
       video: trim(item.video),
       caption: trim(item.caption),
+      category: trim(item.category),
     }));
   const pricing = (data.pricing ?? [])
     .filter((item) => trim(item.name))

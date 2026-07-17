@@ -5,6 +5,7 @@ import Header from "@/components/public/Header";
 import Footer from "@/components/public/Footer";
 import PublicVideo from "@/components/public/PublicVideo";
 import MediaView from "@/components/public/MediaView";
+import WorksGallery from "@/components/public/WorksGallery";
 import { externalHref } from "@/lib/utils";
 
 type Section = { key: string; zh: string; en: string; bg: string };
@@ -99,14 +100,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
         <section id="hair-video" className="scroll-mt-14 py-14 md:py-20" style={{ backgroundColor: sec.bg }}>
           <div className="mx-auto max-w-6xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {content.videos.map((item) => (
-                <figure key={item.id} className="overflow-hidden bg-white rounded-lg">
-                  <PublicVideo src={item.video} controls autoPlay className="aspect-[9/16] w-full bg-black object-cover" />
-                  {!!item.caption && <figcaption className="p-4 text-sm text-neutral-600">{item.caption}</figcaption>}
-                </figure>
-              ))}
-            </div>
+            <WorksGallery videos={content.videos} />
           </div>
         </section>
       ) : null;

@@ -47,7 +47,7 @@ export default function AdminShell({
           onToggleCollapse={() => setCollapsed((c) => !c)}
           collapsed={collapsed}
         />
-        <main className="flex-1 overflow-x-hidden p-4 md:p-8">{children}</main>
+        <main className="flex-1 overflow-x-clip p-4 md:p-8">{children}</main>
         <Toaster position="top-right" richColors />
       </div>
     </div>
