@@ -10,9 +10,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "**" },
     ],
-    localPatterns: [
-      { pathname: "/uploads/**" },
-    ],
     minimumCacheTTL: 2592000,
   },
   experimental: {

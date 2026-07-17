@@ -75,7 +75,7 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16（後續 re
 
 - 圖片目標儲存：Cloudflare R2。
 - 影片目標儲存：Cloudflare Stream。
-- R2 未完整設定時，`/api/upload` 會 fallback 到 `public/uploads`。
+- 圖片一律走 R2：`/api/upload` 未設定 R2 回 503、R2 失敗回 502，不再寫本機/Volume；已移除 `zeabur.yaml` 的 Volume 掛載、`app/uploads/[...path]` 路由與 next.config 的 localPatterns。正式站 R2 已設定（bucket `designer-web`，pub-…r2.dev 公開網址）。
 - 目前後台圖片可直接上傳；影片欄位目前使用播放 URL，尚未接上完整的 direct-upload UI。
 - 不在此檔記錄任何 Cloudflare ID、token 或 secret。
 

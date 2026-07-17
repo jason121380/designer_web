@@ -43,9 +43,9 @@ npm run dev
 1. 建立 PostgreSQL 服務，`DATABASE_URL` 由 Zeabur 注入（見 `zeabur.yaml`）。
 2. 設定環境變數：
    - 必要：`AUTH_SECRET`、`NEXTAUTH_URL`、`SITE_URL`（後兩者使用同一個正式 HTTPS 網域）。
-   - 圖片走 Cloudflare R2 時：`CLOUDFLARE_R2_ACCOUNT_ID`、`CLOUDFLARE_R2_ACCESS_KEY_ID`、`CLOUDFLARE_R2_SECRET_ACCESS_KEY`、`CLOUDFLARE_R2_BUCKET`、`CLOUDFLARE_R2_PUBLIC_URL`（五個都要設定才會啟用）。
+   - 圖片（必要）：`CLOUDFLARE_R2_ACCOUNT_ID`、`CLOUDFLARE_R2_ACCESS_KEY_ID`、`CLOUDFLARE_R2_SECRET_ACCESS_KEY`、`CLOUDFLARE_R2_BUCKET`、`CLOUDFLARE_R2_PUBLIC_URL`（五個缺一，圖片上傳會回 503）。
    - 影片 direct upload API 需要：`CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_STREAM_API_TOKEN`。
-3. 未設定 R2 時圖片寫入 Volume（掛載於 `/src/public/uploads`，見 `zeabur.yaml` 註解）。
+3. 圖片一律存 R2、不再掛 Volume；未設定 R2 則無法上傳圖片（不會退回本機磁碟）。
 4. 建置流程：`npm install` → `npx prisma generate` → `npx prisma migrate deploy` → `npm run build`。
 5. 部署後 smoke test：登入、儲存頁面設定、圖片上傳、前台更新與 390px 手機版。
 

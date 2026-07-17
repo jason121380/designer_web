@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
 import sharp from "sharp";
 import { rateLimit, tooMany } from "@/lib/rate-limit";
 import { isR2Configured, uploadToR2 } from "@/lib/cloudflare-media";
 
-const UPLOAD_DIR = join(process.cwd(), "public", "uploads");
+// 圖片一律上傳 Cloudflare R2（不再退回本機/Volume）。
 // MIME → 副檔名：副檔名一律由檔案的實際 MIME 推導，不信任使用者檔名。
-// （舊寫法用 file.name 推副檔名，無副檔名或怪異檔名會讓本機儲存的檔案
-//  透過 /uploads 服務時 Content-Type 變成 octet-stream 而破圖。）
 const MIME_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -30,6 +26,11 @@ export async function POST(req: NextRequest) {
   // 上傳寫磁碟,限速以保護 Volume 容量與 CPU
   const rl = rateLimit(`upload:${u.id}`, { limit: 60, windowMs: 60 * 60_000 });
   if (!rl.ok) return tooMany(rl.retryAfter, "上傳太頻繁,請稍後再試");
+
+  // 圖片一律存 Cloudflare R2；未設定就直接擋下，絕不寫入本機/Volume。
+  if (!isR2Configured()) {
+    return NextResponse.json({ error: "尚未設定 Cloudflare R2，無法上傳圖片" }, { status: 503 });
+  }
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
@@ -68,15 +69,12 @@ export async function POST(req: NextRequest) {
   const folder = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}`;
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const key = `uploads/${folder}/${filename}`;
-  let url: string;
 
-  if (isR2Configured()) {
+  let url: string;
+  try {
     url = await uploadToR2({ key, body: buffer, contentType: mimeType });
-  } else {
-    const uploadPath = join(UPLOAD_DIR, folder);
-    await mkdir(uploadPath, { recursive: true });
-    await writeFile(join(uploadPath, filename), buffer);
-    url = `/${key}`;
+  } catch {
+    return NextResponse.json({ error: "上傳到 Cloudflare R2 失敗，請稍後再試" }, { status: 502 });
   }
 
   const media = await prisma.media.create({
