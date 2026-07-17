@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, ExternalLink, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import type { DesignerWebContent, PageService } from "@/lib/designer-web-content";
+import { SECTION_DEFS, type DesignerWebContent, type PageService } from "@/lib/designer-web-content";
 import ImageUpload from "./ImageUpload";
 import VideoUpload from "./VideoUpload";
 import ColorSelect from "./ColorSelect";
@@ -72,6 +72,17 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
     }
   }
 
+  function moveSection(index: number, dir: -1 | 1) {
+    const target = index + dir;
+    if (target < 0 || target >= content.sections.length) return;
+    const next = [...content.sections];
+    [next[index], next[target]] = [next[target], next[index]];
+    setContent({ ...content, sections: next });
+  }
+  function updateSection(index: number, patch: Partial<DesignerWebContent["sections"][number]>) {
+    setContent({ ...content, sections: content.sections.map((s, i) => (i === index ? { ...s, ...patch } : s)) });
+  }
+
   return (
     <div className="mx-auto max-w-5xl pb-20">
       <Link href="/admin/page-management" className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800"><ArrowLeft size={15} />回頁面列表</Link>
@@ -93,12 +104,36 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
         </PageSectionPanel>
 
         <PageSectionPanel title="首屏形象" description="首頁第一個畫面、主標題與形象媒體">
-          <TextArea label="主標題" value={content.hero.heading} onChange={(heading) => setContent({ ...content, hero: { ...content.hero, heading } })} />
+          <TextArea label="主標題（顯示於首屏，可自訂文字）" value={content.hero.heading} onChange={(heading) => setContent({ ...content, hero: { ...content.hero, heading } })} />
+          <div className="mt-4">
+            <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">主標題文字顏色</span><ColorSelect value={content.hero.headingColor} onChange={(headingColor) => setContent({ ...content, hero: { ...content.hero, headingColor } })} /></label>
+          </div>
           <div className="mt-4">
             <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">媒體類型</span><select className={inputClass} value={content.hero.mediaType} onChange={(event) => setContent({ ...content, hero: { ...content.hero, mediaType: event.target.value as "image" | "video" } })}><option value="image">圖片</option><option value="video">影片</option></select></label>
           </div>
           {content.hero.mediaType === "image" && <div className="mt-4"><ImageUpload label="首屏圖片" value={content.hero.mediaUrl} onChange={(mediaUrl) => setContent({ ...content, hero: { ...content.hero, mediaUrl } })} /></div>}
           {content.hero.mediaType === "video" && <div className="mt-4"><VideoUpload label="首屏影片" value={content.hero.mediaUrl} onChange={(mediaUrl) => setContent({ ...content, hero: { ...content.hero, mediaUrl } })} /></div>}
+        </PageSectionPanel>
+
+        <PageSectionPanel title="區塊順序與標題" description="調整前台區塊的排列順序，並自訂各區塊的中英文標題">
+          {content.sections.map((sec, index) => {
+            const def = SECTION_DEFS.find((d) => d.key === sec.key);
+            return (
+              <div key={sec.key} className={rowClass}>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700">{def?.zh ?? sec.key}</p>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => moveSection(index, -1)} disabled={index === 0} className="inline-flex h-8 w-8 items-center justify-center border border-gray-200 bg-white rounded-lg text-gray-600 transition hover:bg-gray-50 disabled:opacity-30" aria-label="上移"><ChevronUp size={15} /></button>
+                    <button type="button" onClick={() => moveSection(index, 1)} disabled={index === content.sections.length - 1} className="inline-flex h-8 w-8 items-center justify-center border border-gray-200 bg-white rounded-lg text-gray-600 transition hover:bg-gray-50 disabled:opacity-30" aria-label="下移"><ChevronDown size={15} /></button>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="中文標題" value={sec.zh} onChange={(zh) => updateSection(index, { zh })} />
+                  <Field label="英文標題（選填）" value={sec.en} onChange={(en) => updateSection(index, { en })} />
+                </div>
+              </div>
+            );
+          })}
         </PageSectionPanel>
 
         <PageSectionPanel title="活動 DM" description="沒有圖片時前台自動隱藏">
