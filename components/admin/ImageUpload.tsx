@@ -2,6 +2,7 @@
 
 import { useState, useRef, DragEvent } from "react";
 import Image from "next/image";
+import MediaPickerModal from "./MediaPickerModal";
 
 interface Props {
   value?: string;
@@ -15,6 +16,7 @@ export default function ImageUpload({ value, onChange, label = "封面圖片", a
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function uploadFile(file: File) {
@@ -71,7 +73,7 @@ export default function ImageUpload({ value, onChange, label = "封面圖片", a
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
-          onClick={() => inputRef.current?.click()}
+          onClick={() => setPickerOpen(true)}
           className={`border-2 border-dashed cursor-pointer transition-colors ${aspect} flex flex-col items-center justify-center gap-3 rounded-lg ${
             isDragging ? "border-rose-brand bg-rose-brand/5" : "border-gray-200 hover:border-rose-brand"
           }`}
@@ -85,7 +87,7 @@ export default function ImageUpload({ value, onChange, label = "封面圖片", a
             <>
               <div className="text-3xl text-gray-200">⊞</div>
               <div className="text-center">
-                <p className="text-sm text-gray-500">點擊或拖拽上傳圖片</p>
+                <p className="text-sm text-gray-500">點擊選擇：本機上傳或媒體庫</p>
                 <p className="text-xs text-gray-300 mt-1">JPG、PNG、WebP，最大 10MB</p>
               </div>
             </>
@@ -101,6 +103,14 @@ export default function ImageUpload({ value, onChange, label = "封面圖片", a
         accept="image/*"
         className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ""; }}
+      />
+
+      <MediaPickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        accept="image"
+        onSelect={(url) => { onChange(url); setPickerOpen(false); }}
+        onUploadClick={() => { setPickerOpen(false); inputRef.current?.click(); }}
       />
     </div>
   );

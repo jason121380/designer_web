@@ -36,8 +36,9 @@ assert.match(login, /"\/admin\/page-management"/);
 const layout = read("app/admin/layout.tsx");
 assert.doesNotMatch(layout, /mifaso|迷髮所/i);
 
+// 上傳元件可從媒體庫選取既有媒體（點擊先跳彈窗：本機上傳 / 媒體庫）
 const imageUpload = read("components/admin/ImageUpload.tsx");
-assert.doesNotMatch(imageUpload, /MediaPicker|媒體庫/);
+assert.match(imageUpload, /MediaPickerModal/);
 
 const middleware = read("middleware.ts");
 assert.match(middleware, /legacyAdminPrefixes/);
