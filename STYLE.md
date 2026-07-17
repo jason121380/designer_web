@@ -14,14 +14,14 @@ Designer Web 前台與後台的現行設計規範。修改 UI 前先比對實際
 
 ### 動態前台品牌色
 
-前台由 PostgreSQL 的 `brand.themeColor` 寫入 CSS 變數 `--brand`。目前示範值為 `#d9bf77`，用於：
+前台由 PostgreSQL 的 `brand.themeColor`（＝「選單列底色」）寫入 CSS 變數 `--brand`。目前示範值為 `#d9bf77`，用於：
 
-- Footer 背景。
+- 選單列（Header）與頁尾背景（文字色為 `brand.headerTextColor`）。
 - 分期區標題背景。
-- 聯絡資訊 icon。
+- 聯絡資訊 icon、右下角懸浮泡泡（`FloatingBubble`）。
 - 英文區塊副標題。
 
-新增前台品牌色用途時使用 `var(--brand)`，不要把示範色硬編碼到元件。
+新增前台品牌色用途時使用 `var(--brand)`，不要把示範色硬編碼到元件。首屏底色（`hero.bgColor`）、主標題文字色（`hero.headingColor`）與各內容區塊底色（`sections[].bg`）皆為每頁可設定，預設區塊底色為 `--cream-3`。
 
 ### 固定介面色
 
@@ -30,9 +30,9 @@ Designer Web 前台與後台的現行設計規範。修改 UI 前先比對實際
 | `rose-brand` | `#C4837A` | 後台主要按鈕、選單 active、focus |
 | `rose-light` | `#EDD5D2` | 後台 focus ring |
 | `rose-dark` | `#A3635B` | 後台主要按鈕 hover |
-| `--cream-1` | `#fdf7f0` | 作品與分期區背景 |
-| `--cream-2` | `#fff8e8` | DM、價目與聯絡區背景 |
-| `--cream-3` | `#f9f7f3` | 服務與環境區背景 |
+| `--cream-1` | `#fdf7f0` | 區塊底色選項（暖米） |
+| `--cream-2` | `#fff8e8` | 區塊底色選項（奶油黃） |
+| `--cream-3` | `#f9f7f3` | 內容區塊預設底色（米白） |
 | `neutral-*` / `gray-*` | Tailwind 預設 | 文字、邊框、工作介面底色 |
 
 ## 字體

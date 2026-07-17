@@ -32,6 +32,26 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16（後續 re
 
 以上是 2026-07-16 本機與該 commit 的狀態，不代表 Zeabur 最新部署一定已更新；部署狀態需到 Zeabur 或正式網域重新確認。
 
+### 2026-07-17 大批功能與媒體重整（分支 claude/repo-review-fegvlg，多個 PR 已合併 main）
+
+- **後台四入口**：頁面管理、媒體庫、用戶管理（ADMIN）、工程模式（ADMIN）。`CLAUDE.md` 決策 1、4 已更新以反映媒體庫與工程模式加回。
+- **編輯器雙欄**：`PageManagementForm` 改左選單（基本設定／內容區塊分組）＋右畫面；左選單名稱跟隨區塊中文標題。
+- **首屏 Banner**：固定一張圖片＋一支影片；前台電腦左右、手機上下、皆 1:1、左右滿版；可自訂主標題文字、文字顏色、Banner 底色。
+- **選單列**：可設底色（themeColor）與文字顏色（headerTextColor）、左上標題（tagline）、手機漢堡選單。合約 `brand` 加 `headerTextColor`、`hero` 加 `headingColor`/`bgColor`。
+- **區塊設定**：`sections` 陣列（key/zh/en/bg）可拖曳排序、改中英標題與各區塊底色；「其他服務」預設名改「特色項目」。
+- **內容區塊卡片化**：DM／特色項目／環境／作品影片皆卡片式（1:1 或 9:16），項目可上下排序（RowTools）。
+- **作品影片分類**：合約 `videoCategories`；後台「管理分類」彈窗（新增/改名/刪除，已套用不可刪）；前台 `WorksGallery` 分類標籤切換、手機 scroll-snap 左右滑動。
+- **媒體全面走 R2**：圖片 `/api/upload`、影片 presigned 直傳；`MediaUpload`/`ImageUpload`/`VideoUpload` 點擊先跳 `MediaPickerModal`（本機上傳／媒體庫選取），拖拽直接上傳。前台影片自動播放靜音、`PublicVideo` 進場才播＋失敗顯示連結；`MediaView` 依副檔名渲染圖或影片。
+- **媒體庫**（`/admin/media`）：列出圖片/影片、複製網址、刪除（連 R2，`deleteFromR2`）、已使用空間、每筆被引用位置（`lib/media-usage`）；影片縮圖 `AdminVideoThumb` 進場才載入、分批顯示。影片上傳成功會補寫 `media` 紀錄。
+- **連結頁社群獨立**：`links.social`（ig/fb/line/email/phone/mapUrl）與 `contact` 分開；舊資料 normalize 時由 contact 種入一次相容。頭像可放圖片或影片。
+- **聯絡與懸浮泡泡**：移除 `contact.mapEmbedUrl`；新增 `contact.bubble`（line/facebook/instagram/map）→ 前台右下角 `FloatingBubble`。前台聯絡列置中橫排。
+- **SEO**：面板雙欄（左分享圖、右標題/描述）；「AI 自動填寫」`POST /api/seo/generate`（Google Gemini，`GEMINI_API_KEY`/`GEMINI_MODEL`，未設回 503）。
+- **改後綴 308 轉址**：`lib/slug-redirects` 記錄舊→新後綴，前台找不到頁面時 `permanentRedirect` 到新網址（保 Ads/SEO）。
+- **工程模式**（`/admin/tools`，ADMIN）：回填媒體庫（掃描所有頁面、補未記錄媒體與 `size`，HEAD 取 Content-Length）、上傳網站圖示（`site_icon_url`，favicon + App icon 共用，`lib/site-icon`；root layout 改 `generateMetadata`、public manifest 動態 icons）。
+- **列表按鈕**：兩組主按鈕（一頁式網站＋預覽、個人連結＋預覽）＋「更多」下拉（編輯後綴/複製/停用）。
+- **併發上傳修正**：媒體上傳 onChange 改函式式 `setContent((prev)=>…)`，同時上傳多支影片不互相覆寫。
+- **速度**：影片進場才載入、首屏圖 `fetchPriority=high`；媒體庫/選取器影片縮圖滑到才載入、分批顯示。
+
 ## 已確定架構
 
 ### Next.js 服務
@@ -73,10 +93,9 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16（後續 re
 
 ### Cloudflare
 
-- 圖片目標儲存：Cloudflare R2。
-- 影片目標儲存：Cloudflare Stream。
-- 圖片一律走 R2：`/api/upload` 未設定 R2 回 503、R2 失敗回 502，不再寫本機/Volume；已移除 `zeabur.yaml` 的 Volume 掛載、`app/uploads/[...path]` 路由與 next.config 的 localPatterns。正式站 R2 已設定（bucket `designer-web`，pub-…r2.dev 公開網址）。
-- 目前後台圖片可直接上傳；影片欄位目前使用播放 URL，尚未接上完整的 direct-upload UI。
+- 圖片與影片目標儲存：Cloudflare R2（同一 bucket）。Cloudflare Stream 為可選方案（helper/route 保留）。
+- 圖片一律走 R2：`/api/upload` 未設定 R2 回 503、R2 失敗回 502，不再寫本機/Volume。正式站 R2 已設定（pub-…r2.dev 公開網址）。
+- 影片 presigned 直傳 R2：`VideoUpload`/`MediaUpload` → `POST /api/upload/video-url` 取 presigned PUT → 瀏覽器 XHR 直傳（帶進度），成功後補寫 `media` 紀錄；需 R2 bucket CORS 允許站台來源 PUT/GET。
 - 不在此檔記錄任何 Cloudflare ID、token 或 secret。
 
 ## 已完成決策
@@ -85,8 +104,8 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16（後續 re
 - 前台是一頁式服務網站，不是文章首頁。
 - 後台不提供多模組 CMS，只提供頁面管理。
 - 可選區塊沒有內容時，前台與導覽都自動隱藏。
-- 圖片從區塊內上傳，不顯示獨立媒體庫。
-- 舊 `/admin/dashboard`、`/admin/designer-web`、文章、分類、標籤、媒體、分析、用戶與工具路徑由 middleware 導回 `/admin/page-management`。
+- 圖片/影片從區塊內上傳；另有媒體庫（`/admin/media`）列出/複製/刪除既有媒體，上傳元件可從媒體庫選取（2026-07-17 起，媒體庫與工程模式已加回）。
+- 舊 `/admin/dashboard`、`/admin/designer-web`、文章、分類、標籤、分析路徑由 middleware 導回 `/admin/page-management`；`/admin/media`、`/admin/tools`、`/admin/users` 為現行入口，已從 legacy 清單移除。
 - 正式建置驗證使用 `.next-verify`，避免破壞運行中的 `.next` 開發樣式。
 - `tsconfig.tsbuildinfo` 已停止追蹤並加入 `.gitignore`。
 
