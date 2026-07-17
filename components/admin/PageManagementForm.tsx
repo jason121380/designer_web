@@ -82,6 +82,9 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
   function updateSection(index: number, patch: Partial<DesignerWebContent["sections"][number]>) {
     setContent({ ...content, sections: content.sections.map((s, i) => (i === index ? { ...s, ...patch } : s)) });
   }
+  function setHeroMedia(media: DesignerWebContent["hero"]["media"]) {
+    setContent({ ...content, hero: { ...content.hero, media } });
+  }
 
   const panels: { id: string; title: string; description?: string; body: ReactNode }[] = [
     {
@@ -99,18 +102,28 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
     {
       id: "hero",
       title: "首屏形象",
-      description: "首頁第一個畫面、主標題與形象媒體",
+      description: "首頁第一個畫面、主標題與形象媒體。可放最多兩個媒體（圖片或影片），手機上下、電腦左右排列",
       body: (
         <>
           <TextArea label="主標題（顯示於首屏，可自訂文字）" value={content.hero.heading} onChange={(heading) => setContent({ ...content, hero: { ...content.hero, heading } })} />
           <div className="mt-4">
             <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">主標題文字顏色</span><ColorSelect value={content.hero.headingColor} onChange={(headingColor) => setContent({ ...content, hero: { ...content.hero, headingColor } })} /></label>
           </div>
-          <div className="mt-4">
-            <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">媒體類型</span><select className={inputClass} value={content.hero.mediaType} onChange={(event) => setContent({ ...content, hero: { ...content.hero, mediaType: event.target.value as "image" | "video" } })}><option value="image">圖片</option><option value="video">影片</option></select></label>
+          <div className="mt-6 space-y-0">
+            {content.hero.media.map((item, index) => (
+              <div key={index} className={rowClass}>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700">首屏媒體 {index + 1}</p>
+                  <RemoveButton onClick={() => setHeroMedia(removeAt(content.hero.media, index))} />
+                </div>
+                <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">媒體類型</span><select className={inputClass} value={item.type} onChange={(event) => setHeroMedia(updateAt(content.hero.media, index, { type: event.target.value as "image" | "video" }))}><option value="image">圖片</option><option value="video">影片</option></select></label>
+                {item.type === "image"
+                  ? <ImageUpload label={`首屏圖片 ${index + 1}`} value={item.url} onChange={(url) => setHeroMedia(updateAt(content.hero.media, index, { url }))} />
+                  : <VideoUpload label={`首屏影片 ${index + 1}`} value={item.url} onChange={(url) => setHeroMedia(updateAt(content.hero.media, index, { url }))} />}
+              </div>
+            ))}
+            {content.hero.media.length < 2 && <AddButton label="新增首屏媒體" onClick={() => setHeroMedia([...content.hero.media, { url: "", type: "image" }])} />}
           </div>
-          {content.hero.mediaType === "image" && <div className="mt-4"><ImageUpload label="首屏圖片" value={content.hero.mediaUrl} onChange={(mediaUrl) => setContent({ ...content, hero: { ...content.hero, mediaUrl } })} /></div>}
-          {content.hero.mediaType === "video" && <div className="mt-4"><VideoUpload label="首屏影片" value={content.hero.mediaUrl} onChange={(mediaUrl) => setContent({ ...content, hero: { ...content.hero, mediaUrl } })} /></div>}
         </>
       ),
     },

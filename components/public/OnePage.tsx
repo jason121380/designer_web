@@ -212,13 +212,17 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
       <Header content={content} />
       <main className="min-h-screen">
         <section id="top" className="scroll-mt-14 bg-neutral-900">
-          {!!content.hero.mediaUrl && (
-            <div className="mx-auto max-w-6xl overflow-hidden">
-              {content.hero.mediaType === "video" ? (
-                <video src={content.hero.mediaUrl} className="aspect-video w-full object-cover" autoPlay muted loop playsInline />
-              ) : (
-                <img src={content.hero.mediaUrl} alt={content.brand.name} className="aspect-video w-full object-cover" />
-              )}
+          {content.hero.media.length > 0 && (
+            <div className={`mx-auto grid max-w-6xl gap-1 ${content.hero.media.length > 1 ? "md:grid-cols-2" : "grid-cols-1"}`}>
+              {content.hero.media.map((item, index) => (
+                <div key={`${index}-${item.url}`} className="overflow-hidden">
+                  {item.type === "video" ? (
+                    <video src={item.url} className="aspect-video w-full object-cover" autoPlay muted loop playsInline />
+                  ) : (
+                    <img src={item.url} alt={content.brand.name} className="aspect-video w-full object-cover" />
+                  )}
+                </div>
+              ))}
             </div>
           )}
           <div className="mx-auto max-w-4xl px-4 py-8 text-center md:py-10">
