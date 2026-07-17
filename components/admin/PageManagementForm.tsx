@@ -217,8 +217,8 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "直接上傳影片（存 Cloudflare R2）或貼上播放網址；沒有影片時前台自動隱藏",
       body: (
         <>
-          {content.videos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div><VideoUpload label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} /><Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} /></div>)}
-          <AddButton label="新增作品影片" onClick={() => setContent({ ...content, videos: [...content.videos, { id: makeId("video"), video: "", caption: "" }] })} />
+          {content.videos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div><VideoUpload label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} /><div className="grid gap-4 md:grid-cols-2"><Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} /><Field label="分類（選填，同名歸為同一類，前台可切換）" value={item.category} onChange={(category) => setContent({ ...content, videos: updateAt(content.videos, index, { category }) })} /></div></div>)}
+          <AddButton label="新增作品影片" onClick={() => setContent({ ...content, videos: [...content.videos, { id: makeId("video"), video: "", caption: "", category: "" }] })} />
         </>
       ),
     },
