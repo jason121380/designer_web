@@ -24,7 +24,7 @@ function BulletList({ label, items }: { label: string; items: string[] }) {
     <div className="mb-4">
       <p className="mb-1 font-semibold text-neutral-700">{label}</p>
       <ul className="space-y-1 text-neutral-600">
-        {items.map((item) => <li key={item}>- {item}</li>)}
+        {items.map((item) => <li key={item}>{item}</li>)}
       </ul>
     </div>
   );
@@ -80,7 +80,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
             <div className="grid gap-6 md:grid-cols-2">
               {content.otherServices.map((service) => (
                 <article key={service.id} className="overflow-hidden bg-white rounded-lg">
-                  {!!service.image && <MediaView src={service.image} alt={service.title} className="aspect-video w-full object-cover" />}
+                  {!!service.image && <MediaView src={service.image} alt={service.title} className="aspect-square w-full object-cover" />}
                   <div className="p-6">
                     <h3 className="mb-3 text-lg font-bold text-neutral-800">{service.title}</h3>
                     <p className="mb-4 whitespace-pre-line leading-relaxed text-neutral-600">{service.description}</p>
@@ -144,7 +144,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
                   <h3 className="mb-4 text-2xl font-bold text-neutral-900">{item.price}</h3>
                   <p className="mb-5 leading-relaxed text-neutral-600">{item.description}</p>
                   <ul className="space-y-2 text-sm text-neutral-600">
-                    {item.features.map((feature) => <li key={feature}>- {feature}</li>)}
+                    {item.features.map((feature) => <li key={feature}>{feature}</li>)}
                   </ul>
                 </article>
               ))}
@@ -161,7 +161,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {content.environment.map((item, index) => (
                 <figure key={item.id} className="overflow-hidden bg-white rounded-lg">
-                  <MediaView src={item.image} alt={item.alt || `${sec.zh} ${index + 1}`} className="aspect-[4/3] w-full object-cover" />
+                  <MediaView src={item.image} alt={item.alt || `${sec.zh} ${index + 1}`} className="aspect-square w-full object-cover" />
                 </figure>
               ))}
             </div>
