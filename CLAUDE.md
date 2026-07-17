@@ -9,7 +9,7 @@ Designer Web 是設計師品牌的一頁式網站，不是文章 CMS。
 - 前台：`app/(public)/page.tsx`。
 - 後台唯一主要功能：`/admin/page-management`。
 - 資料：Zeabur PostgreSQL + Prisma。
-- 圖片：Cloudflare R2；未設定 R2 時才使用本機/Zeabur Volume fallback。
+- 圖片：一律上傳 Cloudflare R2（不再寫本機/Volume；未設定 R2 時上傳直接回 503）。
 - 影片：Cloudflare Stream URL。
 - 部署目標：前端與後端由同一個 Next.js 服務提供，PostgreSQL 與 Cloudflare 為外部服務。
 
@@ -84,8 +84,8 @@ PageManagementForm
 
 - JPEG/PNG：自動修正 EXIF 方向、最大寬度 1600px、轉 WebP quality 80。
 - WebP/GIF/AVIF：保持原檔，避免破壞動畫或重複壓縮。
-- R2 五個變數完整時上傳至 R2。
-- R2 未設定時寫入 `public/uploads/YYYY/MM`。
+- 圖片一律上傳 Cloudflare R2（key 為 `uploads/YYYY/MM/<檔名>`）；R2 五個變數缺任一即回 503、上傳到 R2 失敗回 502，皆不寫本機磁碟。
+- 已無本機/Volume fallback：`zeabur.yaml` 不再掛 Volume，`app/uploads/[...path]` 服務路由已移除。
 - 每次成功上傳仍會建立 `media` DB 紀錄，但後台不提供獨立媒體庫入口。
 
 ### 影片

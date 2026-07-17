@@ -13,7 +13,7 @@
 - 後台入口：「頁面管理」`/admin/page-management`（頁面列表 → 各頁獨立編輯器）與「用戶管理」`/admin/users`（僅 ADMIN，列出登入帳號並可重設密碼）。
 - 可編輯品牌、首屏、活動 DM、接髮介紹、其他服務、作品影片、分期、價目表、環境與聯絡資訊。
 - 圖片上傳時驗證格式與大小；JPEG/PNG 會縮至最多 1600px 並轉為 WebP。
-- 設定 Cloudflare R2 後圖片存入 R2；未設定時才退回本機 `public/uploads`。
+- 圖片一律存 Cloudflare R2（未設定 R2 則上傳回 503，不寫本機磁碟，也不再掛 Volume）。
 - PostgreSQL 儲存登入使用者、媒體資料與完整頁面 JSON。
 - Auth.js Credentials + JWT 保護後台與寫入 API。
 - 首頁 SEO 標題與描述跟隨後台的品牌名稱、標語與主標題設定。
