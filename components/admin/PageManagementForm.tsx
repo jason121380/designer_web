@@ -2,13 +2,14 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, GripVertical, Plus, Save, Sparkles, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, GripVertical, Plus, Save, Sparkles, Tags, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { SECTION_DEFS, type DesignerWebContent, type PageService } from "@/lib/designer-web-content";
 import ImageUpload from "./ImageUpload";
 import VideoUpload from "./VideoUpload";
 import MediaUpload from "./MediaUpload";
 import ColorSelect from "./ColorSelect";
+import VideoCategoryModal from "./VideoCategoryModal";
 
 const inputClass = "w-full border border-gray-200 bg-white rounded-lg px-3 py-2.5 text-sm outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light";
 const textareaClass = `${inputClass} min-h-24 resize-y`;
@@ -63,6 +64,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
   const [active, setActive] = useState("brand");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const apiPath = `/api/designer-web/${slug}`;
   const previewPath = `/${slug}`;
 
@@ -105,6 +107,24 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
   }
   function updateSection(index: number, patch: Partial<DesignerWebContent["sections"][number]>) {
     setContent({ ...content, sections: content.sections.map((s, i) => (i === index ? { ...s, ...patch } : s)) });
+  }
+  function addVideoCategory(name: string) {
+    const value = name.trim();
+    if (!value || content.videoCategories.includes(value)) return;
+    setContent({ ...content, videoCategories: [...content.videoCategories, value] });
+  }
+  function renameVideoCategory(from: string, to: string) {
+    const value = to.trim();
+    if (!value || content.videoCategories.includes(value)) return;
+    setContent({
+      ...content,
+      videoCategories: content.videoCategories.map((category) => (category === from ? value : category)),
+      videos: content.videos.map((video) => (video.category === from ? { ...video, category: value } : video)),
+    });
+  }
+  function removeVideoCategory(name: string) {
+    if (content.videos.some((video) => video.category === name)) return;
+    setContent({ ...content, videoCategories: content.videoCategories.filter((category) => category !== name) });
   }
 
   const panels: { id: string; title: string; description?: string; body: ReactNode }[] = [
@@ -217,7 +237,10 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "直接上傳影片（存 Cloudflare R2）或貼上播放網址；沒有影片時前台自動隱藏",
       body: (
         <>
-          {content.videos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div><div className="max-w-[260px]"><VideoUpload aspect="aspect-[9/16]" label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} /></div><div className="grid gap-4 md:grid-cols-2"><Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} /><Field label="分類（選填，同名歸為同一類，前台可切換）" value={item.category} onChange={(category) => setContent({ ...content, videos: updateAt(content.videos, index, { category }) })} /></div></div>)}
+          <div className="mb-4 flex justify-end">
+            <button type="button" onClick={() => setCategoryModalOpen(true)} className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"><Tags size={14} />管理分類</button>
+          </div>
+          {content.videos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div><div className="max-w-[260px]"><VideoUpload aspect="aspect-[9/16]" label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} /></div><div className="grid gap-4 md:grid-cols-2"><Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} /><label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">分類（選填，前台可切換）</span><select className={inputClass} value={item.category} onChange={(event) => setContent({ ...content, videos: updateAt(content.videos, index, { category: event.target.value }) })}><option value="">無分類</option>{content.videoCategories.map((category) => <option key={category} value={category}>{category}</option>)}{!!item.category && !content.videoCategories.includes(item.category) && <option value={item.category}>{item.category}（已移除）</option>}</select></label></div></div>)}
           <AddButton label="新增作品影片" onClick={() => setContent({ ...content, videos: [...content.videos, { id: makeId("video"), video: "", caption: "", category: "" }] })} />
         </>
       ),
@@ -332,6 +355,16 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
           {current.body}
         </div>
       </div>
+
+      <VideoCategoryModal
+        open={categoryModalOpen}
+        onClose={() => setCategoryModalOpen(false)}
+        categories={content.videoCategories}
+        usageCount={(name) => content.videos.filter((video) => video.category === name).length}
+        onAdd={addVideoCategory}
+        onRename={renameVideoCategory}
+        onRemove={removeVideoCategory}
+      />
     </div>
   );
 }

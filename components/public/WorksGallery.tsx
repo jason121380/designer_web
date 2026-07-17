@@ -9,15 +9,17 @@ type Video = { id: string; video: string; caption: string; category: string };
  * 作品影片區塊：依分類標籤切換；桌機為格狀、手機為可左右滑動（scroll-snap）的橫向輪播。
  * 分類由各影片的 category 依出現順序去重而來；沒有任何分類時不顯示標籤列。
  */
-export default function WorksGallery({ videos }: { videos: Video[] }) {
+export default function WorksGallery({ videos, categoryOrder = [] }: { videos: Video[]; categoryOrder?: string[] }) {
   const categories = useMemo(() => {
-    const seen: string[] = [];
+    const used = new Set(videos.map((item) => item.category.trim()).filter(Boolean));
+    // 先依後台管理的分類順序，再補上影片有用到但不在清單內的分類。
+    const ordered = categoryOrder.filter((category) => used.has(category));
     for (const item of videos) {
       const category = item.category.trim();
-      if (category && !seen.includes(category)) seen.push(category);
+      if (category && !ordered.includes(category)) ordered.push(category);
     }
-    return seen;
-  }, [videos]);
+    return ordered;
+  }, [videos, categoryOrder]);
 
   const [active, setActive] = useState<string | null>(null);
   const shown = active ? videos.filter((item) => item.category.trim() === active) : videos;
