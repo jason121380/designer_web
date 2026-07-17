@@ -7,8 +7,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const source = readFileSync(path.join(root, "components/admin/PageManagementForm.tsx"), "utf8");
 
 for (const title of [
-  "品牌與導覽",
-  "首屏形象",
+  "網站基本設定",
+  "Banner 橫幅設定",
   "活動 DM",
   "接髮介紹",
   "其他服務",

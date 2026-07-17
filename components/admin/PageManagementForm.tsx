@@ -34,6 +34,12 @@ const removeAt = <T,>(items: T[], index: number) => items.filter((_, itemIndex) 
 const splitList = (value: string) => value.split(/[，,\n]/).map((item) => item.trim()).filter(Boolean);
 const makeId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
+// 左側選單分組：基本設定與內容區塊（id 對應 panels 的 id）。
+const MENU_GROUPS: { title: string; ids: string[] }[] = [
+  { title: "基本設定", ids: ["brand", "hero", "sections", "seo"] },
+  { title: "內容區塊", ids: ["promos", "services", "otherServices", "videos", "installment", "pricing", "environment", "contact"] },
+];
+
 function ServiceRows({ items, onChange }: { items: PageService[]; onChange: (items: PageService[]) => void }) {
   return <>{items.map((item, index) => <div key={item.id} className={rowClass}>
     <div className="flex items-center justify-between"><p className="text-sm font-semibold text-gray-700">項目 {index + 1}</p><RemoveButton onClick={() => onChange(removeAt(items, index))} /></div>
@@ -82,14 +88,11 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
   function updateSection(index: number, patch: Partial<DesignerWebContent["sections"][number]>) {
     setContent({ ...content, sections: content.sections.map((s, i) => (i === index ? { ...s, ...patch } : s)) });
   }
-  function setHeroMedia(media: DesignerWebContent["hero"]["media"]) {
-    setContent({ ...content, hero: { ...content.hero, media } });
-  }
 
   const panels: { id: string; title: string; description?: string; body: ReactNode }[] = [
     {
       id: "brand",
-      title: "品牌與導覽",
+      title: "網站基本設定",
       description: "品牌名稱、標語與主色",
       body: (
         <div className="grid gap-4 md:grid-cols-2">
@@ -101,7 +104,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
     },
     {
       id: "hero",
-      title: "首屏形象",
+      title: "Banner 橫幅設定",
       description: "首頁第一個畫面、主標題與形象媒體。可放最多兩個媒體（圖片或影片），手機上下、電腦左右排列",
       body: (
         <>
@@ -109,26 +112,17 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
           <div className="mt-4">
             <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">主標題文字顏色</span><ColorSelect value={content.hero.headingColor} onChange={(headingColor) => setContent({ ...content, hero: { ...content.hero, headingColor } })} /></label>
           </div>
-          <div className="mt-6 space-y-0">
-            {content.hero.media.map((item, index) => (
-              <div key={index} className={rowClass}>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-700">首屏媒體 {index + 1}</p>
-                  <RemoveButton onClick={() => setHeroMedia(removeAt(content.hero.media, index))} />
-                </div>
-                <p className="text-xs text-gray-400">圖片或影片擇一上傳；上傳影片會覆蓋圖片，反之亦然。</p>
-                <ImageUpload label="圖片" value={item.type === "image" ? item.url : ""} onChange={(url) => setHeroMedia(updateAt(content.hero.media, index, { type: "image", url }))} />
-                <VideoUpload label="影片" value={item.type === "video" ? item.url : ""} onChange={(url) => setHeroMedia(updateAt(content.hero.media, index, { type: "video", url }))} />
-              </div>
-            ))}
-            {content.hero.media.length < 2 && <AddButton label="新增首屏媒體" onClick={() => setHeroMedia([...content.hero.media, { url: "", type: "image" }])} />}
+          <div className="mt-6 space-y-5">
+            <p className="text-xs text-gray-400">固定一張圖片、一支影片；前台電腦版左圖右影、手機版上下排列。留空的不會顯示。</p>
+            <ImageUpload label="首屏圖片（左）" value={content.hero.image} onChange={(image) => setContent({ ...content, hero: { ...content.hero, image } })} />
+            <VideoUpload label="首屏影片（右）" value={content.hero.video} onChange={(video) => setContent({ ...content, hero: { ...content.hero, video } })} />
           </div>
         </>
       ),
     },
     {
       id: "sections",
-      title: "區塊順序、標題與底色",
+      title: "區塊設定",
       description: "調整前台區塊的排列順序，並自訂各區塊的中英文標題與底色",
       body: (
         <>
@@ -267,14 +261,23 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       </div>
 
       <div className="md:grid md:grid-cols-[220px_1fr] md:gap-6">
-        <nav className="mb-4 md:mb-0">
-          <ul className="flex gap-2 overflow-x-auto pb-1 md:sticky md:top-4 md:flex-col md:gap-1 md:overflow-visible md:pb-0">
-            {panels.map((panel) => (
-              <li key={panel.id} className="shrink-0">
-                <button type="button" onClick={() => setActive(panel.id)} className={`w-full whitespace-nowrap rounded-lg px-3.5 py-2.5 text-left text-sm font-medium transition ${panel.id === active ? "bg-rose-brand text-white" : "text-gray-600 hover:bg-gray-100"}`}>{panel.title}</button>
-              </li>
-            ))}
-          </ul>
+        <nav className="mb-4 md:mb-0 md:sticky md:top-4 md:self-start">
+          {MENU_GROUPS.map((group) => (
+            <div key={group.title} className="mb-3 last:mb-0 md:mb-4">
+              <p className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{group.title}</p>
+              <ul className="flex gap-2 overflow-x-auto pb-1 md:flex-col md:gap-1 md:overflow-visible md:pb-0">
+                {group.ids.map((id) => {
+                  const panel = panels.find((item) => item.id === id);
+                  if (!panel) return null;
+                  return (
+                    <li key={panel.id} className="shrink-0">
+                      <button type="button" onClick={() => setActive(panel.id)} className={`w-full whitespace-nowrap rounded-lg px-3.5 py-2.5 text-left text-sm font-medium transition ${panel.id === active ? "bg-rose-brand text-white" : "text-gray-600 hover:bg-gray-100"}`}>{panel.title}</button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
         <div className="border border-gray-200 bg-white rounded-lg p-5 md:p-7">

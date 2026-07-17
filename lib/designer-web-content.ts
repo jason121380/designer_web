@@ -65,12 +65,14 @@ export const designerWebContentSchema = z.object({
   hero: z.object({
     heading: nullableString,
     headingColor: nullableString,
-    // 新版：首屏可放最多兩個媒體（各自可為圖片或影片）。
+    // 新版：固定一張圖片、一張影片。
+    image: nullableString,
+    video: nullableString,
+    // 舊版相容欄位（normalize 時遷移到 image/video）。
     media: z.array(z.object({
       url: nullableString,
       type: z.enum(["image", "video"]).optional().nullable(),
     })).optional(),
-    // 舊版單一媒體欄位（向下相容，normalize 時遷移到 media）。
     mediaUrl: nullableString,
     mediaType: z.enum(["image", "video"]).optional().nullable(),
   }).optional(),
@@ -142,7 +144,7 @@ export interface PageService {
 
 export interface DesignerWebContent {
   brand: { name: string; tagline: string; themeColor: string };
-  hero: { heading: string; headingColor: string; media: { url: string; type: "image" | "video" }[] };
+  hero: { heading: string; headingColor: string; image: string; video: string };
   /** 前台區塊順序、中英標題與底色（依此順序渲染，標題與底色可自訂）。 */
   sections: { key: string; zh: string; en: string; bg: string }[];
   promos: { id: string; image: string; caption: string }[];
@@ -180,7 +182,8 @@ export const defaultDesignerWebContent: DesignerWebContent = {
     heading:
       "中壢接髮推薦 KIMEKO HAIR\n極致零感羽毛接髮｜新縮毛鏡面燙｜歐美手刷染\n日韓系光線染｜5G 網狀纖維護髮｜特殊色白金髮",
     headingColor: "#ffffff",
-    media: [],
+    image: "",
+    video: "",
   },
   promos: [],
   services: [
@@ -279,20 +282,31 @@ function normalizeServices(items: RawContent["services"], fallback: PageService[
   return normalized.length ? normalized : fallback;
 }
 
-/** 首屏媒體正規化：新版 media 陣列優先，否則遷移舊版單一 mediaUrl/mediaType；最多兩個、過濾空網址。 */
-function normalizeHeroMedia(hero: RawContent["hero"]): DesignerWebContent["hero"]["media"] {
-  const result: DesignerWebContent["hero"]["media"] = [];
-  for (const item of hero?.media ?? []) {
-    const url = trim(item?.url);
-    if (!url) continue;
-    result.push({ url, type: item?.type === "video" ? "video" : "image" });
+/** 首屏媒體正規化：固定一張圖片、一張影片。新版 image/video 欄位優先，否則從舊版 media[]／mediaUrl 遷移。 */
+function normalizeHeroMedia(hero: RawContent["hero"]): { image: string; video: string } {
+  let image = trim(hero?.image);
+  let video = trim(hero?.video);
+  if (!image && !video) {
+    // 舊版 media 陣列：取第一張圖片與第一支影片。
+    for (const item of hero?.media ?? []) {
+      const url = trim(item?.url);
+      if (!url) continue;
+      if (item?.type === "video") {
+        if (!video) video = url;
+      } else if (!image) {
+        image = url;
+      }
+    }
+    // 更舊版單一媒體欄位。
+    if (!image && !video) {
+      const url = trim(hero?.mediaUrl);
+      if (url) {
+        if (hero?.mediaType === "video") video = url;
+        else image = url;
+      }
+    }
   }
-  // 舊資料只有單一媒體欄位時遷移過來。
-  if (!result.length) {
-    const url = trim(hero?.mediaUrl);
-    if (url) result.push({ url, type: hero?.mediaType === "video" ? "video" : "image" });
-  }
-  return result.slice(0, 2);
+  return { image, video };
 }
 
 function normalizeSections(input: RawContent["sections"]): DesignerWebContent["sections"] {
@@ -384,7 +398,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
     hero: {
       heading: withDefault(data.hero?.heading, defaultDesignerWebContent.hero.heading),
       headingColor: withDefault(data.hero?.headingColor, defaultDesignerWebContent.hero.headingColor),
-      media: normalizeHeroMedia(data.hero),
+      ...normalizeHeroMedia(data.hero),
     },
     promos,
     services: normalizeServices(data.services, defaultDesignerWebContent.services),

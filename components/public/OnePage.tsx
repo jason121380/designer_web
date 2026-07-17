@@ -209,17 +209,18 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
       <Header content={content} />
       <main className="min-h-screen">
         <section id="top" className="scroll-mt-14 bg-neutral-900">
-          {content.hero.media.length > 0 && (
-            <div className={`mx-auto grid max-w-6xl gap-1 ${content.hero.media.length > 1 ? "md:grid-cols-2" : "grid-cols-1"}`}>
-              {content.hero.media.map((item, index) => (
-                <div key={`${index}-${item.url}`} className="overflow-hidden">
-                  {item.type === "video" ? (
-                    <PublicVideo src={item.url} autoPlay className="aspect-square w-full object-cover" />
-                  ) : (
-                    <img src={item.url} alt={content.brand.name} className="aspect-square w-full object-cover" />
-                  )}
+          {(content.hero.image || content.hero.video) && (
+            <div className={`mx-auto grid max-w-6xl gap-1 ${content.hero.image && content.hero.video ? "md:grid-cols-2" : "grid-cols-1"}`}>
+              {!!content.hero.image && (
+                <div className="overflow-hidden">
+                  <img src={content.hero.image} alt={content.brand.name} className="aspect-square w-full object-cover" />
                 </div>
-              ))}
+              )}
+              {!!content.hero.video && (
+                <div className="overflow-hidden">
+                  <PublicVideo src={content.hero.video} autoPlay className="aspect-square w-full object-cover" />
+                </div>
+              )}
             </div>
           )}
           <div className="mx-auto max-w-4xl px-4 py-8 text-center md:py-10">
