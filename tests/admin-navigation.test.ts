@@ -8,6 +8,8 @@ const read = (file: string) => readFileSync(path.join(root, file), "utf8");
 
 const sidebar = read("components/admin/Sidebar.tsx");
 assert.match(sidebar, /href: "\/admin\/page-management", label: "頁面管理"/);
+// 媒體庫為編輯與管理員入口（列出所有已上傳圖片/影片）
+assert.match(sidebar, /href: "\/admin\/media", label: "媒體庫"/);
 // 用戶管理為 ADMIN 專用入口（列表 + 改密碼）
 assert.match(sidebar, /href: "\/admin\/users", label: "用戶管理"/);
 // 舊 CMS 模組入口不得復活
@@ -17,7 +19,6 @@ for (const removed of [
   "文章管理",
   "分類管理",
   "標籤管理",
-  "媒體庫",
   "流量分析",
   "工程工具",
 ]) {

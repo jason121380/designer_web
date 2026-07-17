@@ -53,6 +53,8 @@ export default function VideoUpload({ value, onChange, label = "影片" }: Props
       });
 
       onChange(data.publicUrl);
+      // 記錄到媒體庫（失敗不影響上傳結果）。
+      fetch("/api/media", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: data.publicUrl, mimeType: file.type, size: file.size, originalName: file.name }) }).catch(() => {});
     } catch (e) {
       setError(e instanceof Error ? e.message : "上傳失敗");
     } finally {

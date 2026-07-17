@@ -1,4 +1,4 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 type EnvLike = Record<string, string | undefined>;
@@ -96,6 +96,22 @@ export async function getR2PresignedUploadUrl({
     uploadUrl,
     publicUrl: buildR2PublicUrl(process.env.CLOUDFLARE_R2_PUBLIC_URL!, key),
   };
+}
+
+/** 從公開網址反推 R2 物件 key；非本站 R2 網址（例如外部貼上的網址）回 null。 */
+export function r2KeyFromPublicUrl(url: string, env: EnvLike = process.env): string | null {
+  const base = env.CLOUDFLARE_R2_PUBLIC_URL;
+  if (!base || !url) return null;
+  const prefix = `${base.replace(/\/+$/, "")}/`;
+  return url.startsWith(prefix) ? url.slice(prefix.length) : null;
+}
+
+/** 從 R2 刪除物件（媒體庫刪除時使用）。 */
+export async function deleteFromR2(key: string) {
+  if (!isR2Configured()) throw new Error("Cloudflare R2 尚未設定");
+  await r2Client().send(
+    new DeleteObjectCommand({ Bucket: process.env.CLOUDFLARE_R2_BUCKET!, Key: key })
+  );
 }
 
 export async function createStreamDirectUpload(maxDurationSeconds: number) {

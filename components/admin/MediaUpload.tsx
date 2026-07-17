@@ -54,6 +54,8 @@ export default function MediaUpload({ value, onChange, label = "圖片或影片"
       xhr.send(file);
     });
     onChange(data.publicUrl);
+    // 記錄到媒體庫（失敗不影響上傳結果）。
+    fetch("/api/media", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: data.publicUrl, mimeType: file.type, size: file.size, originalName: file.name }) }).catch(() => {});
   }
 
   async function uploadFile(file: File) {
