@@ -1,5 +1,6 @@
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import type { DesignerWebContent } from "@/lib/designer-web-content";
+import { externalHref } from "@/lib/utils";
 
 /** 個人連結頁（linktree 風格）：頭像、名稱、簡介、連結按鈕與社群 icon。 */
 export default function LinksPage({ content }: { content: DesignerWebContent }) {
@@ -7,12 +8,12 @@ export default function LinksPage({ content }: { content: DesignerWebContent }) 
   const initial = brand.name.trim()[0]?.toUpperCase() ?? "•";
 
   const socials: { key: string; href: string; label: string; node: React.ReactNode }[] = [
-    contact.instagram && { key: "ig", href: contact.instagram, label: "Instagram", node: <span className="text-xs font-bold">IG</span> },
-    contact.facebook && { key: "fb", href: contact.facebook, label: "Facebook", node: <span className="text-sm font-bold">f</span> },
-    contact.line && { key: "line", href: contact.line, label: "LINE", node: <MessageCircle size={18} /> },
+    contact.instagram && { key: "ig", href: externalHref(contact.instagram), label: "Instagram", node: <span className="text-xs font-bold">IG</span> },
+    contact.facebook && { key: "fb", href: externalHref(contact.facebook), label: "Facebook", node: <span className="text-sm font-bold">f</span> },
+    contact.line && { key: "line", href: externalHref(contact.line), label: "LINE", node: <MessageCircle size={18} /> },
     contact.email && { key: "mail", href: `mailto:${contact.email}`, label: "Email", node: <Mail size={18} /> },
     contact.phone && { key: "tel", href: `tel:${contact.phone}`, label: "電話", node: <Phone size={18} /> },
-    contact.mapUrl && { key: "map", href: contact.mapUrl, label: "地圖", node: <MapPin size={18} /> },
+    contact.mapUrl && { key: "map", href: externalHref(contact.mapUrl), label: "地圖", node: <MapPin size={18} /> },
   ].filter(Boolean) as { key: string; href: string; label: string; node: React.ReactNode }[];
 
   return (
@@ -34,7 +35,7 @@ export default function LinksPage({ content }: { content: DesignerWebContent }) 
             {links.items.map((item) => (
               <a
                 key={item.id}
-                href={item.url}
+                href={externalHref(item.url)}
                 target="_blank"
                 rel="noreferrer"
                 className="block w-full rounded-full border border-neutral-200 bg-white px-5 py-3.5 text-center text-sm font-medium text-neutral-800 transition hover:-translate-y-0.5 hover:border-[color:var(--brand)]"

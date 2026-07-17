@@ -4,6 +4,16 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { normalizeDesignerWebContent } from "../lib/designer-web-content";
 import { linksPageMetadata } from "../lib/seo";
+import { externalHref } from "../lib/utils";
+
+// 外部連結補協定：沒有 http(s):// 的網址補上 https://，不被當成站內相對路徑
+assert.equal(externalHref("www.google.com"), "https://www.google.com");
+assert.equal(externalHref("  google.com  "), "https://google.com");
+assert.equal(externalHref("https://ig.com/x"), "https://ig.com/x");
+assert.equal(externalHref("http://a.com"), "http://a.com");
+assert.equal(externalHref("mailto:a@b.com"), "mailto:a@b.com");
+assert.equal(externalHref("/internal"), "/internal");
+assert.equal(externalHref(""), "");
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (file: string) => readFileSync(path.join(root, file), "utf8");
@@ -51,6 +61,7 @@ assert.match(rootRoute, /redirect\(`\/\$\{slug\}\/web`\)/, "根 /{slug} 需導�
 const linksPage = read("components/public/LinksPage.tsx");
 assert.match(linksPage, /links\.items/);
 assert.match(linksPage, /content: DesignerWebContent/);
+assert.match(linksPage, /externalHref\(item\.url\)/, "連結按鈕需補協定避免變站內相對路徑");
 assert.doesNotMatch(linksPage, /getDesignerWebPageContent/);
 
 // 後台連結頁編輯器
