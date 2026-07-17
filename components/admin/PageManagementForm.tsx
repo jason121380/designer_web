@@ -90,9 +90,9 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "品牌名稱、標語與主色",
       body: (
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="品牌名稱" value={content.brand.name} onChange={(name) => setContent({ ...content, brand: { ...content.brand, name } })} />
-          <Field label="品牌標語" value={content.brand.tagline} onChange={(tagline) => setContent({ ...content, brand: { ...content.brand, tagline } })} />
-          <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">主色</span><ColorSelect value={content.brand.themeColor} onChange={(themeColor) => setContent({ ...content, brand: { ...content.brand, themeColor } })} /></label>
+          <Field label="網頁標題（瀏覽器分頁與 SEO 標題）" value={content.brand.name} onChange={(name) => setContent({ ...content, brand: { ...content.brand, name } })} />
+          <Field label="標題設定（顯示於選單列左上）" value={content.brand.tagline} onChange={(tagline) => setContent({ ...content, brand: { ...content.brand, tagline } })} />
+          <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">選單列底色（Header 底色）</span><ColorSelect value={content.brand.themeColor} onChange={(themeColor) => setContent({ ...content, brand: { ...content.brand, themeColor } })} /></label>
         </div>
       ),
     },
@@ -229,7 +229,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "此頁在搜尋結果與廣告到達頁的標題、描述與分享圖；未填時自動使用品牌與主標題",
       body: (
         <>
-          <Field label="SEO 標題（搜尋結果與分頁標題）" value={content.seo.title} placeholder={`${content.brand.tagline}｜${content.brand.name}`} onChange={(title) => setContent({ ...content, seo: { ...content.seo, title } })} />
+          <Field label="SEO 標題（搜尋結果與分頁標題）" value={content.seo.title} placeholder={content.brand.name} onChange={(title) => setContent({ ...content, seo: { ...content.seo, title } })} />
           <div className="mt-4">
             <TextArea label="SEO 描述（搜尋結果摘要，建議 80-150 字）" value={content.seo.description} onChange={(description) => setContent({ ...content, seo: { ...content.seo, description } })} />
           </div>

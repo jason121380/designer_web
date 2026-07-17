@@ -31,11 +31,11 @@ import type { DesignerWebContent } from "@/lib/designer-web-content";
 
 /**
  * 每個頁面（首頁與 /{slug}）的完整 SEO metadata。
- * 後台 SEO 設定優先；未填時自動使用品牌標語＋名稱與主標題。
+ * 後台 SEO 設定優先；未填時自動使用網頁標題（品牌名稱）與主標題。
  * 各頁獨立 title / description / canonical / og / twitter，供搜尋與 Google Ads 到達頁使用。
  */
 export function designerPageMetadata(content: DesignerWebContent, path: string): Metadata {
-  const title = content.seo.title || `${content.brand.tagline}｜${content.brand.name}`;
+  const title = content.seo.title || content.brand.name;
   const description =
     content.seo.description || content.hero.heading.replace(/\s*\n\s*/g, "，").slice(0, 150);
   const ogImage =
