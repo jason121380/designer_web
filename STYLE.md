@@ -135,7 +135,7 @@ Focus    border-rose-brand ring-2 ring-rose-light
 說明     text-sm text-gray-400
 ```
 
-- 使用適合資料型態的控制：主色使用 color input、媒體類型使用 select。
+- 使用適合資料型態的控制：主色使用 `ColorSelect`（色塊＋名稱下拉，附自訂顏色）、媒體類型使用 select。
 - 圖片從區塊內直接點擊或拖放上傳，不顯示獨立媒體庫選取器。
 - 影片目前填入 Cloudflare Stream 播放 URL，不假裝已有整合完成的影片上傳 UI。
 - 成功與錯誤狀態使用 Sonner toast，不使用 `window.alert`。
