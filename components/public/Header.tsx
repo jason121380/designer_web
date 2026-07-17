@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 import type { DesignerWebContent } from "@/lib/designer-web-content";
 import { SECTION_ANCHOR } from "@/lib/designer-web-content";
 
@@ -10,20 +14,43 @@ function isVisible(key: string, content: DesignerWebContent): boolean {
 }
 
 export default function Header({ content }: { content: DesignerWebContent }) {
+  const [open, setOpen] = useState(false);
+  const title = content.brand.tagline || content.brand.name;
   const links = content.sections
     .filter((sec) => isVisible(sec.key, content))
     .map((sec) => ({ href: `#${SECTION_ANCHOR[sec.key]}`, label: sec.zh }));
 
   return (
-    <nav className="sticky top-0 z-50 bg-neutral-900/95 text-white backdrop-blur">
+    <nav className="sticky top-0 z-50 text-white backdrop-blur" style={{ backgroundColor: content.brand.themeColor }}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <a href="#top" className="font-semibold tracking-wide">{content.brand.name}</a>
-        <ul className="hidden items-center gap-6 text-sm text-neutral-200 md:flex">
+        <a href="#top" className="font-semibold tracking-wide" onClick={() => setOpen(false)}>{title}</a>
+        <ul className="hidden items-center gap-6 text-sm text-white/90 md:flex">
           {links.map((link) => (
-            <li key={link.href}><a href={link.href} className="transition-colors hover:text-white">{link.label}</a></li>
+            <li key={link.href}><a href={link.href} className="transition-opacity hover:opacity-100 opacity-90">{link.label}</a></li>
           ))}
         </ul>
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          aria-label={open ? "關閉選單" : "開啟選單"}
+          aria-expanded={open}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-white transition-colors hover:bg-white/10 md:hidden"
+        >
+          {open ? <X size={20} /> : <Menu size={20} />}
+        </button>
       </div>
+
+      {open && (
+        <div className="border-t border-white/15 md:hidden" style={{ backgroundColor: content.brand.themeColor }}>
+          <ul className="mx-auto max-w-6xl px-4 py-2">
+            {links.map((link) => (
+              <li key={link.href}>
+                <a href={link.href} onClick={() => setOpen(false)} className="block rounded-lg px-2 py-3 text-sm text-white/90 transition-colors hover:bg-white/10">{link.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </nav>
   );
 }
