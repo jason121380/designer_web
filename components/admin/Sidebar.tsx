@@ -9,6 +9,7 @@ import {
   ChevronRight,
   X,
   PanelsTopLeft,
+  Images,
   Users,
 } from "lucide-react";
 
@@ -19,6 +20,7 @@ const navItems: {
   adminOnly?: boolean;
 }[] = [
   { href: "/admin/page-management", label: "頁面管理", icon: PanelsTopLeft },
+  { href: "/admin/media", label: "媒體庫", icon: Images },
   { href: "/admin/users", label: "用戶管理", icon: Users, adminOnly: true },
 ];
 

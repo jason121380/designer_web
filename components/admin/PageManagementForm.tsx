@@ -297,7 +297,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       </div>
 
       <div className="md:grid md:grid-cols-[220px_1fr] md:gap-6">
-        <nav className="mb-4 md:mb-0 md:sticky md:top-4 md:self-start">
+        <nav className="mb-4 md:mb-0 md:sticky md:top-[4.5rem] md:self-start md:max-h-[calc(100dvh-5.5rem)] md:overflow-y-auto">
           {MENU_GROUPS.map((group) => (
             <div key={group.title} className="mb-3 last:mb-0 md:mb-4">
               <p className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{group.title}</p>

@@ -9,7 +9,6 @@ const legacyAdminPrefixes = [
   "/admin/articles",
   "/admin/categories",
   "/admin/tags",
-  "/admin/media",
   "/admin/analytics",
   "/admin/tools",
 ];
