@@ -78,7 +78,7 @@ export default function VideoUpload({ value, onChange, label = "影片" }: Props
           </div>
           <div className="flex items-center gap-3">
             <button type="button" onClick={() => inputRef.current?.click()} className="text-xs font-medium text-rose-brand">更換影片</button>
-            <button type="button" onClick={() => onChange("")} className="text-xs font-medium text-red-500">移除</button>
+            <button type="button" onClick={() => { onChange(""); setError(""); setNotice(""); }} className="text-xs font-medium text-red-500">移除</button>
           </div>
         </div>
       ) : (
