@@ -128,8 +128,8 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
     },
     {
       id: "sections",
-      title: "區塊順序與標題",
-      description: "調整前台區塊的排列順序，並自訂各區塊的中英文標題",
+      title: "區塊順序、標題與底色",
+      description: "調整前台區塊的排列順序，並自訂各區塊的中英文標題與底色",
       body: (
         <>
           {content.sections.map((sec, index) => {
@@ -147,6 +147,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
                   <Field label="中文標題" value={sec.zh} onChange={(zh) => updateSection(index, { zh })} />
                   <Field label="英文標題（選填）" value={sec.en} onChange={(en) => updateSection(index, { en })} />
                 </div>
+                <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">區塊底色</span><ColorSelect value={sec.bg} onChange={(bg) => updateSection(index, { bg })} /></label>
               </div>
             );
           })}
