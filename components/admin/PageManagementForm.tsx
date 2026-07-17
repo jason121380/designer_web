@@ -60,7 +60,7 @@ const MENU_GROUPS: { title: string; ids: string[] }[] = [
   { title: "內容區塊", ids: ["promos", "services", "otherServices", "videos", "installment", "pricing", "environment", "contact"] },
 ];
 
-function ServiceRows({ items, onChange }: { items: PageService[]; onChange: (items: PageService[]) => void }) {
+function ServiceRows({ items, onChange, onImageChange }: { items: PageService[]; onChange: (items: PageService[]) => void; onImageChange: (index: number, image: string) => void }) {
   return <>{items.map((item, index) => <div key={item.id} className={rowClass}>
     <div className="flex items-center justify-between"><p className="text-sm font-semibold text-gray-700">項目 {index + 1}</p><RowTools index={index} total={items.length} onMove={(dir) => onChange(moveAt(items, index, dir))} onRemove={() => onChange(removeAt(items, index))} /></div>
     <div className="grid gap-4 md:grid-cols-2">
@@ -72,7 +72,7 @@ function ServiceRows({ items, onChange }: { items: PageService[]; onChange: (ite
       <TextArea label="特色（逗號或換行分隔）" value={item.features.join("\n")} onChange={(value) => onChange(updateAt(items, index, { features: splitList(value) }))} />
       <TextArea label="適合對象（逗號或換行分隔）" value={item.suitableFor.join("\n")} onChange={(value) => onChange(updateAt(items, index, { suitableFor: splitList(value) }))} />
     </div>
-    <MediaUpload label="項目圖片或影片" value={item.image} onChange={(image) => onChange(updateAt(items, index, { image }))} />
+    <MediaUpload label="項目圖片或影片" value={item.image} onChange={(image) => onImageChange(index, image)} />
   </div>)}</>;
 }
 
@@ -175,11 +175,11 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <p className="mb-2 text-xs font-medium text-gray-500">首屏圖片（左）</p>
-                <ImageUpload label="" aspect="aspect-square" value={content.hero.image} onChange={(image) => setContent({ ...content, hero: { ...content.hero, image } })} />
+                <ImageUpload label="" aspect="aspect-square" value={content.hero.image} onChange={(image) => setContent((prev) => ({ ...prev, hero: { ...prev.hero, image } }))} />
               </div>
               <div>
                 <p className="mb-2 text-xs font-medium text-gray-500">首屏影片（右）</p>
-                <VideoUpload label="" aspect="aspect-square" value={content.hero.video} onChange={(video) => setContent({ ...content, hero: { ...content.hero, video } })} />
+                <VideoUpload label="" aspect="aspect-square" value={content.hero.video} onChange={(video) => setContent((prev) => ({ ...prev, hero: { ...prev.hero, video } }))} />
               </div>
             </div>
           </div>
@@ -237,7 +237,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
               const label = content.sections.find((section) => section.key === "dm")?.zh || "活動 DM";
               return (
                 <div key={item.id} className="space-y-3 border border-gray-100 rounded-lg p-3">
-                  <MediaUpload aspect="aspect-square" label={`${label} ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, promos: updateAt(content.promos, index, { image }) })} />
+                  <MediaUpload aspect="aspect-square" label={`${label} ${index + 1}`} value={item.image} onChange={(image) => setContent((prev) => ({ ...prev, promos: updateAt(prev.promos, index, { image }) }))} />
                   <Field label="圖片說明" value={item.caption} onChange={(caption) => setContent({ ...content, promos: updateAt(content.promos, index, { caption }) })} />
                   <div className="flex justify-end"><RowTools index={index} total={content.promos.length} onMove={(dir) => setContent({ ...content, promos: moveAt(content.promos, index, dir) })} onRemove={() => setContent({ ...content, promos: removeAt(content.promos, index) })} /></div>
                 </div>
@@ -253,7 +253,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       title: "接髮介紹",
       body: (
         <>
-          <ServiceRows items={content.services} onChange={(services) => setContent({ ...content, services })} />
+          <ServiceRows items={content.services} onChange={(services) => setContent({ ...content, services })} onImageChange={(i, image) => setContent((prev) => ({ ...prev, services: updateAt(prev.services, i, { image }) }))} />
           <AddButton label="新增接髮項目" onClick={() => setContent({ ...content, services: [...content.services, { id: makeId("service"), title: "", description: "", features: [], suitableFor: [], image: "", price: "" }] })} />
         </>
       ),
@@ -263,7 +263,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       title: "特色項目",
       body: (
         <>
-          <ServiceRows items={content.otherServices} onChange={(otherServices) => setContent({ ...content, otherServices })} />
+          <ServiceRows items={content.otherServices} onChange={(otherServices) => setContent({ ...content, otherServices })} onImageChange={(i, image) => setContent((prev) => ({ ...prev, otherServices: updateAt(prev.otherServices, i, { image }) }))} />
           <AddButton label="新增特色項目" onClick={() => setContent({ ...content, otherServices: [...content.otherServices, { id: makeId("other"), title: "", description: "", features: [], suitableFor: [], image: "", price: "" }] })} />
         </>
       ),
@@ -280,7 +280,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {content.videos.map((item, index) => (
               <div key={item.id} className="space-y-3 border border-gray-100 rounded-lg p-3">
-                <VideoUpload aspect="aspect-[9/16]" label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} />
+                <VideoUpload aspect="aspect-[9/16]" label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent((prev) => ({ ...prev, videos: updateAt(prev.videos, index, { video }) }))} />
                 <Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} />
                 <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">分類（選填，前台可切換）</span><select className={inputClass} value={item.category} onChange={(event) => setContent({ ...content, videos: updateAt(content.videos, index, { category: event.target.value }) })}><option value="">無分類</option>{content.videoCategories.map((category) => <option key={category} value={category}>{category}</option>)}{!!item.category && !content.videoCategories.includes(item.category) && <option value={item.category}>{item.category}（已移除）</option>}</select></label>
                 <div className="flex justify-end"><RowTools index={index} total={content.videos.length} onMove={(dir) => setContent({ ...content, videos: moveAt(content.videos, index, dir) })} onRemove={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div>
@@ -317,7 +317,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "沒有照片時前台自動隱藏",
       body: (
         <>
-          {content.environment.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RowTools index={index} total={content.environment.length} onMove={(dir) => setContent({ ...content, environment: moveAt(content.environment, index, dir) })} onRemove={() => setContent({ ...content, environment: removeAt(content.environment, index) })} /></div><MediaUpload label={`環境照片或影片 ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, environment: updateAt(content.environment, index, { image }) })} /><Field label="圖片說明" value={item.alt} onChange={(alt) => setContent({ ...content, environment: updateAt(content.environment, index, { alt }) })} /></div>)}
+          {content.environment.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RowTools index={index} total={content.environment.length} onMove={(dir) => setContent({ ...content, environment: moveAt(content.environment, index, dir) })} onRemove={() => setContent({ ...content, environment: removeAt(content.environment, index) })} /></div><MediaUpload label={`環境照片或影片 ${index + 1}`} value={item.image} onChange={(image) => setContent((prev) => ({ ...prev, environment: updateAt(prev.environment, index, { image }) }))} /><Field label="圖片說明" value={item.alt} onChange={(alt) => setContent({ ...content, environment: updateAt(content.environment, index, { alt }) })} /></div>)}
           <AddButton label="新增環境照片" onClick={() => setContent({ ...content, environment: [...content.environment, { id: makeId("environment"), image: "", alt: "" }] })} />
         </>
       ),
