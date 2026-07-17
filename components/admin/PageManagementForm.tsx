@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { SECTION_DEFS, type DesignerWebContent, type PageService } from "@/lib/designer-web-content";
 import ImageUpload from "./ImageUpload";
 import VideoUpload from "./VideoUpload";
+import MediaUpload from "./MediaUpload";
 import ColorSelect from "./ColorSelect";
 
 const inputClass = "w-full border border-gray-200 bg-white rounded-lg px-3 py-2.5 text-sm outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light";
@@ -52,7 +53,7 @@ function ServiceRows({ items, onChange }: { items: PageService[]; onChange: (ite
       <TextArea label="特色（逗號或換行分隔）" value={item.features.join("\n")} onChange={(value) => onChange(updateAt(items, index, { features: splitList(value) }))} />
       <TextArea label="適合對象（逗號或換行分隔）" value={item.suitableFor.join("\n")} onChange={(value) => onChange(updateAt(items, index, { suitableFor: splitList(value) }))} />
     </div>
-    <ImageUpload label="項目圖片" value={item.image} onChange={(image) => onChange(updateAt(items, index, { image }))} />
+    <MediaUpload label="項目圖片或影片" value={item.image} onChange={(image) => onChange(updateAt(items, index, { image }))} />
   </div>)}</>;
 }
 
@@ -154,7 +155,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "沒有圖片時前台自動隱藏",
       body: (
         <>
-          {content.promos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, promos: removeAt(content.promos, index) })} /></div><ImageUpload label={`DM 圖片 ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, promos: updateAt(content.promos, index, { image }) })} /><Field label="圖片說明" value={item.caption} onChange={(caption) => setContent({ ...content, promos: updateAt(content.promos, index, { caption }) })} /></div>)}
+          {content.promos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, promos: removeAt(content.promos, index) })} /></div><MediaUpload label={`DM 圖片或影片 ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, promos: updateAt(content.promos, index, { image }) })} /><Field label="圖片說明" value={item.caption} onChange={(caption) => setContent({ ...content, promos: updateAt(content.promos, index, { caption }) })} /></div>)}
           <AddButton label="新增 DM" onClick={() => setContent({ ...content, promos: [...content.promos, { id: makeId("dm"), image: "", caption: "" }] })} />
         </>
       ),
@@ -216,7 +217,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "沒有照片時前台自動隱藏",
       body: (
         <>
-          {content.environment.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, environment: removeAt(content.environment, index) })} /></div><ImageUpload label={`環境照片 ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, environment: updateAt(content.environment, index, { image }) })} /><Field label="圖片說明" value={item.alt} onChange={(alt) => setContent({ ...content, environment: updateAt(content.environment, index, { alt }) })} /></div>)}
+          {content.environment.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, environment: removeAt(content.environment, index) })} /></div><MediaUpload label={`環境照片或影片 ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, environment: updateAt(content.environment, index, { image }) })} /><Field label="圖片說明" value={item.alt} onChange={(alt) => setContent({ ...content, environment: updateAt(content.environment, index, { alt }) })} /></div>)}
           <AddButton label="新增環境照片" onClick={() => setContent({ ...content, environment: [...content.environment, { id: makeId("environment"), image: "", alt: "" }] })} />
         </>
       ),
