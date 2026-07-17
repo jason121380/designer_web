@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, ExternalLink, Link2, Pencil, Plus, X } from "lucide-react";
+import { Copy, Eye, EyeOff, ExternalLink, Link2, Pencil, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { isValidPageSlug } from "@/lib/designer-web-content";
 
@@ -25,13 +25,17 @@ export default function PageList({ pages }: { pages: PageListItem[] }) {
   const [renameTarget, setRenameTarget] = useState<PageListItem | null>(null);
   const [renameSlug, setRenameSlug] = useState("");
   const [renaming, setRenaming] = useState(false);
+  const [copyTarget, setCopyTarget] = useState<PageListItem | null>(null);
+  const [copyName, setCopyName] = useState("");
+  const [copySlug, setCopySlug] = useState("");
+  const [copying, setCopying] = useState(false);
 
-  const anyModalOpen = showCreate || !!renameTarget;
+  const anyModalOpen = showCreate || !!renameTarget || !!copyTarget;
 
   // 彈窗開啟時：Esc 關閉、鎖住背景捲動
   useEffect(() => {
     if (!anyModalOpen) return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") { closeCreate(); closeRename(); } };
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") { closeCreate(); closeRename(); closeCopy(); } };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
@@ -85,6 +89,44 @@ export default function PageList({ pages }: { pages: PageListItem[] }) {
       toast.error(error instanceof Error ? error.message : "變更失敗");
     } finally {
       setRenaming(false);
+    }
+  }
+
+  function openCopy(page: PageListItem) {
+    setCopyName(`${page.brandName} 複本`);
+    setCopySlug("");
+    setCopyTarget(page);
+  }
+
+  function closeCopy() {
+    if (copying) return;
+    setCopyTarget(null);
+  }
+
+  async function copyPage() {
+    if (!copyTarget) return;
+    const slug = copySlug.trim().toLowerCase();
+    if (!isValidPageSlug(slug)) {
+      toast.error("後綴限小寫英數與連字號（1-50 字），且不可使用 home、admin 等保留字");
+      return;
+    }
+    setCopying(true);
+    try {
+      const response = await fetch(`/api/designer-web/${slug}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: copyName.trim(), from: copyTarget.slug }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "複製失敗");
+      toast.success(`已複製到 /${slug}`);
+      setCopyTarget(null);
+      router.push(`/admin/page-management/${slug}`);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "複製失敗");
+    } finally {
+      setCopying(false);
     }
   }
 
@@ -166,6 +208,7 @@ export default function PageList({ pages }: { pages: PageListItem[] }) {
               <Link href={`/admin/page-management/${page.slug}`} className="inline-flex items-center gap-1.5 bg-rose-brand rounded-lg px-4 py-2 text-xs font-semibold text-white"><Pencil size={13} />一頁式</Link>
               <Link href={`/admin/page-management/${page.slug}/links`} className="inline-flex items-center gap-1.5 bg-rose-brand rounded-lg px-4 py-2 text-xs font-semibold text-white"><Link2 size={13} />連結頁</Link>
               <button type="button" onClick={() => openRename(page)} className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600" title="變更網址後綴"><Pencil size={13} />後綴</button>
+              <button type="button" onClick={() => openCopy(page)} className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600" title="複製此頁"><Copy size={13} />複製</button>
               {page.active ? (
                 <button type="button" disabled={togglingSlug === page.slug} onClick={() => toggleActive(page.slug, false)} aria-label={`停用 /${page.slug}`} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-red-500 disabled:opacity-50"><EyeOff size={13} />{togglingSlug === page.slug ? "處理中" : "停用"}</button>
               ) : (
@@ -276,6 +319,55 @@ export default function PageList({ pages }: { pages: PageListItem[] }) {
               <button type="button" onClick={closeRename} disabled={renaming} className="border border-gray-200 bg-white rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 disabled:opacity-50">取消</button>
               <button type="button" onClick={renamePage} disabled={renaming} className="inline-flex items-center justify-center gap-2 bg-rose-brand rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
                 <Link2 size={15} />{renaming ? "變更中" : "儲存後綴"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 複製頁面彈窗 */}
+      {copyTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={closeCopy}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="複製頁面"
+            className="w-full max-w-md border border-gray-200 bg-white rounded-lg p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">複製頁面</h2>
+                <p className="mt-1 text-sm text-gray-400">複製 /{copyTarget.slug} 的全部內容到一個新網址。</p>
+              </div>
+              <button type="button" onClick={closeCopy} aria-label="關閉" className="shrink-0 text-gray-400 hover:text-gray-700"><X size={18} /></button>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-gray-500">設計師名稱</span>
+                <input className={inputClass} value={copyName} placeholder="例如 Jason、Kimiko" autoFocus onChange={(event) => setCopyName(event.target.value)} />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-gray-500">網址後綴</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-400">/</span>
+                  <input
+                    className={inputClass}
+                    value={copySlug}
+                    placeholder="例如 jason-2、kimiko"
+                    onChange={(event) => setCopySlug(event.target.value)}
+                    onKeyDown={(event) => { if (event.key === "Enter") copyPage(); }}
+                  />
+                </div>
+                <span className="mt-1.5 block text-xs text-gray-400">小寫英數與連字號，1-50 字；複製後直接進入編輯。</span>
+              </label>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={closeCopy} disabled={copying} className="border border-gray-200 bg-white rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 disabled:opacity-50">取消</button>
+              <button type="button" onClick={copyPage} disabled={copying} className="inline-flex items-center justify-center gap-2 bg-rose-brand rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                <Copy size={15} />{copying ? "複製中" : "複製頁面"}
               </button>
             </div>
           </div>
