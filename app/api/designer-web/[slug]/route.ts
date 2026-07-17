@@ -8,6 +8,7 @@ import {
   parseDesignerWebContent,
 } from "@/lib/designer-web-content";
 import prisma from "@/lib/prisma";
+import { clearSlugRedirect, recordSlugRename } from "@/lib/slug-redirects";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
   if (name) content.brand.name = name;
 
   await prisma.siteSettings.create({ data: { key, value: JSON.stringify(content) } });
+  await clearSlugRedirect(slug); // 若此後綴曾是別頁的舊轉址，建立實體頁後清掉，避免被導走
   return NextResponse.json(content, { status: 201 });
 }
 
@@ -123,6 +125,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       prisma.siteSettings.create({ data: { key: pageContentKey(newSlug), value: row.value } }),
       prisma.siteSettings.delete({ where: { key: pageContentKey(slug) } }),
     ]);
+    // 記錄舊後綴 → 新後綴，前台會 308 永久轉址（保住廣告到達頁與 SEO）。
+    await recordSlugRename(slug, newSlug);
     return NextResponse.json({ slug: newSlug });
   }
 
