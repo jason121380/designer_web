@@ -185,15 +185,17 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
             <SectionHeading en="Contact" zh="聯絡我們" />
             <div className="grid items-start gap-8 md:grid-cols-2">
               <div className="space-y-3 text-neutral-700">
-                <p className="flex items-center gap-2">
-                  <MapPin size={18} style={{ color: "var(--brand)" }} />
-                  {content.contact.mapUrl ? (
-                    <a href={externalHref(content.contact.mapUrl)} target="_blank" rel="noreferrer" className="hover:underline">{content.contact.address}</a>
-                  ) : (
-                    <span>{content.contact.address}</span>
-                  )}
-                </p>
-                <p className="flex items-center gap-2"><Phone size={18} style={{ color: "var(--brand)" }} /><a href={`tel:${content.contact.phone}`} className="hover:underline">{content.contact.phone}</a></p>
+                {!!content.contact.address && (
+                  <p className="flex items-center gap-2">
+                    <MapPin size={18} style={{ color: "var(--brand)" }} />
+                    {content.contact.mapUrl ? (
+                      <a href={externalHref(content.contact.mapUrl)} target="_blank" rel="noreferrer" className="hover:underline">{content.contact.address}</a>
+                    ) : (
+                      <span>{content.contact.address}</span>
+                    )}
+                  </p>
+                )}
+                {!!content.contact.phone && <p className="flex items-center gap-2"><Phone size={18} style={{ color: "var(--brand)" }} /><a href={`tel:${content.contact.phone}`} className="hover:underline">{content.contact.phone}</a></p>}
                 {!!content.contact.email && <p className="flex items-center gap-2"><Mail size={18} style={{ color: "var(--brand)" }} /><a href={`mailto:${content.contact.email}`} className="hover:underline">{content.contact.email}</a></p>}
                 {!!content.contact.facebook && <p className="flex items-center gap-2"><span className="w-[18px] text-center text-sm font-bold" style={{ color: "var(--brand)" }}>f</span><a href={externalHref(content.contact.facebook)} target="_blank" rel="noreferrer" className="hover:underline">Facebook</a></p>}
                 {!!content.contact.instagram && <p className="flex items-center gap-2"><span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>IG</span><a href={externalHref(content.contact.instagram)} target="_blank" rel="noreferrer" className="hover:underline">Instagram</a></p>}

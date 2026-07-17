@@ -43,7 +43,7 @@ PageManagementForm
   -> 子頁面不存在或已停用（active=false）則各路由 404
 ```
 
-一份子頁面內容（`DesignerWebContent`）同時驅動兩個對外頁：`/{slug}/web`（一頁式）與 `/{slug}/links`（連結頁）。連結頁內容在合約的 `links { avatar, bio, items[] }`，名稱／主色／社群沿用 `brand` 與 `contact`。根 `/{slug}` 只做導向到 `/{slug}/web`。
+一份子頁面內容（`DesignerWebContent`）同時驅動兩個對外頁：`/{slug}/web`（一頁式）與 `/{slug}/links`（連結頁）。連結頁內容在合約的 `links { avatar, bio, qr, items[] }`（`qr` 為選填 QR 圖，連結頁右上角按鈕點擊放大），名稱／主色／社群沿用 `brand` 與 `contact`；連結頁的社群欄位也可直接在連結頁編輯器編輯（與 `contact` 共用）。根 `/{slug}` 只做導向到 `/{slug}/web`。`contact` 所有欄位（含地址、電話）皆可留空，前台空值隱藏。
 
 首頁固定維護頁：`app/(public)/page.tsx` 一律渲染 `components/public/MaintenancePage.tsx`，根網址 `/` 不提供任何設定、不對外呈現內容。公開內容一律放在子頁面（`/{slug}`）。後台頁面列表不再顯示「首頁」列，也沒有「首頁顯示」設定。示範內容（`defaultDesignerWebContent`）只作為新子頁起始值與 DB 讀取異常時的容錯。
 

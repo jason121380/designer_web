@@ -84,10 +84,11 @@ export const designerWebContentSchema = z.object({
     description: nullableString,
     ogImage: nullableString,
   }).optional(),
-  // 個人連結頁（linktree 風格）：頭像、簡介與連結按鈕清單。
+  // 個人連結頁（linktree 風格）：頭像、簡介、連結按鈕清單與 QR Code 圖。
   links: z.object({
     avatar: nullableString,
     bio: nullableString,
+    qr: nullableString,
     items: z.array(z.object({
       id: nullableString,
       label: nullableString,
@@ -131,7 +132,7 @@ export interface DesignerWebContent {
   /** 每頁獨立 SEO；空字串代表自動使用品牌與主標題產生。 */
   seo: { title: string; description: string; ogImage: string };
   /** 個人連結頁（`/{slug}/links`，linktree 風格）內容。 */
-  links: { avatar: string; bio: string; items: { id: string; label: string; url: string }[] };
+  links: { avatar: string; bio: string; qr: string; items: { id: string; label: string; url: string }[] };
   /** 子頁面是否啟用；false＝停用（前台該 slug 回 404）。首頁不使用此欄位。 */
   active: boolean;
 }
@@ -218,7 +219,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
     mapEmbedUrl: "",
   },
   seo: { title: "", description: "", ogImage: "" },
-  links: { avatar: "", bio: "", items: [] },
+  links: { avatar: "", bio: "", qr: "", items: [] },
   active: true,
 };
 
@@ -246,14 +247,14 @@ function normalizeServices(items: RawContent["services"], fallback: PageService[
 
 function normalizeContact(contact: RawContent["contact"]): DesignerWebContent["contact"] {
   const defaults = defaultDesignerWebContent.contact;
-  // 完全沒有 contact 資料（示範狀態）→ 用預設示範值。
+  // 完全沒有 contact 資料（示範狀態）→ 用預設示範值當新頁起始。
   if (!contact) return { ...defaults };
-  // 已有 contact 資料時：地址與電話保留預設避免區塊空白，
-  // 連結類欄位清空就是清空，前台會隱藏對應項目，不再被塞回示範連結。
+  // 已有 contact 資料時：所有欄位清空就是清空（包含地址與電話），
+  // 前台會隱藏空的項目，不再被塞回示範值。
   return {
-    address: withDefault(contact.address, defaults.address),
+    address: trim(contact.address),
     mapUrl: trim(contact.mapUrl),
-    phone: withDefault(contact.phone, defaults.phone),
+    phone: trim(contact.phone),
     email: trim(contact.email),
     line: trim(contact.line),
     instagram: trim(contact.instagram),
@@ -333,6 +334,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
     links: {
       avatar: trim(data.links?.avatar),
       bio: trim(data.links?.bio),
+      qr: trim(data.links?.qr),
       items: linkItems,
     },
     // 只有明確為 false 才停用；缺欄位或其他值一律視為啟用（向下相容舊資料）。

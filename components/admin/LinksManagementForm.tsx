@@ -84,6 +84,10 @@ export default function LinksManagementForm({ initialContent, slug }: { initialC
           </div>
         </PageSectionPanel>
 
+        <PageSectionPanel title="QR Code" description="上傳後連結頁右上角會出現 QR 按鈕，點擊可放大顯示（可放 LINE 加好友或本頁 QR）；留空則不顯示">
+          <ImageUpload label="QR Code 圖片" value={links.qr} onChange={(qr) => setContent({ ...content, links: { ...content.links, qr } })} />
+        </PageSectionPanel>
+
         <PageSectionPanel title="連結按鈕" description="每一列一顆按鈕，由上到下排列（可上下移動）">
           {items.map((item, index) => (
             <div key={item.id} className={rowClass}>

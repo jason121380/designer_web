@@ -1,6 +1,7 @@
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import type { DesignerWebContent } from "@/lib/designer-web-content";
 import { externalHref } from "@/lib/utils";
+import LinksQrButton from "@/components/public/LinksQrButton";
 
 /** 個人連結頁（linktree 風格）：頭像、名稱、簡介、連結按鈕與社群 icon。 */
 export default function LinksPage({ content }: { content: DesignerWebContent }) {
@@ -18,6 +19,7 @@ export default function LinksPage({ content }: { content: DesignerWebContent }) 
 
   return (
     <div style={{ ["--brand" as string]: brand.themeColor }} className="min-h-screen bg-neutral-50">
+      {!!links.qr && <LinksQrButton src={links.qr} />}
       <main className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center px-6 py-14">
         {links.avatar ? (
           <img src={links.avatar} alt={brand.name} className="h-24 w-24 rounded-full object-cover" />
@@ -64,7 +66,7 @@ export default function LinksPage({ content }: { content: DesignerWebContent }) 
           </div>
         )}
 
-        <p className="mt-auto pt-12 text-xs text-neutral-400">© {new Date().getFullYear()} {brand.name}</p>
+        <p className="mt-auto pt-12 text-center text-xs text-neutral-400">© {new Date().getFullYear()} {brand.name}</p>
       </main>
     </div>
   );

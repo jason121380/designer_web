@@ -23,6 +23,7 @@ const normalized = normalizeDesignerWebContent({
   links: {
     avatar: "  https://cdn.example.com/a.jpg  ",
     bio: "  設計師簡介  ",
+    qr: "  https://cdn.example.com/qr.png  ",
     items: [
       { label: "預約", url: "https://book.example.com" },
       { label: "", url: "https://no-label.example.com" },
@@ -32,13 +33,14 @@ const normalized = normalizeDesignerWebContent({
 });
 assert.equal(normalized.links.avatar, "https://cdn.example.com/a.jpg");
 assert.equal(normalized.links.bio, "設計師簡介");
+assert.equal(normalized.links.qr, "https://cdn.example.com/qr.png");
 assert.equal(normalized.links.items.length, 1, "缺文字或網址的連結項目要被丟棄");
 assert.equal(normalized.links.items[0].label, "預約");
 assert.ok(normalized.links.items[0].id, "連結項目需自動補 id");
 
 // 舊資料無 links 欄位時 fallback 空連結頁（向下相容）
 const legacy = normalizeDesignerWebContent({ brand: { name: "A" } });
-assert.deepEqual(legacy.links, { avatar: "", bio: "", items: [] });
+assert.deepEqual(legacy.links, { avatar: "", bio: "", qr: "", items: [] });
 
 // 連結頁 metadata：canonical 指向 /{slug}/links，描述優先用 bio
 const meta = linksPageMetadata(normalized, "/jason/links");
