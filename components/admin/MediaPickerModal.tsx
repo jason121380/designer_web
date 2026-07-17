@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Upload, X } from "lucide-react";
+import AdminVideoThumb from "./AdminVideoThumb";
 
 interface MediaItem {
   id: string;
@@ -69,7 +70,7 @@ export default function MediaPickerModal({ open, onClose, accept, onSelect, onUp
                 >
                   <div className="aspect-square bg-gray-100">
                     {isVideo(item) ? (
-                      <video src={item.url} preload="metadata" muted playsInline className="h-full w-full object-cover" />
+                      <AdminVideoThumb src={item.url} className="h-full w-full object-cover" />
                     ) : (
                       <img src={item.url} alt={item.originalName} loading="lazy" className="h-full w-full object-cover" />
                     )}
