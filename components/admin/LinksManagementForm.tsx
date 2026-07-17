@@ -6,6 +6,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, ExternalLink, Plus, Save, Trash2 } f
 import { toast } from "sonner";
 import type { DesignerWebContent } from "@/lib/designer-web-content";
 import ImageUpload from "./ImageUpload";
+import MediaUpload from "./MediaUpload";
 import PageSectionPanel from "./PageSectionPanel";
 
 const inputClass = "w-full border border-gray-200 bg-white rounded-lg px-3 py-2.5 text-sm outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light";
@@ -75,7 +76,7 @@ export default function LinksManagementForm({ initialContent, slug }: { initialC
 
       <div className="overflow-hidden border border-gray-200 bg-white rounded-lg">
         <PageSectionPanel title="頭像與簡介" description="連結頁最上方的頭像與一段自我介紹" defaultOpen>
-          <ImageUpload label="頭像" value={links.avatar} onChange={(avatar) => setContent({ ...content, links: { ...content.links, avatar } })} />
+          <MediaUpload label="頭像（圖片或影片）" value={links.avatar} onChange={(avatar) => setContent({ ...content, links: { ...content.links, avatar } })} />
           <div className="mt-4">
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-gray-500">簡介</span>

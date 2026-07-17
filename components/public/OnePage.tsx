@@ -4,6 +4,7 @@ import type { DesignerWebContent } from "@/lib/designer-web-content";
 import Header from "@/components/public/Header";
 import Footer from "@/components/public/Footer";
 import PublicVideo from "@/components/public/PublicVideo";
+import MediaView from "@/components/public/MediaView";
 import { externalHref } from "@/lib/utils";
 
 type Section = { key: string; zh: string; en: string; bg: string };
@@ -40,7 +41,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
             <div className="grid gap-5 md:grid-cols-2">
               {content.promos.map((promo) => (
                 <figure key={promo.id} className="overflow-hidden bg-white rounded-lg">
-                  <img src={promo.image} alt={promo.caption || sec.zh} className="h-auto w-full object-cover" loading="lazy" />
+                  <MediaView src={promo.image} alt={promo.caption || sec.zh} className="h-auto w-full object-cover" />
                   {!!promo.caption && <figcaption className="p-4 text-sm text-neutral-600">{promo.caption}</figcaption>}
                 </figure>
               ))}
@@ -63,7 +64,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
                     <BulletList label="特色：" items={service.features} />
                     <BulletList label="適合對象：" items={service.suitableFor} />
                   </div>
-                  {!!service.image && <img src={service.image} alt={service.title} className="h-full min-h-64 w-full object-cover" loading="lazy" />}
+                  {!!service.image && <MediaView src={service.image} alt={service.title} className="h-full min-h-64 w-full object-cover" />}
                 </article>
               ))}
             </div>
@@ -79,7 +80,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
             <div className="grid gap-6 md:grid-cols-2">
               {content.otherServices.map((service) => (
                 <article key={service.id} className="overflow-hidden bg-white rounded-lg">
-                  {!!service.image && <img src={service.image} alt={service.title} className="aspect-video w-full object-cover" loading="lazy" />}
+                  {!!service.image && <MediaView src={service.image} alt={service.title} className="aspect-video w-full object-cover" />}
                   <div className="p-6">
                     <h3 className="mb-3 text-lg font-bold text-neutral-800">{service.title}</h3>
                     <p className="mb-4 whitespace-pre-line leading-relaxed text-neutral-600">{service.description}</p>
@@ -101,7 +102,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {content.videos.map((item) => (
                 <figure key={item.id} className="overflow-hidden bg-white rounded-lg">
-                  <PublicVideo src={item.video} controls className="aspect-[9/16] w-full bg-black object-cover" />
+                  <PublicVideo src={item.video} controls autoPlay className="aspect-[9/16] w-full bg-black object-cover" />
                   {!!item.caption && <figcaption className="p-4 text-sm text-neutral-600">{item.caption}</figcaption>}
                 </figure>
               ))}
@@ -160,7 +161,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {content.environment.map((item, index) => (
                 <figure key={item.id} className="overflow-hidden bg-white rounded-lg">
-                  <img src={item.image} alt={item.alt || `${sec.zh} ${index + 1}`} className="aspect-[4/3] w-full object-cover" loading="lazy" />
+                  <MediaView src={item.image} alt={item.alt || `${sec.zh} ${index + 1}`} className="aspect-[4/3] w-full object-cover" />
                 </figure>
               ))}
             </div>
@@ -173,26 +174,24 @@ function renderSection(content: DesignerWebContent, sec: Section) {
         <section id="contact" className="scroll-mt-14 py-14 md:py-20" style={{ backgroundColor: sec.bg }}>
           <div className="mx-auto max-w-4xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
-            <div className="grid items-start gap-8 md:grid-cols-2">
-              <div className="space-y-3 text-neutral-700">
-                {!!content.contact.address && (
-                  <p className="flex items-center gap-2">
-                    <MapPin size={18} style={{ color: "var(--brand)" }} />
-                    {content.contact.mapUrl ? (
-                      <a href={externalHref(content.contact.mapUrl)} target="_blank" rel="noreferrer" className="hover:underline">{content.contact.address}</a>
-                    ) : (
-                      <span>{content.contact.address}</span>
-                    )}
-                  </p>
-                )}
-                {!!content.contact.phone && <p className="flex items-center gap-2"><Phone size={18} style={{ color: "var(--brand)" }} /><a href={`tel:${content.contact.phone}`} className="hover:underline">{content.contact.phone}</a></p>}
-                {!!content.contact.email && <p className="flex items-center gap-2"><Mail size={18} style={{ color: "var(--brand)" }} /><a href={`mailto:${content.contact.email}`} className="hover:underline">{content.contact.email}</a></p>}
-                {!!content.contact.facebook && <p className="flex items-center gap-2"><span className="w-[18px] text-center text-sm font-bold" style={{ color: "var(--brand)" }}>f</span><a href={externalHref(content.contact.facebook)} target="_blank" rel="noreferrer" className="hover:underline">Facebook</a></p>}
-                {!!content.contact.instagram && <p className="flex items-center gap-2"><span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>IG</span><a href={externalHref(content.contact.instagram)} target="_blank" rel="noreferrer" className="hover:underline">Instagram</a></p>}
-                {!!content.contact.line && <p className="flex items-center gap-2"><MessageCircle size={18} style={{ color: "var(--brand)" }} /><a href={externalHref(content.contact.line)} target="_blank" rel="noreferrer" className="hover:underline">LINE</a></p>}
-              </div>
-              {!!content.contact.mapEmbedUrl && <iframe src={content.contact.mapEmbedUrl} title="店家位置" className="h-72 w-full border-0" loading="lazy" />}
+            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-neutral-700">
+              {!!content.contact.address && (
+                <span className="flex items-center gap-2">
+                  <MapPin size={18} style={{ color: "var(--brand)" }} />
+                  {content.contact.mapUrl ? (
+                    <a href={externalHref(content.contact.mapUrl)} target="_blank" rel="noreferrer" className="hover:underline">{content.contact.address}</a>
+                  ) : (
+                    <span>{content.contact.address}</span>
+                  )}
+                </span>
+              )}
+              {!!content.contact.phone && <a href={`tel:${content.contact.phone}`} className="flex items-center gap-2 hover:underline"><Phone size={18} style={{ color: "var(--brand)" }} />{content.contact.phone}</a>}
+              {!!content.contact.email && <a href={`mailto:${content.contact.email}`} className="flex items-center gap-2 hover:underline"><Mail size={18} style={{ color: "var(--brand)" }} />{content.contact.email}</a>}
+              {!!content.contact.facebook && <a href={externalHref(content.contact.facebook)} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:underline"><span className="w-[18px] text-center text-sm font-bold" style={{ color: "var(--brand)" }}>f</span>Facebook</a>}
+              {!!content.contact.instagram && <a href={externalHref(content.contact.instagram)} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:underline"><span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>IG</span>Instagram</a>}
+              {!!content.contact.line && <a href={externalHref(content.contact.line)} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:underline"><MessageCircle size={18} style={{ color: "var(--brand)" }} />LINE</a>}
             </div>
+            {!!content.contact.mapEmbedUrl && <iframe src={content.contact.mapEmbedUrl} title="店家位置" className="mt-8 h-72 w-full border-0" loading="lazy" />}
           </div>
         </section>
       );
