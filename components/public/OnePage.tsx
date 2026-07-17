@@ -3,6 +3,7 @@ import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import type { DesignerWebContent } from "@/lib/designer-web-content";
 import Header from "@/components/public/Header";
 import Footer from "@/components/public/Footer";
+import PublicVideo from "@/components/public/PublicVideo";
 import { externalHref } from "@/lib/utils";
 
 const sectionStyle = { backgroundColor: "var(--cream-3)" };
@@ -104,7 +105,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {content.videos.map((item) => (
                 <figure key={item.id} className="overflow-hidden bg-white rounded-lg">
-                  <video src={item.video} controls playsInline preload="metadata" className="aspect-[9/16] w-full bg-black object-cover" />
+                  <PublicVideo src={item.video} controls className="aspect-[9/16] w-full bg-black object-cover" />
                   {!!item.caption && <figcaption className="p-4 text-sm text-neutral-600">{item.caption}</figcaption>}
                 </figure>
               ))}
@@ -217,9 +218,9 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
               {content.hero.media.map((item, index) => (
                 <div key={`${index}-${item.url}`} className="overflow-hidden">
                   {item.type === "video" ? (
-                    <video src={item.url} className="aspect-video w-full object-cover" autoPlay muted loop playsInline />
+                    <PublicVideo src={item.url} autoPlay className="aspect-square w-full object-cover" />
                   ) : (
-                    <img src={item.url} alt={content.brand.name} className="aspect-video w-full object-cover" />
+                    <img src={item.url} alt={content.brand.name} className="aspect-square w-full object-cover" />
                   )}
                 </div>
               ))}

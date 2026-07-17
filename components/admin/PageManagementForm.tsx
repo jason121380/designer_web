@@ -116,10 +116,9 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
                   <p className="text-sm font-semibold text-gray-700">首屏媒體 {index + 1}</p>
                   <RemoveButton onClick={() => setHeroMedia(removeAt(content.hero.media, index))} />
                 </div>
-                <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">媒體類型</span><select className={inputClass} value={item.type} onChange={(event) => setHeroMedia(updateAt(content.hero.media, index, { type: event.target.value as "image" | "video" }))}><option value="image">圖片</option><option value="video">影片</option></select></label>
-                {item.type === "image"
-                  ? <ImageUpload label={`首屏圖片 ${index + 1}`} value={item.url} onChange={(url) => setHeroMedia(updateAt(content.hero.media, index, { url }))} />
-                  : <VideoUpload label={`首屏影片 ${index + 1}`} value={item.url} onChange={(url) => setHeroMedia(updateAt(content.hero.media, index, { url }))} />}
+                <p className="text-xs text-gray-400">圖片或影片擇一上傳；上傳影片會覆蓋圖片，反之亦然。</p>
+                <ImageUpload label="圖片" value={item.type === "image" ? item.url : ""} onChange={(url) => setHeroMedia(updateAt(content.hero.media, index, { type: "image", url }))} />
+                <VideoUpload label="影片" value={item.type === "video" ? item.url : ""} onChange={(url) => setHeroMedia(updateAt(content.hero.media, index, { type: "video", url }))} />
               </div>
             ))}
             {content.hero.media.length < 2 && <AddButton label="新增首屏媒體" onClick={() => setHeroMedia([...content.hero.media, { url: "", type: "image" }])} />}
