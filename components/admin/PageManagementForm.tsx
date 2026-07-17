@@ -217,7 +217,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "直接上傳影片（存 Cloudflare R2）或貼上播放網址；沒有影片時前台自動隱藏",
       body: (
         <>
-          {content.videos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div><VideoUpload label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} /><div className="grid gap-4 md:grid-cols-2"><Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} /><Field label="分類（選填，同名歸為同一類，前台可切換）" value={item.category} onChange={(category) => setContent({ ...content, videos: updateAt(content.videos, index, { category }) })} /></div></div>)}
+          {content.videos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div><div className="max-w-[260px]"><VideoUpload aspect="aspect-[9/16]" label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} /></div><div className="grid gap-4 md:grid-cols-2"><Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} /><Field label="分類（選填，同名歸為同一類，前台可切換）" value={item.category} onChange={(category) => setContent({ ...content, videos: updateAt(content.videos, index, { category }) })} /></div></div>)}
           <AddButton label="新增作品影片" onClick={() => setContent({ ...content, videos: [...content.videos, { id: makeId("video"), video: "", caption: "", category: "" }] })} />
         </>
       ),
@@ -285,6 +285,14 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
   ];
   const current = panels.find((panel) => panel.id === active) ?? panels[0];
 
+  // 內容區塊面板的顯示名稱跟著該區塊的中文標題（右側編輯後左側選單同步）；panel.id 對應 section key（promos ↔ dm）。
+  const sectionKeyByPanel: Record<string, string> = { promos: "dm" };
+  const panelLabel = (panel: { id: string; title: string }) => {
+    const key = sectionKeyByPanel[panel.id] ?? panel.id;
+    const section = content.sections.find((item) => item.key === key);
+    return section ? section.zh : panel.title;
+  };
+
   return (
     <div className="mx-auto max-w-6xl pb-20">
       <Link href="/admin/page-management" className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800"><ArrowLeft size={15} />回頁面列表</Link>
@@ -307,7 +315,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
                   if (!panel) return null;
                   return (
                     <li key={panel.id} className="shrink-0">
-                      <button type="button" onClick={() => setActive(panel.id)} className={`w-full whitespace-nowrap rounded-lg px-3.5 py-2.5 text-left text-sm font-medium transition ${panel.id === active ? "bg-rose-brand text-white" : "text-gray-600 hover:bg-gray-100"}`}>{panel.title}</button>
+                      <button type="button" onClick={() => setActive(panel.id)} className={`w-full whitespace-nowrap rounded-lg px-3.5 py-2.5 text-left text-sm font-medium transition ${panel.id === active ? "bg-rose-brand text-white" : "text-gray-600 hover:bg-gray-100"}`}>{panelLabel(panel)}</button>
                     </li>
                   );
                 })}
@@ -318,7 +326,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
 
         <div className="border border-gray-200 bg-white rounded-lg p-5 md:p-7">
           <div className="mb-6">
-            <h2 className="text-base font-semibold text-gray-900">{current.title}</h2>
+            <h2 className="text-base font-semibold text-gray-900">{panelLabel(current)}</h2>
             {!!current.description && <p className="mt-1 text-sm text-gray-400">{current.description}</p>}
           </div>
           {current.body}

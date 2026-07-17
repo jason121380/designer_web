@@ -6,12 +6,14 @@ interface Props {
   value?: string;
   onChange: (url: string) => void;
   label?: string;
+  /** 預覽/上傳區的長寬比 Tailwind class，預設 16:9；作品影片可傳 "aspect-[9/16]" 呈現直式卡片。 */
+  aspect?: string;
 }
 
 const ALLOWED = ["video/mp4", "video/webm", "video/quicktime"];
 const MAX_SIZE = 200 * 1024 * 1024;
 
-export default function VideoUpload({ value, onChange, label = "影片" }: Props) {
+export default function VideoUpload({ value, onChange, label = "影片", aspect = "aspect-video" }: Props) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
@@ -76,7 +78,7 @@ export default function VideoUpload({ value, onChange, label = "影片" }: Props
       {value ? (
         <div className="space-y-2">
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-black">
-            <video src={value} controls playsInline preload="metadata" className="aspect-video w-full bg-black object-contain" />
+            <video src={value} controls playsInline preload="metadata" className={`${aspect} w-full bg-black object-contain`} />
           </div>
           <div className="flex items-center gap-3">
             <button type="button" onClick={() => inputRef.current?.click()} className="text-xs font-medium text-rose-brand">更換影片</button>
@@ -89,7 +91,7 @@ export default function VideoUpload({ value, onChange, label = "影片" }: Props
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           onClick={() => !uploading && inputRef.current?.click()}
-          className={`flex aspect-video cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed transition-colors ${
+          className={`flex ${aspect} cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed transition-colors ${
             isDragging ? "border-rose-brand bg-rose-brand/5" : "border-gray-200 hover:border-rose-brand"
           }`}
         >
