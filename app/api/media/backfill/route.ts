@@ -47,9 +47,26 @@ export async function POST() {
   const urls = [...all];
   if (urls.length === 0) return NextResponse.json({ scanned: 0, added: 0 });
 
-  const existing = await prisma.media.findMany({ where: { url: { in: urls } }, select: { url: true } });
-  const existingSet = new Set(existing.map((item) => item.url));
-  const toAdd = urls.filter((url) => !existingSet.has(url));
+  const existing = await prisma.media.findMany({ where: { url: { in: urls } }, select: { id: true, url: true, size: true } });
+  const existingByUrl = new Map(existing.map((item) => [item.url, item]));
+  const toAdd = urls.filter((url) => !existingByUrl.has(url));
+  // 既有但沒有大小（例如先前回填為 0）的，補抓實際大小。
+  const toFixSize = existing.filter((item) => !item.size);
+
+  // 以 HEAD 取得檔案大小（Content-Length）；失敗回 0。
+  const sizeCache = new Map<string, number>();
+  const targets = [...new Set([...toAdd, ...toFixSize.map((item) => item.url)])];
+  await Promise.all(
+    targets.map(async (url) => {
+      try {
+        const res = await fetch(url, { method: "HEAD" });
+        const length = res.headers.get("content-length");
+        sizeCache.set(url, length ? Number(length) : 0);
+      } catch {
+        sizeCache.set(url, 0);
+      }
+    })
+  );
 
   if (toAdd.length > 0) {
     await prisma.media.createMany({
@@ -57,12 +74,21 @@ export async function POST() {
         filename: url.split("/").pop() || "media",
         originalName: url.split("/").pop() || "media",
         url,
-        size: 0,
+        size: sizeCache.get(url) ?? 0,
         mimeType: isVideoUrl(url) ? "video/mp4" : "image/webp",
         userId: user.id!,
       })),
     });
   }
 
-  return NextResponse.json({ scanned: urls.length, added: toAdd.length });
+  let updated = 0;
+  for (const item of toFixSize) {
+    const size = sizeCache.get(item.url) ?? 0;
+    if (size > 0) {
+      await prisma.media.update({ where: { id: item.id }, data: { size } });
+      updated += 1;
+    }
+  }
+
+  return NextResponse.json({ scanned: urls.length, added: toAdd.length, updated });
 }
