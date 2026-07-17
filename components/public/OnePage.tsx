@@ -100,7 +100,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
         <section id="hair-video" className="scroll-mt-14 py-14 md:py-20" style={{ backgroundColor: sec.bg }}>
           <div className="mx-auto max-w-6xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
-            <WorksGallery videos={content.videos} />
+            <WorksGallery videos={content.videos} categoryOrder={content.videoCategories} />
           </div>
         </section>
       ) : null;
