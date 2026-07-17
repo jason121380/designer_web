@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, GripVertical, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, GripVertical, Plus, Save, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { SECTION_DEFS, type DesignerWebContent, type PageService } from "@/lib/designer-web-content";
 import ImageUpload from "./ImageUpload";
@@ -62,6 +62,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
   const [saving, setSaving] = useState(false);
   const [active, setActive] = useState("brand");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const apiPath = `/api/designer-web/${slug}`;
   const previewPath = `/${slug}`;
 
@@ -77,6 +78,21 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       toast.error(error instanceof Error ? error.message : "儲存失敗");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function generateSeo() {
+    setAiLoading(true);
+    try {
+      const response = await fetch("/api/seo/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(content) });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "AI 產生失敗");
+      setContent((prev) => ({ ...prev, seo: { ...prev.seo, title: body.title || prev.seo.title, description: body.description || prev.seo.description } }));
+      toast.success("已用 AI 填入 SEO 標題與描述");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "AI 產生失敗");
+    } finally {
+      setAiLoading(false);
     }
   }
 
@@ -252,6 +268,10 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "此頁在搜尋結果與廣告到達頁的標題、描述與分享圖；未填時自動使用品牌與主標題",
       body: (
         <>
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-rose-brand/5 p-3">
+            <p className="text-xs text-gray-500">依本頁內容用 AI 自動產生 SEO 標題與描述</p>
+            <button type="button" onClick={generateSeo} disabled={aiLoading} className="inline-flex shrink-0 items-center gap-1.5 bg-rose-brand rounded-lg px-3.5 py-2 text-xs font-semibold text-white disabled:opacity-50"><Sparkles size={14} />{aiLoading ? "AI 產生中…" : "AI 自動填寫"}</button>
+          </div>
           <Field label="SEO 標題（搜尋結果與分頁標題）" value={content.seo.title} placeholder={content.brand.name} onChange={(title) => setContent({ ...content, seo: { ...content.seo, title } })} />
           <div className="mt-4">
             <TextArea label="SEO 描述（搜尋結果摘要，建議 80-150 字）" value={content.seo.description} onChange={(description) => setContent({ ...content, seo: { ...content.seo, description } })} />
