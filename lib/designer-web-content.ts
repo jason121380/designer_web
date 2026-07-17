@@ -132,6 +132,15 @@ export const designerWebContentSchema = z.object({
       label: nullableString,
       url: nullableString,
     })).optional(),
+    // 連結頁專屬社群（與一頁式 contact 獨立；舊資料 normalize 時由 contact 種入）。
+    social: z.object({
+      instagram: nullableString,
+      facebook: nullableString,
+      line: nullableString,
+      email: nullableString,
+      phone: nullableString,
+      mapUrl: nullableString,
+    }).optional(),
   }).optional(),
   // 子頁面是否啟用；false＝停用，前台該 slug 回 404（不刪除內容）。缺欄位＝啟用（向下相容）。
   active: z.boolean().optional().nullable(),
@@ -173,8 +182,14 @@ export interface DesignerWebContent {
   };
   /** 每頁獨立 SEO；空字串代表自動使用品牌與主標題產生。 */
   seo: { title: string; description: string; ogImage: string };
-  /** 個人連結頁（`/{slug}/links`，linktree 風格）內容。 */
-  links: { avatar: string; bio: string; qr: string; items: { id: string; label: string; url: string }[] };
+  /** 個人連結頁（`/{slug}/links`，linktree 風格）內容。social 與一頁式 contact 獨立。 */
+  links: {
+    avatar: string;
+    bio: string;
+    qr: string;
+    items: { id: string; label: string; url: string }[];
+    social: { instagram: string; facebook: string; line: string; email: string; phone: string; mapUrl: string };
+  };
   /** 子頁面是否啟用；false＝停用（前台該 slug 回 404）。首頁不使用此欄位。 */
   active: boolean;
 }
@@ -265,7 +280,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
     mapEmbedUrl: "",
   },
   seo: { title: "", description: "", ogImage: "" },
-  links: { avatar: "", bio: "", qr: "", items: [] },
+  links: { avatar: "", bio: "", qr: "", items: [], social: { instagram: "", facebook: "", line: "", email: "", phone: "", mapUrl: "" } },
   sections: SECTION_DEFS.map((d) => ({ key: d.key, zh: d.zh, en: d.en, bg: DEFAULT_SECTION_BG })),
   active: true,
 };
@@ -393,6 +408,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
       alt: trim(item.alt),
     }));
   const installment = stringList(data.installment);
+  const contact = normalizeContact(data.contact);
   const linkItems = (data.links?.items ?? [])
     .filter((item) => trim(item.url) && trim(item.label))
     .map((item, index) => ({
@@ -422,7 +438,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
     installment: installment.length ? installment : defaultDesignerWebContent.installment,
     pricing: pricing.length ? pricing : defaultDesignerWebContent.pricing,
     environment,
-    contact: normalizeContact(data.contact),
+    contact,
     seo: {
       title: trim(data.seo?.title),
       description: trim(data.seo?.description),
@@ -433,6 +449,26 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
       bio: trim(data.links?.bio),
       qr: trim(data.links?.qr),
       items: linkItems,
+      // 有 social（新資料）→ 用其值；無 social 但有 contact（舊資料共用）→ 由 contact 種入一次，之後兩頁各自獨立；都沒有 → 空白。
+      social: data.links?.social
+        ? {
+            instagram: trim(data.links.social.instagram),
+            facebook: trim(data.links.social.facebook),
+            line: trim(data.links.social.line),
+            email: trim(data.links.social.email),
+            phone: trim(data.links.social.phone),
+            mapUrl: trim(data.links.social.mapUrl),
+          }
+        : data.contact
+          ? {
+              instagram: contact.instagram,
+              facebook: contact.facebook,
+              line: contact.line,
+              email: contact.email,
+              phone: contact.phone,
+              mapUrl: contact.mapUrl,
+            }
+          : { instagram: "", facebook: "", line: "", email: "", phone: "", mapUrl: "" },
     },
     sections: normalizeSections(data.sections),
     // 只有明確為 false 才停用；缺欄位或其他值一律視為啟用（向下相容舊資料）。

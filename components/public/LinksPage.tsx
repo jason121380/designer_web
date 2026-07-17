@@ -6,16 +6,17 @@ import MediaView from "@/components/public/MediaView";
 
 /** 個人連結頁（linktree 風格）：頭像、名稱、簡介、連結按鈕與社群 icon。 */
 export default function LinksPage({ content }: { content: DesignerWebContent }) {
-  const { brand, links, contact } = content;
+  const { brand, links } = content;
+  const social = links.social;
   const initial = brand.name.trim()[0]?.toUpperCase() ?? "•";
 
   const socials: { key: string; href: string; label: string; node: React.ReactNode }[] = [
-    contact.instagram && { key: "ig", href: externalHref(contact.instagram), label: "Instagram", node: <span className="text-xs font-bold">IG</span> },
-    contact.facebook && { key: "fb", href: externalHref(contact.facebook), label: "Facebook", node: <span className="text-sm font-bold">f</span> },
-    contact.line && { key: "line", href: externalHref(contact.line), label: "LINE", node: <MessageCircle size={18} /> },
-    contact.email && { key: "mail", href: `mailto:${contact.email}`, label: "Email", node: <Mail size={18} /> },
-    contact.phone && { key: "tel", href: `tel:${contact.phone}`, label: "電話", node: <Phone size={18} /> },
-    contact.mapUrl && { key: "map", href: externalHref(contact.mapUrl), label: "地圖", node: <MapPin size={18} /> },
+    social.instagram && { key: "ig", href: externalHref(social.instagram), label: "Instagram", node: <span className="text-xs font-bold">IG</span> },
+    social.facebook && { key: "fb", href: externalHref(social.facebook), label: "Facebook", node: <span className="text-sm font-bold">f</span> },
+    social.line && { key: "line", href: externalHref(social.line), label: "LINE", node: <MessageCircle size={18} /> },
+    social.email && { key: "mail", href: `mailto:${social.email}`, label: "Email", node: <Mail size={18} /> },
+    social.phone && { key: "tel", href: `tel:${social.phone}`, label: "電話", node: <Phone size={18} /> },
+    social.mapUrl && { key: "map", href: externalHref(social.mapUrl), label: "地圖", node: <MapPin size={18} /> },
   ].filter(Boolean) as { key: string; href: string; label: string; node: React.ReactNode }[];
 
   return (

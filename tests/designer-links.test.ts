@@ -40,7 +40,7 @@ assert.ok(normalized.links.items[0].id, "連結項目需自動補 id");
 
 // 舊資料無 links 欄位時 fallback 空連結頁（向下相容）
 const legacy = normalizeDesignerWebContent({ brand: { name: "A" } });
-assert.deepEqual(legacy.links, { avatar: "", bio: "", qr: "", items: [] });
+assert.deepEqual(legacy.links, { avatar: "", bio: "", qr: "", items: [], social: { instagram: "", facebook: "", line: "", email: "", phone: "", mapUrl: "" } });
 
 // 連結頁 metadata：canonical 指向 /{slug}/links，描述優先用 bio
 const meta = linksPageMetadata(normalized, "/jason/links");
