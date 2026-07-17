@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Copy, Trash2 } from "lucide-react";
+import AdminVideoThumb from "./AdminVideoThumb";
 
 export interface MediaItem {
   id: string;
@@ -26,6 +27,7 @@ function formatSize(bytes: number) {
 export default function MediaLibrary({ initialMedia }: { initialMedia: MediaItem[] }) {
   const [media, setMedia] = useState(initialMedia);
   const [filter, setFilter] = useState<"all" | "image" | "video">("all");
+  const [visible, setVisible] = useState(48);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -66,7 +68,7 @@ export default function MediaLibrary({ initialMedia }: { initialMedia: MediaItem
   const tab = (key: typeof filter, label: string) => (
     <button
       type="button"
-      onClick={() => setFilter(key)}
+      onClick={() => { setFilter(key); setVisible(48); }}
       className={`rounded-lg px-3.5 py-2 text-sm font-medium transition ${filter === key ? "bg-rose-brand text-white" : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"}`}
     >
       {label}
@@ -92,12 +94,13 @@ export default function MediaLibrary({ initialMedia }: { initialMedia: MediaItem
       {shown.length === 0 ? (
         <p className="border border-dashed border-gray-200 rounded-lg px-5 py-16 text-center text-sm text-gray-400">目前沒有媒體。從各區塊上傳圖片或影片後，會自動出現在這裡。</p>
       ) : (
+        <>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {shown.map((item) => (
+          {shown.slice(0, visible).map((item) => (
             <div key={item.id} className="group relative overflow-hidden border border-gray-200 bg-white rounded-lg">
               <div className="aspect-square bg-gray-100">
                 {isVideo(item) ? (
-                  <video src={item.url} preload="metadata" muted playsInline className="h-full w-full object-cover" />
+                  <AdminVideoThumb src={item.url} className="h-full w-full object-cover" />
                 ) : (
                   <img src={item.url} alt={item.originalName} loading="lazy" className="h-full w-full object-cover" />
                 )}
@@ -139,6 +142,12 @@ export default function MediaLibrary({ initialMedia }: { initialMedia: MediaItem
             </div>
           ))}
         </div>
+        {shown.length > visible && (
+          <div className="mt-6 text-center">
+            <button type="button" onClick={() => setVisible((value) => value + 48)} className="inline-flex items-center gap-2 border border-gray-200 bg-white rounded-lg px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50">載入更多（剩 {shown.length - visible}）</button>
+          </div>
+        )}
+        </>
       )}
     </div>
   );
