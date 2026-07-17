@@ -7,6 +7,20 @@ export const DESIGNER_WEB_SETTINGS_PREFIX = `${DESIGNER_WEB_SETTINGS_KEY}:`;
 export const HOME_PAGE_SLUG = "home";
 export const RESERVED_PAGE_SLUGS = [HOME_PAGE_SLUG, "admin", "api", "uploads"];
 
+// 前台可排序/可改標題的內容區塊定義：key（資料欄位）、anchor（錨點 id）、預設中英標題。
+export const SECTION_DEFS = [
+  { key: "dm", anchor: "dm", zh: "活動 DM", en: "DM" },
+  { key: "services", anchor: "services", zh: "接髮介紹", en: "Services" },
+  { key: "otherServices", anchor: "other-services", zh: "其他服務", en: "Other Services" },
+  { key: "videos", anchor: "hair-video", zh: "作品影片", en: "Works" },
+  { key: "installment", anchor: "pay", zh: "分期介紹", en: "" },
+  { key: "pricing", anchor: "pricing", zh: "價目表", en: "Pricing" },
+  { key: "environment", anchor: "ev", zh: "環境介紹", en: "Environment" },
+  { key: "contact", anchor: "contact", zh: "聯絡我們", en: "Contact" },
+] as const;
+export const SECTION_KEYS = SECTION_DEFS.map((d) => d.key) as string[];
+export const SECTION_ANCHOR: Record<string, string> = Object.fromEntries(SECTION_DEFS.map((d) => [d.key, d.anchor]));
+
 // 頁面後綴：小寫英數與連字號，1-50 字，頭尾不可為連字號。
 const PAGE_SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,48}[a-z0-9])?$/;
 
@@ -47,9 +61,16 @@ export const designerWebContentSchema = z.object({
   }).optional(),
   hero: z.object({
     heading: nullableString,
+    headingColor: nullableString,
     mediaUrl: nullableString,
     mediaType: z.enum(["image", "video"]).optional().nullable(),
   }).optional(),
+  // 前台區塊順序與中英標題（可在後台調整）。
+  sections: z.array(z.object({
+    key: nullableString,
+    zh: nullableString,
+    en: nullableString,
+  })).optional(),
   promos: z.array(z.object({
     id: nullableString,
     image: nullableString,
@@ -111,7 +132,9 @@ export interface PageService {
 
 export interface DesignerWebContent {
   brand: { name: string; tagline: string; themeColor: string };
-  hero: { heading: string; mediaUrl: string; mediaType: "image" | "video" };
+  hero: { heading: string; headingColor: string; mediaUrl: string; mediaType: "image" | "video" };
+  /** 前台區塊順序與中英標題（依此順序渲染，標題可自訂）。 */
+  sections: { key: string; zh: string; en: string }[];
   promos: { id: string; image: string; caption: string }[];
   services: PageService[];
   otherServices: PageService[];
@@ -146,6 +169,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
   hero: {
     heading:
       "中壢接髮推薦 KIMEKO HAIR\n極致零感羽毛接髮｜新縮毛鏡面燙｜歐美手刷染\n日韓系光線染｜5G 網狀纖維護髮｜特殊色白金髮",
+    headingColor: "#ffffff",
     mediaUrl: "",
     mediaType: "image",
   },
@@ -220,6 +244,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
   },
   seo: { title: "", description: "", ogImage: "" },
   links: { avatar: "", bio: "", qr: "", items: [] },
+  sections: SECTION_DEFS.map((d) => ({ key: d.key, zh: d.zh, en: d.en })),
   active: true,
 };
 
@@ -243,6 +268,24 @@ function normalizeServices(items: RawContent["services"], fallback: PageService[
       price: trim(item.price),
     }));
   return normalized.length ? normalized : fallback;
+}
+
+function normalizeSections(input: RawContent["sections"]): DesignerWebContent["sections"] {
+  const seen = new Set<string>();
+  const result: DesignerWebContent["sections"] = [];
+  for (const s of input ?? []) {
+    const key = trim(s?.key);
+    const def = SECTION_DEFS.find((d) => d.key === key);
+    if (!def || seen.has(key)) continue;
+    seen.add(key);
+    // zh 必有（清空回預設避免無標題）；en 可清空（清空＝不顯示英文副標）。
+    result.push({ key, zh: withDefault(s?.zh, def.zh), en: trim(s?.en) });
+  }
+  // 補上缺少的區塊（維持預設順序在最後）。
+  for (const def of SECTION_DEFS) {
+    if (!seen.has(def.key)) result.push({ key: def.key, zh: def.zh, en: def.en });
+  }
+  return result;
 }
 
 function normalizeContact(contact: RawContent["contact"]): DesignerWebContent["contact"] {
@@ -315,6 +358,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
     },
     hero: {
       heading: withDefault(data.hero?.heading, defaultDesignerWebContent.hero.heading),
+      headingColor: withDefault(data.hero?.headingColor, defaultDesignerWebContent.hero.headingColor),
       mediaUrl: trim(data.hero?.mediaUrl),
       mediaType: data.hero?.mediaType ?? defaultDesignerWebContent.hero.mediaType,
     },
@@ -337,6 +381,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
       qr: trim(data.links?.qr),
       items: linkItems,
     },
+    sections: normalizeSections(data.sections),
     // 只有明確為 false 才停用；缺欄位或其他值一律視為啟用（向下相容舊資料）。
     active: data.active !== false,
   };

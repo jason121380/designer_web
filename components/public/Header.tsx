@@ -1,15 +1,18 @@
 import type { DesignerWebContent } from "@/lib/designer-web-content";
+import { SECTION_ANCHOR } from "@/lib/designer-web-content";
+
+/** 可選區塊沒有內容時不進導覽（跟前台顯示規則一致）。 */
+function isVisible(key: string, content: DesignerWebContent): boolean {
+  if (key === "dm") return content.promos.length > 0;
+  if (key === "videos") return content.videos.length > 0;
+  if (key === "environment") return content.environment.length > 0;
+  return true;
+}
 
 export default function Header({ content }: { content: DesignerWebContent }) {
-  const links = [
-    ...(content.promos.length ? [{ href: "#dm", label: "活動 DM" }] : []),
-    { href: "#services", label: "接髮介紹" },
-    { href: "#other-services", label: "其他服務" },
-    ...(content.videos.length ? [{ href: "#hair-video", label: "作品影片" }] : []),
-    { href: "#pricing", label: "價目表" },
-    ...(content.environment.length ? [{ href: "#ev", label: "環境介紹" }] : []),
-    { href: "#contact", label: "聯絡我們" },
-  ];
+  const links = content.sections
+    .filter((sec) => isVisible(sec.key, content))
+    .map((sec) => ({ href: `#${SECTION_ANCHOR[sec.key]}`, label: sec.zh }));
 
   return (
     <nav className="sticky top-0 z-50 bg-neutral-900/95 text-white backdrop-blur">
