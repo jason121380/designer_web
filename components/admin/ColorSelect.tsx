@@ -17,6 +17,9 @@ const PALETTE: { name: string; hex: string }[] = [
   { name: "霧灰", hex: "#9AA0A6" },
   { name: "墨黑", hex: "#2B2B2B" },
   { name: "白色", hex: "#FFFFFF" },
+  { name: "米白（區塊預設）", hex: "#F9F7F3" },
+  { name: "暖米", hex: "#FDF7F0" },
+  { name: "奶油黃", hex: "#FFF8E8" },
 ];
 
 function Swatch({ hex }: { hex: string }) {

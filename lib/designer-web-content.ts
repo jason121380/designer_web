@@ -21,6 +21,9 @@ export const SECTION_DEFS = [
 export const SECTION_KEYS = SECTION_DEFS.map((d) => d.key) as string[];
 export const SECTION_ANCHOR: Record<string, string> = Object.fromEntries(SECTION_DEFS.map((d) => [d.key, d.anchor]));
 
+// 區塊預設底色＝「接髮介紹」底色（globals.css 的 --cream-3）。每個區塊可各自覆寫。
+export const DEFAULT_SECTION_BG = "#f9f7f3";
+
 // 頁面後綴：小寫英數與連字號，1-50 字，頭尾不可為連字號。
 const PAGE_SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,48}[a-z0-9])?$/;
 
@@ -71,11 +74,12 @@ export const designerWebContentSchema = z.object({
     mediaUrl: nullableString,
     mediaType: z.enum(["image", "video"]).optional().nullable(),
   }).optional(),
-  // 前台區塊順序與中英標題（可在後台調整）。
+  // 前台區塊順序、中英標題與底色（可在後台調整）。
   sections: z.array(z.object({
     key: nullableString,
     zh: nullableString,
     en: nullableString,
+    bg: nullableString,
   })).optional(),
   promos: z.array(z.object({
     id: nullableString,
@@ -139,8 +143,8 @@ export interface PageService {
 export interface DesignerWebContent {
   brand: { name: string; tagline: string; themeColor: string };
   hero: { heading: string; headingColor: string; media: { url: string; type: "image" | "video" }[] };
-  /** 前台區塊順序與中英標題（依此順序渲染，標題可自訂）。 */
-  sections: { key: string; zh: string; en: string }[];
+  /** 前台區塊順序、中英標題與底色（依此順序渲染，標題與底色可自訂）。 */
+  sections: { key: string; zh: string; en: string; bg: string }[];
   promos: { id: string; image: string; caption: string }[];
   services: PageService[];
   otherServices: PageService[];
@@ -249,7 +253,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
   },
   seo: { title: "", description: "", ogImage: "" },
   links: { avatar: "", bio: "", qr: "", items: [] },
-  sections: SECTION_DEFS.map((d) => ({ key: d.key, zh: d.zh, en: d.en })),
+  sections: SECTION_DEFS.map((d) => ({ key: d.key, zh: d.zh, en: d.en, bg: DEFAULT_SECTION_BG })),
   active: true,
 };
 
@@ -299,12 +303,12 @@ function normalizeSections(input: RawContent["sections"]): DesignerWebContent["s
     const def = SECTION_DEFS.find((d) => d.key === key);
     if (!def || seen.has(key)) continue;
     seen.add(key);
-    // zh 必有（清空回預設避免無標題）；en 可清空（清空＝不顯示英文副標）。
-    result.push({ key, zh: withDefault(s?.zh, def.zh), en: trim(s?.en) });
+    // zh 必有（清空回預設避免無標題）；en 可清空（清空＝不顯示英文副標）；bg 缺值回預設底色。
+    result.push({ key, zh: withDefault(s?.zh, def.zh), en: trim(s?.en), bg: withDefault(s?.bg, DEFAULT_SECTION_BG) });
   }
   // 補上缺少的區塊（維持預設順序在最後）。
   for (const def of SECTION_DEFS) {
-    if (!seen.has(def.key)) result.push({ key: def.key, zh: def.zh, en: def.en });
+    if (!seen.has(def.key)) result.push({ key: def.key, zh: def.zh, en: def.en, bg: DEFAULT_SECTION_BG });
   }
   return result;
 }

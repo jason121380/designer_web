@@ -6,11 +6,7 @@ import Footer from "@/components/public/Footer";
 import PublicVideo from "@/components/public/PublicVideo";
 import { externalHref } from "@/lib/utils";
 
-const sectionStyle = { backgroundColor: "var(--cream-3)" };
-const lightSectionStyle = { backgroundColor: "var(--cream-1)" };
-const warmSectionStyle = { backgroundColor: "var(--cream-2)" };
-
-type Section = { key: string; zh: string; en: string };
+type Section = { key: string; zh: string; en: string; bg: string };
 
 function SectionHeading({ en, zh }: { en: string; zh: string }) {
   return (
@@ -38,7 +34,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
   switch (sec.key) {
     case "dm":
       return content.promos.length ? (
-        <section id="dm" className="scroll-mt-14 py-14 md:py-20" style={warmSectionStyle}>
+        <section id="dm" className="scroll-mt-14 py-14 md:py-20" style={{ backgroundColor: sec.bg }}>
           <div className="mx-auto max-w-6xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
             <div className="grid gap-5 md:grid-cols-2">
@@ -55,7 +51,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
 
     case "services":
       return (
-        <section id="services" className="scroll-mt-14 py-14 md:py-20" style={sectionStyle}>
+        <section id="services" className="scroll-mt-14 py-14 md:py-20" style={{ backgroundColor: sec.bg }}>
           <div className="mx-auto max-w-5xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
             <div className="space-y-8">
@@ -77,7 +73,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
 
     case "otherServices":
       return (
-        <section id="other-services" className="scroll-mt-14 py-14 md:py-20" style={sectionStyle}>
+        <section id="other-services" className="scroll-mt-14 py-14 md:py-20" style={{ backgroundColor: sec.bg }}>
           <div className="mx-auto max-w-5xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
             <div className="grid gap-6 md:grid-cols-2">
@@ -99,7 +95,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
 
     case "videos":
       return content.videos.length ? (
-        <section id="hair-video" className="scroll-mt-14 py-14 md:py-20" style={lightSectionStyle}>
+        <section id="hair-video" className="scroll-mt-14 py-14 md:py-20" style={{ backgroundColor: sec.bg }}>
           <div className="mx-auto max-w-6xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -116,7 +112,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
 
     case "installment":
       return (
-        <section id="pay" className="scroll-mt-14 py-14 md:py-20" style={lightSectionStyle}>
+        <section id="pay" className="scroll-mt-14 py-14 md:py-20" style={{ backgroundColor: sec.bg }}>
           <div className="mx-auto max-w-3xl px-4">
             <div className="overflow-hidden bg-white rounded-lg">
               <h3 className="py-4 text-center text-lg font-bold text-white" style={{ backgroundColor: "var(--brand)" }}>
@@ -137,7 +133,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
 
     case "pricing":
       return (
-        <section id="pricing" className="scroll-mt-14 py-14 md:py-20" style={warmSectionStyle}>
+        <section id="pricing" className="scroll-mt-14 py-14 md:py-20" style={{ backgroundColor: sec.bg }}>
           <div className="mx-auto max-w-6xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
             <div className="grid gap-6 md:grid-cols-3">
@@ -158,7 +154,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
 
     case "environment":
       return content.environment.length ? (
-        <section id="ev" className="scroll-mt-14 py-14 md:py-20" style={sectionStyle}>
+        <section id="ev" className="scroll-mt-14 py-14 md:py-20" style={{ backgroundColor: sec.bg }}>
           <div className="mx-auto max-w-6xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -174,7 +170,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
 
     case "contact":
       return (
-        <section id="contact" className="scroll-mt-14 py-14 md:py-20" style={warmSectionStyle}>
+        <section id="contact" className="scroll-mt-14 py-14 md:py-20" style={{ backgroundColor: sec.bg }}>
           <div className="mx-auto max-w-4xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
             <div className="grid items-start gap-8 md:grid-cols-2">
