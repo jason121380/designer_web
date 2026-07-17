@@ -334,9 +334,23 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       id: "contact",
       title: "聯絡資訊",
       body: (
-        <div className="grid gap-4 md:grid-cols-2">
-          {([['地址', 'address'], ['Google Maps 連結', 'mapUrl'], ['電話', 'phone'], ['Email', 'email'], ['LINE 連結', 'line'], ['Instagram 連結', 'instagram'], ['Facebook 連結', 'facebook'], ['Google Map 嵌入 URL', 'mapEmbedUrl']] as const).map(([label, key]) => <Field key={key} label={label} value={content.contact[key]} onChange={(value) => setContent({ ...content, contact: { ...content.contact, [key]: value } })} />)}
-        </div>
+        <>
+          <div className="grid gap-4 md:grid-cols-2">
+            {([['地址', 'address'], ['Google Maps 連結', 'mapUrl'], ['電話', 'phone'], ['Email', 'email'], ['LINE 連結', 'line'], ['Instagram 連結', 'instagram'], ['Facebook 連結', 'facebook']] as const).map(([label, key]) => <Field key={key} label={label} value={content.contact[key]} onChange={(value) => setContent({ ...content, contact: { ...content.contact, [key]: value } })} />)}
+          </div>
+          <div className="mt-6 border-t border-gray-100 pt-5">
+            <p className="mb-1 text-sm font-semibold text-gray-700">前台右下角懸浮泡泡</p>
+            <p className="mb-3 text-xs text-gray-400">勾選要顯示在懸浮泡泡的聯絡管道（需該欄位有填網址才會顯示）。</p>
+            <div className="flex flex-wrap gap-4">
+              {([['LINE', 'line'], ['Facebook', 'facebook'], ['Instagram', 'instagram'], ['Google 地圖', 'map']] as const).map(([label, key]) => (
+                <label key={key} className="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" checked={content.contact.bubble[key]} onChange={(event) => setContent({ ...content, contact: { ...content.contact, bubble: { ...content.contact.bubble, [key]: event.target.checked } } })} className="h-4 w-4 rounded border-gray-300 text-rose-brand focus:ring-rose-light" />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+        </>
       ),
     },
     {
