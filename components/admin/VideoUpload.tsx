@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, DragEvent } from "react";
+import MediaPickerModal from "./MediaPickerModal";
 
 interface Props {
   value?: string;
@@ -20,6 +21,7 @@ export default function VideoUpload({ value, onChange, label = "影片", aspect 
   const [notice, setNotice] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [manualUrl, setManualUrl] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function uploadFile(file: File) {
@@ -90,7 +92,7 @@ export default function VideoUpload({ value, onChange, label = "影片", aspect 
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
-          onClick={() => !uploading && inputRef.current?.click()}
+          onClick={() => !uploading && setPickerOpen(true)}
           className={`flex ${aspect} cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed transition-colors ${
             isDragging ? "border-rose-brand bg-rose-brand/5" : "border-gray-200 hover:border-rose-brand"
           }`}
@@ -104,7 +106,7 @@ export default function VideoUpload({ value, onChange, label = "影片", aspect 
             </div>
           ) : (
             <>
-              <p className="text-sm text-gray-500">點擊或拖拽上傳影片</p>
+              <p className="text-sm text-gray-500">點擊選擇：本機上傳或媒體庫</p>
               <p className="text-xs text-gray-300">mp4、webm、mov，最大 200MB</p>
             </>
           )}
@@ -134,6 +136,14 @@ export default function VideoUpload({ value, onChange, label = "影片", aspect 
         accept="video/mp4,video/webm,video/quicktime"
         className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ""; }}
+      />
+
+      <MediaPickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        accept="video"
+        onSelect={(url) => { onChange(url); setPickerOpen(false); }}
+        onUploadClick={() => { setPickerOpen(false); inputRef.current?.click(); }}
       />
     </div>
   );
