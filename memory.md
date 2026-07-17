@@ -97,7 +97,7 @@ Designer Web 的跨 session 專案記錄。最後更新：2026-07-16（後續 re
 - 死碼清理：已刪除 `types/index.ts`（全為舊 CMS 型別）與 `lib/rate-limit.ts` 未使用的 `debounce`／`getClientIp`。
 - 上傳副檔名改由實際 MIME 推導（不再信任使用者檔名），`/uploads` 靜態服務白名單收斂為點陣圖類型（移除 svg/txt，避免 XSS）。
 - `lib/auth.ts` 仍保留舊管理員 email alias（`admin` -> `admin@mifaso.com`），讓現有帳號可用 `admin` 登入；這是內部相容，不是品牌顯示。
-- Cloudflare Stream direct-upload API 已存在，但頁面管理 UI 尚未串接，影片欄位仍手動填播放 URL。
+- 影片直傳 R2（2026-07）：`VideoUpload` 元件 → `POST /api/upload/video-url` 取 presigned PUT → 瀏覽器 XHR 直傳 R2（帶進度、大檔不佔伺服器記憶體）；mp4/webm/mov、200MB 上限；首屏與作品影片欄位已接上，仍保留手貼網址。**R2 bucket 已設 CORS（mlg.zeabur.app PUT/GET）**。需要套件 `@aws-sdk/s3-request-presigner`。Cloudflare Stream 路由/helper 仍保留為可選方案。
 - 每頁 SEO title/description/og:image 皆已納入頁面設定（`PageManagementForm` 的 SEO 區塊），未填時由 `designerPageMetadata()` 自動以品牌與主標題產生。
 - 聯絡資訊的連結欄位（地圖、Email、LINE、IG、FB）清空即隱藏，不再被 normalize 回填示範連結；地址與電話仍保留預設避免區塊空白。
 

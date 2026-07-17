@@ -1,4 +1,5 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 type EnvLike = Record<string, string | undefined>;
 
@@ -63,6 +64,38 @@ export async function uploadToR2({
   );
 
   return buildR2PublicUrl(process.env.CLOUDFLARE_R2_PUBLIC_URL!, key);
+}
+
+/**
+ * 產生 R2 直傳用的 presigned PUT URL（瀏覽器直接上傳，不經伺服器，適合大檔如影片）。
+ * 回傳簽名後的上傳 URL 與上傳完成後的公開播放 URL。
+ * 注意：簽名包含 ContentType，前端 PUT 時必須帶相同的 `Content-Type` 標頭。
+ */
+export async function getR2PresignedUploadUrl({
+  key,
+  contentType,
+  expiresIn = 600,
+}: {
+  key: string;
+  contentType: string;
+  expiresIn?: number;
+}) {
+  if (!isR2Configured()) throw new Error("Cloudflare R2 尚未設定");
+
+  const uploadUrl = await getSignedUrl(
+    r2Client(),
+    new PutObjectCommand({
+      Bucket: process.env.CLOUDFLARE_R2_BUCKET!,
+      Key: key,
+      ContentType: contentType,
+    }),
+    { expiresIn }
+  );
+
+  return {
+    uploadUrl,
+    publicUrl: buildR2PublicUrl(process.env.CLOUDFLARE_R2_PUBLIC_URL!, key),
+  };
 }
 
 export async function createStreamDirectUpload(maxDurationSeconds: number) {
