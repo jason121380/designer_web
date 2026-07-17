@@ -152,10 +152,18 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
             <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">主標題文字顏色</span><ColorSelect value={content.hero.headingColor} onChange={(headingColor) => setContent({ ...content, hero: { ...content.hero, headingColor } })} /></label>
             <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">Banner 底色</span><ColorSelect value={content.hero.bgColor} onChange={(bgColor) => setContent({ ...content, hero: { ...content.hero, bgColor } })} /></label>
           </div>
-          <div className="mt-6 space-y-5">
-            <p className="text-xs text-gray-400">固定一張圖片、一支影片；前台電腦版左圖右影、手機版上下排列。留空的不會顯示。</p>
-            <ImageUpload label="首屏圖片（左）" value={content.hero.image} onChange={(image) => setContent({ ...content, hero: { ...content.hero, image } })} />
-            <VideoUpload label="首屏影片（右）" value={content.hero.video} onChange={(video) => setContent({ ...content, hero: { ...content.hero, video } })} />
+          <div className="mt-6">
+            <p className="mb-4 text-xs text-gray-400">固定一張圖片、一支影片；前台電腦版左圖右影、手機版上下排列。留空的不會顯示。</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <p className="mb-2 text-xs font-medium text-gray-500">首屏圖片（左）</p>
+                <ImageUpload label="" aspect="aspect-square" value={content.hero.image} onChange={(image) => setContent({ ...content, hero: { ...content.hero, image } })} />
+              </div>
+              <div>
+                <p className="mb-2 text-xs font-medium text-gray-500">首屏影片（右）</p>
+                <VideoUpload label="" aspect="aspect-square" value={content.hero.video} onChange={(video) => setContent({ ...content, hero: { ...content.hero, video } })} />
+              </div>
+            </div>
           </div>
         </>
       ),

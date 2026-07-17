@@ -7,9 +7,11 @@ interface Props {
   value?: string;
   onChange: (url: string) => void;
   label?: string;
+  /** 預覽/上傳區的長寬比 Tailwind class，預設 16:9；首屏可傳 "aspect-square" 呈現 1:1。 */
+  aspect?: string;
 }
 
-export default function ImageUpload({ value, onChange, label = "封面圖片" }: Props) {
+export default function ImageUpload({ value, onChange, label = "封面圖片", aspect = "aspect-video" }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
@@ -50,7 +52,7 @@ export default function ImageUpload({ value, onChange, label = "封面圖片" }:
 
       {value ? (
         <div className="relative group">
-          <div className="relative aspect-video w-full overflow-hidden bg-gray-100 rounded-lg">
+          <div className={`relative ${aspect} w-full overflow-hidden bg-gray-100 rounded-lg`}>
             <Image src={value} alt="封面圖片" fill className="object-cover" />
           </div>
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 rounded-lg">
@@ -70,7 +72,7 @@ export default function ImageUpload({ value, onChange, label = "封面圖片" }:
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
-          className={`border-2 border-dashed cursor-pointer transition-colors aspect-video flex flex-col items-center justify-center gap-3 rounded-lg ${
+          className={`border-2 border-dashed cursor-pointer transition-colors ${aspect} flex flex-col items-center justify-center gap-3 rounded-lg ${
             isDragging ? "border-rose-brand bg-rose-brand/5" : "border-gray-200 hover:border-rose-brand"
           }`}
         >
