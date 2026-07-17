@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_TC } from "next/font/google";
+import { getSiteIconUrl } from "@/lib/site-icon";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -17,7 +18,17 @@ const notoSansTC = Noto_Sans_TC({
   display: "swap",
 });
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const icon = await getSiteIconUrl();
+  return {
+    ...baseMetadata,
+    icons: icon
+      ? { icon: [{ url: icon }], shortcut: [{ url: icon }], apple: [{ url: icon }] }
+      : baseMetadata.icons,
+  };
+}
+
+const baseMetadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
   manifest: "/manifest.webmanifest",
   title: {
