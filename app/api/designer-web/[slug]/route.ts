@@ -53,11 +53,21 @@ export async function POST(req: NextRequest, context: RouteContext) {
   const existing = await prisma.siteSettings.findUnique({ where: { key } });
   if (existing) return NextResponse.json({ error: "頁面已存在" }, { status: 409 });
 
-  const body = (await req.json().catch(() => ({}))) as { name?: string };
+  const body = (await req.json().catch(() => ({}))) as { name?: string; from?: string };
   const name = typeof body?.name === "string" ? body.name.trim() : "";
+  const from = typeof body?.from === "string" ? body.from.trim().toLowerCase() : "";
 
-  const content = structuredClone(defaultDesignerWebContent);
+  // from 有值＝複製來源頁內容；否則以示範內容起始。
+  let content = structuredClone(defaultDesignerWebContent);
+  if (from) {
+    if (!isValidPageSlug(from)) return NextResponse.json({ error: "來源頁面後綴無效" }, { status: 400 });
+    const srcRow = await prisma.siteSettings.findUnique({ where: { key: pageContentKey(from) } });
+    if (!srcRow) return NextResponse.json({ error: "來源頁面不存在" }, { status: 404 });
+    content = parseDesignerWebContent(srcRow.value);
+    content.active = true; // 複製出來的新頁預設啟用
+  }
   if (name) content.brand.name = name;
+
   await prisma.siteSettings.create({ data: { key, value: JSON.stringify(content) } });
   return NextResponse.json(content, { status: 201 });
 }
