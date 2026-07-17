@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, GripVertical, Plus, Save, Sparkles, Tags, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, ExternalLink, GripVertical, Plus, Save, Sparkles, Tags, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { SECTION_DEFS, type DesignerWebContent, type PageService } from "@/lib/designer-web-content";
 import ImageUpload from "./ImageUpload";
@@ -31,8 +31,26 @@ function RemoveButton({ onClick }: { onClick: () => void }) {
   return <button type="button" onClick={onClick} className="inline-flex items-center gap-1.5 text-xs font-medium text-red-500"><Trash2 size={13} />移除</button>;
 }
 
+/** 項目工具列：上移／下移／移除（用於各內容區塊的可排序項目）。 */
+function RowTools({ index, total, onMove, onRemove }: { index: number; total: number; onMove: (dir: -1 | 1) => void; onRemove: () => void }) {
+  return (
+    <div className="flex items-center gap-1">
+      <button type="button" onClick={() => onMove(-1)} disabled={index === 0} aria-label="上移" className="rounded p-1 text-gray-400 transition hover:text-gray-700 disabled:opacity-30"><ChevronUp size={16} /></button>
+      <button type="button" onClick={() => onMove(1)} disabled={index === total - 1} aria-label="下移" className="rounded p-1 text-gray-400 transition hover:text-gray-700 disabled:opacity-30"><ChevronDown size={16} /></button>
+      <RemoveButton onClick={onRemove} />
+    </div>
+  );
+}
+
 const updateAt = <T,>(items: T[], index: number, patch: Partial<T>) => items.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item);
 const removeAt = <T,>(items: T[], index: number) => items.filter((_, itemIndex) => itemIndex !== index);
+const moveAt = <T,>(items: T[], index: number, dir: -1 | 1): T[] => {
+  const target = index + dir;
+  if (target < 0 || target >= items.length) return items;
+  const next = [...items];
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
+};
 const splitList = (value: string) => value.split(/[，,\n]/).map((item) => item.trim()).filter(Boolean);
 const makeId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
@@ -44,7 +62,7 @@ const MENU_GROUPS: { title: string; ids: string[] }[] = [
 
 function ServiceRows({ items, onChange }: { items: PageService[]; onChange: (items: PageService[]) => void }) {
   return <>{items.map((item, index) => <div key={item.id} className={rowClass}>
-    <div className="flex items-center justify-between"><p className="text-sm font-semibold text-gray-700">項目 {index + 1}</p><RemoveButton onClick={() => onChange(removeAt(items, index))} /></div>
+    <div className="flex items-center justify-between"><p className="text-sm font-semibold text-gray-700">項目 {index + 1}</p><RowTools index={index} total={items.length} onMove={(dir) => onChange(moveAt(items, index, dir))} onRemove={() => onChange(removeAt(items, index))} /></div>
     <div className="grid gap-4 md:grid-cols-2">
       <Field label="標題" value={item.title} onChange={(title) => onChange(updateAt(items, index, { title }))} />
       <Field label="價格（選填）" value={item.price} onChange={(price) => onChange(updateAt(items, index, { price }))} />
@@ -214,7 +232,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "沒有圖片時前台自動隱藏",
       body: (
         <>
-          {content.promos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, promos: removeAt(content.promos, index) })} /></div><MediaUpload label={`DM 圖片或影片 ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, promos: updateAt(content.promos, index, { image }) })} /><Field label="圖片說明" value={item.caption} onChange={(caption) => setContent({ ...content, promos: updateAt(content.promos, index, { caption }) })} /></div>)}
+          {content.promos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RowTools index={index} total={content.promos.length} onMove={(dir) => setContent({ ...content, promos: moveAt(content.promos, index, dir) })} onRemove={() => setContent({ ...content, promos: removeAt(content.promos, index) })} /></div><MediaUpload label={`DM 圖片或影片 ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, promos: updateAt(content.promos, index, { image }) })} /><Field label="圖片說明" value={item.caption} onChange={(caption) => setContent({ ...content, promos: updateAt(content.promos, index, { caption }) })} /></div>)}
           <AddButton label="新增 DM" onClick={() => setContent({ ...content, promos: [...content.promos, { id: makeId("dm"), image: "", caption: "" }] })} />
         </>
       ),
@@ -254,7 +272,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
                 <VideoUpload aspect="aspect-[9/16]" label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} />
                 <Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} />
                 <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">分類（選填，前台可切換）</span><select className={inputClass} value={item.category} onChange={(event) => setContent({ ...content, videos: updateAt(content.videos, index, { category: event.target.value }) })}><option value="">無分類</option>{content.videoCategories.map((category) => <option key={category} value={category}>{category}</option>)}{!!item.category && !content.videoCategories.includes(item.category) && <option value={item.category}>{item.category}（已移除）</option>}</select></label>
-                <div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div>
+                <div className="flex justify-end"><RowTools index={index} total={content.videos.length} onMove={(dir) => setContent({ ...content, videos: moveAt(content.videos, index, dir) })} onRemove={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div>
               </div>
             ))}
           </div>
@@ -267,7 +285,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       title: "分期資訊",
       body: (
         <>
-          {content.installment.map((item, index) => <div key={index} className={`${rowClass} flex items-start gap-3`}><div className="flex-1"><TextArea label={`說明 ${index + 1}`} value={item} onChange={(value) => setContent({ ...content, installment: content.installment.map((current, itemIndex) => itemIndex === index ? value : current) })} /></div><div className="pt-7"><RemoveButton onClick={() => setContent({ ...content, installment: removeAt(content.installment, index) })} /></div></div>)}
+          {content.installment.map((item, index) => <div key={index} className={`${rowClass} flex items-start gap-3`}><div className="flex-1"><TextArea label={`說明 ${index + 1}`} value={item} onChange={(value) => setContent({ ...content, installment: content.installment.map((current, itemIndex) => itemIndex === index ? value : current) })} /></div><div className="pt-7"><RowTools index={index} total={content.installment.length} onMove={(dir) => setContent({ ...content, installment: moveAt(content.installment, index, dir) })} onRemove={() => setContent({ ...content, installment: removeAt(content.installment, index) })} /></div></div>)}
           <AddButton label="新增分期說明" onClick={() => setContent({ ...content, installment: [...content.installment, ""] })} />
         </>
       ),
@@ -277,7 +295,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       title: "價目表",
       body: (
         <>
-          {content.pricing.map((item, index) => <div key={index} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, pricing: removeAt(content.pricing, index) })} /></div><div className="grid gap-4 md:grid-cols-2"><Field label="服務名稱" value={item.name} onChange={(name) => setContent({ ...content, pricing: updateAt(content.pricing, index, { name }) })} /><Field label="價格" value={item.price} onChange={(price) => setContent({ ...content, pricing: updateAt(content.pricing, index, { price }) })} /></div><TextArea label="說明" value={item.description} onChange={(description) => setContent({ ...content, pricing: updateAt(content.pricing, index, { description }) })} /><TextArea label="特色（逗號或換行分隔）" value={item.features.join("\n")} onChange={(value) => setContent({ ...content, pricing: updateAt(content.pricing, index, { features: splitList(value) }) })} /></div>)}
+          {content.pricing.map((item, index) => <div key={index} className={rowClass}><div className="flex justify-end"><RowTools index={index} total={content.pricing.length} onMove={(dir) => setContent({ ...content, pricing: moveAt(content.pricing, index, dir) })} onRemove={() => setContent({ ...content, pricing: removeAt(content.pricing, index) })} /></div><div className="grid gap-4 md:grid-cols-2"><Field label="服務名稱" value={item.name} onChange={(name) => setContent({ ...content, pricing: updateAt(content.pricing, index, { name }) })} /><Field label="價格" value={item.price} onChange={(price) => setContent({ ...content, pricing: updateAt(content.pricing, index, { price }) })} /></div><TextArea label="說明" value={item.description} onChange={(description) => setContent({ ...content, pricing: updateAt(content.pricing, index, { description }) })} /><TextArea label="特色（逗號或換行分隔）" value={item.features.join("\n")} onChange={(value) => setContent({ ...content, pricing: updateAt(content.pricing, index, { features: splitList(value) }) })} /></div>)}
           <AddButton label="新增價目" onClick={() => setContent({ ...content, pricing: [...content.pricing, { name: "", price: "", description: "", features: [] }] })} />
         </>
       ),
@@ -288,7 +306,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       description: "沒有照片時前台自動隱藏",
       body: (
         <>
-          {content.environment.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, environment: removeAt(content.environment, index) })} /></div><MediaUpload label={`環境照片或影片 ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, environment: updateAt(content.environment, index, { image }) })} /><Field label="圖片說明" value={item.alt} onChange={(alt) => setContent({ ...content, environment: updateAt(content.environment, index, { alt }) })} /></div>)}
+          {content.environment.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RowTools index={index} total={content.environment.length} onMove={(dir) => setContent({ ...content, environment: moveAt(content.environment, index, dir) })} onRemove={() => setContent({ ...content, environment: removeAt(content.environment, index) })} /></div><MediaUpload label={`環境照片或影片 ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, environment: updateAt(content.environment, index, { image }) })} /><Field label="圖片說明" value={item.alt} onChange={(alt) => setContent({ ...content, environment: updateAt(content.environment, index, { alt }) })} /></div>)}
           <AddButton label="新增環境照片" onClick={() => setContent({ ...content, environment: [...content.environment, { id: makeId("environment"), image: "", alt: "" }] })} />
         </>
       ),
