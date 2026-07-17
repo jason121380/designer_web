@@ -90,7 +90,12 @@ PageManagementForm
 
 ### 影片
 
-`lib/cloudflare-media.ts` 與 `/api/cloudflare/stream/*` 已有建立 direct upload 的 helper/API。現行 `PageManagementForm` 尚未接上檔案上傳流程，作品影片與 hero 影片欄位目前填入可播放 URL。不要在文件或 UI 宣稱已有完整影片上傳，除非實作並驗證完成。
+影片一律直傳 Cloudflare R2（與圖片同一個 bucket，不走 Volume、不需 Cloudflare Stream）：
+- 前端 `components/admin/VideoUpload.tsx` 選檔後，向 `POST /api/upload/video-url` 取得 R2 presigned PUT URL，再用 XHR **由瀏覽器直接上傳到 R2**（帶進度，大檔不佔伺服器記憶體）。
+- presigned helper：`getR2PresignedUploadUrl()`（`lib/cloudflare-media.ts`），簽名含 ContentType，前端 PUT 必須帶相同 `Content-Type`。key 為 `uploads/videos/YYYY/MM/<檔名>`。
+- 限制：mp4／webm／mov，單檔 200MB；R2 未設定回 503。**R2 bucket 需設 CORS 允許站台來源 PUT/GET**。
+- 首屏影片與作品影片欄位皆改用 `VideoUpload`（仍保留「貼上影片網址」欄，可填 Cloudflare Stream 等外部播放 URL）。
+- `/api/cloudflare/stream/*` 與 Stream helper 仍保留（可選的 Cloudflare Stream 方案），但預設走 R2。
 
 ## 環境變數
 

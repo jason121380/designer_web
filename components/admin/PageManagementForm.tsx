@@ -6,6 +6,7 @@ import { ArrowLeft, ExternalLink, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { DesignerWebContent, PageService } from "@/lib/designer-web-content";
 import ImageUpload from "./ImageUpload";
+import VideoUpload from "./VideoUpload";
 import PageSectionPanel from "./PageSectionPanel";
 
 const inputClass = "w-full border border-gray-200 bg-white rounded-lg px-3 py-2.5 text-sm outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light";
@@ -92,11 +93,11 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
 
         <PageSectionPanel title="首屏形象" description="首頁第一個畫面、主標題與形象媒體">
           <TextArea label="主標題" value={content.hero.heading} onChange={(heading) => setContent({ ...content, hero: { ...content.hero, heading } })} />
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="mt-4">
             <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">媒體類型</span><select className={inputClass} value={content.hero.mediaType} onChange={(event) => setContent({ ...content, hero: { ...content.hero, mediaType: event.target.value as "image" | "video" } })}><option value="image">圖片</option><option value="video">影片</option></select></label>
-            {content.hero.mediaType === "video" && <Field label="Cloudflare Stream 播放 URL" value={content.hero.mediaUrl} onChange={(mediaUrl) => setContent({ ...content, hero: { ...content.hero, mediaUrl } })} />}
           </div>
           {content.hero.mediaType === "image" && <div className="mt-4"><ImageUpload label="首屏圖片" value={content.hero.mediaUrl} onChange={(mediaUrl) => setContent({ ...content, hero: { ...content.hero, mediaUrl } })} /></div>}
+          {content.hero.mediaType === "video" && <div className="mt-4"><VideoUpload label="首屏影片" value={content.hero.mediaUrl} onChange={(mediaUrl) => setContent({ ...content, hero: { ...content.hero, mediaUrl } })} /></div>}
         </PageSectionPanel>
 
         <PageSectionPanel title="活動 DM" description="沒有圖片時前台自動隱藏">
@@ -107,8 +108,8 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
         <PageSectionPanel title="接髮介紹"><ServiceRows items={content.services} onChange={(services) => setContent({ ...content, services })} /><AddButton label="新增接髮項目" onClick={() => setContent({ ...content, services: [...content.services, { id: makeId("service"), title: "", description: "", features: [], suitableFor: [], image: "", price: "" }] })} /></PageSectionPanel>
         <PageSectionPanel title="其他服務"><ServiceRows items={content.otherServices} onChange={(otherServices) => setContent({ ...content, otherServices })} /><AddButton label="新增其他服務" onClick={() => setContent({ ...content, otherServices: [...content.otherServices, { id: makeId("other"), title: "", description: "", features: [], suitableFor: [], image: "", price: "" }] })} /></PageSectionPanel>
 
-        <PageSectionPanel title="作品影片" description="使用 Cloudflare Stream 播放 URL；沒有影片時前台自動隱藏">
-          {content.videos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div><Field label="影片 URL" value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} /><Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} /></div>)}
+        <PageSectionPanel title="作品影片" description="直接上傳影片（存 Cloudflare R2）或貼上播放網址；沒有影片時前台自動隱藏">
+          {content.videos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div><VideoUpload label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} /><Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} /></div>)}
           <AddButton label="新增作品影片" onClick={() => setContent({ ...content, videos: [...content.videos, { id: makeId("video"), video: "", caption: "" }] })} />
         </PageSectionPanel>
 
