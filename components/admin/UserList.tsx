@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Pencil, X } from "lucide-react";
+import { Pencil, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -29,16 +29,25 @@ export default function UserList({ users, currentUserId }: { users: UserRow[]; c
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const [showCreate, setShowCreate] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newRole, setNewRole] = useState("EDITOR");
+  const [creating, setCreating] = useState(false);
+
+  const anyModal = !!target || showCreate;
+
   useEffect(() => {
-    if (!target) return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") close(); };
+    if (!anyModal) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") { close(); closeCreate(); } };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [target]);
+  }, [anyModal]);
 
   function open(user: UserRow) {
     setEmail(user.email);
@@ -50,6 +59,42 @@ export default function UserList({ users, currentUserId }: { users: UserRow[]; c
   function close() {
     if (saving) return;
     setTarget(null);
+  }
+
+  function openCreate() {
+    setNewEmail("");
+    setNewName("");
+    setNewPassword("");
+    setNewRole("EDITOR");
+    setShowCreate(true);
+  }
+
+  function closeCreate() {
+    if (creating) return;
+    setShowCreate(false);
+  }
+
+  async function createUser() {
+    if (!newEmail.trim()) { toast.error("登入帳號不可空白"); return; }
+    if (!newName.trim()) { toast.error("名稱不可空白"); return; }
+    if (newPassword.length < 6) { toast.error("密碼至少 6 個字元"); return; }
+    setCreating(true);
+    try {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newEmail.trim(), name: newName.trim(), password: newPassword, role: newRole }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "新增失敗");
+      toast.success(`已新增用戶 ${newEmail.trim()}`);
+      setShowCreate(false);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "新增失敗");
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function save() {
@@ -78,9 +123,18 @@ export default function UserList({ users, currentUserId }: { users: UserRow[]; c
 
   return (
     <div className="mx-auto max-w-5xl pb-20">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">用戶管理</h1>
-        <p className="mt-1 text-sm text-gray-400">管理後台登入帳號，可編輯登入帳號、名稱與密碼。</p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">用戶管理</h1>
+          <p className="mt-1 text-sm text-gray-400">管理後台登入帳號，可新增帳號、編輯登入帳號/名稱/密碼。</p>
+        </div>
+        <button
+          type="button"
+          onClick={openCreate}
+          className="inline-flex shrink-0 items-center justify-center gap-2 bg-rose-brand rounded-lg px-5 py-2.5 text-sm font-semibold text-white"
+        >
+          <Plus size={15} />新增用戶
+        </button>
       </div>
 
       <div className="overflow-x-auto border border-gray-200 bg-white rounded-lg">
@@ -154,6 +208,57 @@ export default function UserList({ users, currentUserId }: { users: UserRow[]; c
               <button type="button" onClick={close} disabled={saving} className="border border-gray-200 bg-white rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 disabled:opacity-50">取消</button>
               <button type="button" onClick={save} disabled={saving} className="inline-flex items-center justify-center gap-2 bg-rose-brand rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
                 <Pencil size={15} />{saving ? "儲存中" : "儲存"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={closeCreate}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="新增用戶"
+            className="w-full max-w-md border border-gray-200 bg-white rounded-lg p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">新增用戶</h2>
+                <p className="mt-1 text-sm text-gray-400">建立一個新的後台登入帳號。</p>
+              </div>
+              <button type="button" onClick={closeCreate} aria-label="關閉" className="shrink-0 text-gray-400 hover:text-gray-700"><X size={18} /></button>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-gray-500">登入帳號</span>
+                <input className={inputClass} value={newEmail} placeholder="登入用的帳號" autoFocus onChange={(event) => setNewEmail(event.target.value)} />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-gray-500">名稱</span>
+                <input className={inputClass} value={newName} placeholder="顯示名稱" onChange={(event) => setNewName(event.target.value)} />
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium text-gray-500">密碼</span>
+                  <input className={inputClass} type="password" value={newPassword} placeholder="至少 6 個字元" onChange={(event) => setNewPassword(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") createUser(); }} />
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium text-gray-500">角色</span>
+                  <select className={inputClass} value={newRole} onChange={(event) => setNewRole(event.target.value)}>
+                    <option value="EDITOR">編輯（可編輯頁面內容）</option>
+                    <option value="ADMIN">管理員（含用戶管理）</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={closeCreate} disabled={creating} className="border border-gray-200 bg-white rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 disabled:opacity-50">取消</button>
+              <button type="button" onClick={createUser} disabled={creating} className="inline-flex items-center justify-center gap-2 bg-rose-brand rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                <Plus size={15} />{creating ? "新增中" : "新增用戶"}
               </button>
             </div>
           </div>
