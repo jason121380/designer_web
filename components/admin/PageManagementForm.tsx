@@ -127,7 +127,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
     setContent({ ...content, videoCategories: content.videoCategories.filter((category) => category !== name) });
   }
 
-  const panels: { id: string; title: string; description?: string; body: ReactNode }[] = [
+  const panels: { id: string; title: string; description?: string; headerAction?: ReactNode; body: ReactNode }[] = [
     {
       id: "brand",
       title: "網站基本設定",
@@ -243,12 +243,21 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       id: "videos",
       title: "作品影片",
       description: "直接上傳影片（存 Cloudflare R2）或貼上播放網址；沒有影片時前台自動隱藏",
+      headerAction: (
+        <button type="button" onClick={() => setCategoryModalOpen(true)} className="inline-flex shrink-0 items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"><Tags size={14} />管理分類</button>
+      ),
       body: (
         <>
-          <div className="mb-4 flex justify-end">
-            <button type="button" onClick={() => setCategoryModalOpen(true)} className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"><Tags size={14} />管理分類</button>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {content.videos.map((item, index) => (
+              <div key={item.id} className="space-y-3 border border-gray-100 rounded-lg p-3">
+                <VideoUpload aspect="aspect-[9/16]" label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} />
+                <Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} />
+                <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">分類（選填，前台可切換）</span><select className={inputClass} value={item.category} onChange={(event) => setContent({ ...content, videos: updateAt(content.videos, index, { category: event.target.value }) })}><option value="">無分類</option>{content.videoCategories.map((category) => <option key={category} value={category}>{category}</option>)}{!!item.category && !content.videoCategories.includes(item.category) && <option value={item.category}>{item.category}（已移除）</option>}</select></label>
+                <div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div>
+              </div>
+            ))}
           </div>
-          {content.videos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div><div className="max-w-[260px]"><VideoUpload aspect="aspect-[9/16]" label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} /></div><div className="grid gap-4 md:grid-cols-2"><Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} /><label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">分類（選填，前台可切換）</span><select className={inputClass} value={item.category} onChange={(event) => setContent({ ...content, videos: updateAt(content.videos, index, { category: event.target.value }) })}><option value="">無分類</option>{content.videoCategories.map((category) => <option key={category} value={category}>{category}</option>)}{!!item.category && !content.videoCategories.includes(item.category) && <option value={item.category}>{item.category}（已移除）</option>}</select></label></div></div>)}
           <AddButton label="新增作品影片" onClick={() => setContent({ ...content, videos: [...content.videos, { id: makeId("video"), video: "", caption: "", category: "" }] })} />
         </>
       ),
@@ -356,9 +365,12 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
         </nav>
 
         <div className="border border-gray-200 bg-white rounded-lg p-5 md:p-7">
-          <div className="mb-6">
-            <h2 className="text-base font-semibold text-gray-900">{panelLabel(current)}</h2>
-            {!!current.description && <p className="mt-1 text-sm text-gray-400">{current.description}</p>}
+          <div className="mb-6 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">{panelLabel(current)}</h2>
+              {!!current.description && <p className="mt-1 text-sm text-gray-400">{current.description}</p>}
+            </div>
+            {current.headerAction}
           </div>
           {current.body}
         </div>

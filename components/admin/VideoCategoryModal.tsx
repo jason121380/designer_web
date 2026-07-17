@@ -81,7 +81,6 @@ export default function VideoCategoryModal({ open, onClose, categories, usageCou
             value={newName}
             placeholder="新增分類名稱"
             onChange={(event) => setNewName(event.target.value)}
-            onKeyDown={(event) => { if (event.key === "Enter") add(); }}
           />
           <button type="button" onClick={add} className="inline-flex shrink-0 items-center gap-1.5 bg-rose-brand rounded-lg px-3.5 py-2 text-sm font-semibold text-white"><Plus size={15} />新增</button>
         </div>
