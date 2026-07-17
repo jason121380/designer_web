@@ -115,7 +115,13 @@ export const designerWebContentSchema = z.object({
     line: nullableString,
     instagram: nullableString,
     facebook: nullableString,
-    mapEmbedUrl: nullableString,
+    // 前台右下角懸浮泡泡要顯示哪些聯絡管道。
+    bubble: z.object({
+      line: z.boolean().optional().nullable(),
+      facebook: z.boolean().optional().nullable(),
+      instagram: z.boolean().optional().nullable(),
+      map: z.boolean().optional().nullable(),
+    }).optional(),
   }).optional(),
   seo: z.object({
     title: nullableString,
@@ -178,7 +184,8 @@ export interface DesignerWebContent {
     line: string;
     instagram: string;
     facebook: string;
-    mapEmbedUrl: string;
+    /** 前台右下角懸浮泡泡顯示哪些管道（line/facebook/instagram/map）。 */
+    bubble: { line: boolean; facebook: boolean; instagram: boolean; map: boolean };
   };
   /** 每頁獨立 SEO；空字串代表自動使用品牌與主標題產生。 */
   seo: { title: string; description: string; ogImage: string };
@@ -277,7 +284,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
     line: "https://lin.ee/Urb3nYc",
     instagram: "https://www.instagram.com/kimeko0905",
     facebook: "",
-    mapEmbedUrl: "",
+    bubble: { line: true, facebook: false, instagram: true, map: true },
   },
   seo: { title: "", description: "", ogImage: "" },
   links: { avatar: "", bio: "", qr: "", items: [], social: { instagram: "", facebook: "", line: "", email: "", phone: "", mapUrl: "" } },
@@ -355,7 +362,7 @@ function normalizeSections(input: RawContent["sections"]): DesignerWebContent["s
 function normalizeContact(contact: RawContent["contact"]): DesignerWebContent["contact"] {
   const defaults = defaultDesignerWebContent.contact;
   // 完全沒有 contact 資料（示範狀態）→ 用預設示範值當新頁起始。
-  if (!contact) return { ...defaults };
+  if (!contact) return { ...defaults, bubble: { ...defaults.bubble } };
   // 已有 contact 資料時：所有欄位清空就是清空（包含地址與電話），
   // 前台會隱藏空的項目，不再被塞回示範值。
   return {
@@ -366,7 +373,12 @@ function normalizeContact(contact: RawContent["contact"]): DesignerWebContent["c
     line: trim(contact.line),
     instagram: trim(contact.instagram),
     facebook: trim(contact.facebook),
-    mapEmbedUrl: trim(contact.mapEmbedUrl),
+    bubble: {
+      line: contact.bubble?.line === true,
+      facebook: contact.bubble?.facebook === true,
+      instagram: contact.bubble?.instagram === true,
+      map: contact.bubble?.map === true,
+    },
   };
 }
 

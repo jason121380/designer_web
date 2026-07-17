@@ -6,6 +6,7 @@ import Footer from "@/components/public/Footer";
 import PublicVideo from "@/components/public/PublicVideo";
 import MediaView from "@/components/public/MediaView";
 import WorksGallery from "@/components/public/WorksGallery";
+import FloatingBubble from "@/components/public/FloatingBubble";
 import { externalHref } from "@/lib/utils";
 
 type Section = { key: string; zh: string; en: string; bg: string };
@@ -185,7 +186,6 @@ function renderSection(content: DesignerWebContent, sec: Section) {
               {!!content.contact.instagram && <a href={externalHref(content.contact.instagram)} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:underline"><span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>IG</span>Instagram</a>}
               {!!content.contact.line && <a href={externalHref(content.contact.line)} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:underline"><MessageCircle size={18} style={{ color: "var(--brand)" }} />LINE</a>}
             </div>
-            {!!content.contact.mapEmbedUrl && <iframe src={content.contact.mapEmbedUrl} title="店家位置" className="mt-8 h-72 w-full border-0" loading="lazy" />}
           </div>
         </section>
       );
@@ -228,6 +228,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
         ))}
       </main>
       <Footer content={content} />
+      <FloatingBubble contact={content.contact} />
     </div>
   );
 }
