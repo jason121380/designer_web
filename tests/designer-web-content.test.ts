@@ -56,9 +56,8 @@ assert.equal(defaultDesignerWebContent.pricing[0].name, "極致零感羽毛接�
 assert.equal(normalized.brand.name, "KIMEKO HAIR");
 assert.equal(normalized.brand.themeColor, "#d9bf77");
 assert.equal(normalized.hero.heading, "中壢接髮推薦");
-assert.equal(normalized.hero.media.length, 1);
-assert.equal(normalized.hero.media[0].type, "video");
-assert.equal(normalized.hero.media[0].url, "https://cdn.example.com/hero.mp4");
+assert.equal(normalized.hero.image, "");
+assert.equal(normalized.hero.video, "https://cdn.example.com/hero.mp4");
 assert.equal(normalized.services.length, 1);
 assert.equal(normalized.services[0].title, "極致零感羽毛接髮");
 assert.deepEqual(normalized.services[0].features, ["輕盈", "隱形"]);

@@ -48,8 +48,8 @@ export default function Sidebar({ userName, userRole, open = false, collapsed = 
         collapsed ? "md:-translate-x-full" : "md:translate-x-0"
       )}
     >
-      <div className="px-5 py-4 border-b border-gray-100">
-        <div className="flex items-center justify-between gap-2">
+      <div className="flex h-14 items-center px-5 border-b border-gray-100 flex-shrink-0">
+        <div className="flex w-full items-center justify-between gap-2">
           <span className="text-sm font-semibold text-gray-900">MLG 設計師一頁式網站後台</span>
           <button
             type="button"

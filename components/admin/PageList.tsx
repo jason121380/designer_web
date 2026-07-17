@@ -210,9 +210,9 @@ export default function PageList({ pages }: { pages: PageListItem[] }) {
               <button type="button" onClick={() => openRename(page)} className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600" title="變更網址後綴"><Pencil size={13} />後綴</button>
               <button type="button" onClick={() => openCopy(page)} className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-600" title="複製此頁"><Copy size={13} />複製</button>
               {page.active ? (
-                <button type="button" disabled={togglingSlug === page.slug} onClick={() => toggleActive(page.slug, false)} aria-label={`停用 /${page.slug}`} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-red-500 disabled:opacity-50"><EyeOff size={13} />{togglingSlug === page.slug ? "處理中" : "停用"}</button>
+                <button type="button" disabled={togglingSlug === page.slug} onClick={() => toggleActive(page.slug, false)} aria-label={`停用 /${page.slug}`} className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"><EyeOff size={13} />{togglingSlug === page.slug ? "處理中" : "停用"}</button>
               ) : (
-                <button type="button" disabled={togglingSlug === page.slug} onClick={() => toggleActive(page.slug, true)} aria-label={`啟用 /${page.slug}`} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-emerald-600 disabled:opacity-50"><Eye size={13} />{togglingSlug === page.slug ? "處理中" : "啟用"}</button>
+                <button type="button" disabled={togglingSlug === page.slug} onClick={() => toggleActive(page.slug, true)} aria-label={`啟用 /${page.slug}`} className="inline-flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"><Eye size={13} />{togglingSlug === page.slug ? "處理中" : "啟用"}</button>
               )}
             </div>
           </div>

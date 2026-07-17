@@ -38,8 +38,7 @@ export function designerPageMetadata(content: DesignerWebContent, path: string):
   const title = content.seo.title || content.brand.name;
   const description =
     content.seo.description || content.hero.heading.replace(/\s*\n\s*/g, "，").slice(0, 150);
-  const ogImage =
-    content.seo.ogImage || content.hero.media.find((item) => item.type === "image")?.url || "";
+  const ogImage = content.seo.ogImage || content.hero.image || "";
 
   return {
     title: { absolute: title },
@@ -71,7 +70,7 @@ export function linksPageMetadata(content: DesignerWebContent, path: string): Me
   const ogImage =
     content.links.avatar ||
     content.seo.ogImage ||
-    content.hero.media.find((item) => item.type === "image")?.url ||
+    content.hero.image ||
     "";
 
   return {
