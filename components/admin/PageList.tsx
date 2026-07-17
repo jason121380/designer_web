@@ -194,7 +194,7 @@ export default function PageList({ pages }: { pages: PageListItem[] }) {
         </button>
       </div>
 
-      <div className="overflow-hidden border border-gray-200 bg-white rounded-lg">
+      <div className="border border-gray-200 bg-white rounded-lg">
         {pages.map((page) => (
           <div key={page.slug} className={rowClass}>
             <div className="min-w-0">
