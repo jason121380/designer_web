@@ -12,6 +12,8 @@ assert.match(sidebar, /href: "\/admin\/page-management", label: "頁面管理"/)
 assert.match(sidebar, /href: "\/admin\/media", label: "媒體庫"/);
 // 用戶管理為 ADMIN 專用入口（列表 + 改密碼）
 assert.match(sidebar, /href: "\/admin\/users", label: "用戶管理"/);
+// 工程模式為 ADMIN 專用維護工具入口
+assert.match(sidebar, /href: "\/admin\/tools", label: "工程模式"/);
 // 舊 CMS 模組入口不得復活
 for (const removed of [
   "總覽",
@@ -20,7 +22,6 @@ for (const removed of [
   "分類管理",
   "標籤管理",
   "流量分析",
-  "工程工具",
 ]) {
   assert.doesNotMatch(sidebar, new RegExp(removed));
 }
@@ -45,6 +46,9 @@ assert.match(middleware, /legacyAdminPrefixes/);
 assert.match(middleware, /\/admin\/page-management/);
 // /admin/users 是現行用戶管理頁，不可再被當成舊路徑導回頁面管理
 assert.doesNotMatch(middleware, /"\/admin\/users"/, "用戶管理路徑不可列入 legacyAdminPrefixes");
+// 媒體庫與工程模式為現行入口，不可再被當成舊路徑導回
+assert.doesNotMatch(middleware, /"\/admin\/media"/, "媒體庫路徑不可列入 legacyAdminPrefixes");
+assert.doesNotMatch(middleware, /"\/admin\/tools"/, "工程模式路徑不可列入 legacyAdminPrefixes");
 // manifest 必須繞過登入保護，否則後台 PWA 無法安裝
 assert.ok(middleware.includes("manifest\\\\.webmanifest"), "middleware matcher 必須排除 manifest");
 

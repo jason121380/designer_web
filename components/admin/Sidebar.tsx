@@ -11,6 +11,7 @@ import {
   PanelsTopLeft,
   Images,
   Users,
+  Wrench,
 } from "lucide-react";
 
 const navItems: {
@@ -22,6 +23,7 @@ const navItems: {
   { href: "/admin/page-management", label: "頁面管理", icon: PanelsTopLeft },
   { href: "/admin/media", label: "媒體庫", icon: Images },
   { href: "/admin/users", label: "用戶管理", icon: Users, adminOnly: true },
+  { href: "/admin/tools", label: "工程模式", icon: Wrench, adminOnly: true },
 ];
 
 const ROLE_MAP: Record<string, string> = {
