@@ -66,7 +66,7 @@ export default function LinksManagementForm({ initialContent, slug }: { initialC
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">編輯連結頁：{previewPath}</h1>
-          <p className="mt-1 text-sm text-gray-400">linktree 風格的個人連結頁；名稱、主色與社群沿用一頁式的「品牌」與「聯絡資訊」設定。</p>
+          <p className="mt-1 text-sm text-gray-400">linktree 風格的個人連結頁；名稱與主色沿用一頁式「品牌」，社群可獨立設定。</p>
         </div>
         <div className="flex gap-2">
           <a href={previewPath} target="_blank" className="inline-flex items-center gap-2 border border-gray-200 bg-white rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600"><ExternalLink size={15} />預覽連結頁</a>
@@ -109,7 +109,7 @@ export default function LinksManagementForm({ initialContent, slug }: { initialC
           <button type="button" onClick={() => setItems([...items, { id: makeId(), label: "", url: "" }])} className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-rose-brand"><Plus size={15} />新增連結按鈕</button>
         </PageSectionPanel>
 
-        <PageSectionPanel title="社群 icon" description="連結頁底部的社群圖示；與一頁式的「聯絡資訊」共用同一份，在任一邊修改都會同步。留空的項目不顯示。">
+        <PageSectionPanel title="社群 icon" description="連結頁底部的社群圖示；與一頁式的「聯絡資訊」獨立，可各自設定。留空的項目不顯示。">
           <div className="grid gap-4 md:grid-cols-2">
             {([
               ["Instagram 連結", "instagram"],
@@ -123,13 +123,13 @@ export default function LinksManagementForm({ initialContent, slug }: { initialC
                 <span className="mb-1.5 block text-xs font-medium text-gray-500">{label}</span>
                 <input
                   className={inputClass}
-                  value={content.contact[key]}
-                  onChange={(event) => setContent({ ...content, contact: { ...content.contact, [key]: event.target.value } })}
+                  value={links.social[key]}
+                  onChange={(event) => setContent({ ...content, links: { ...content.links, social: { ...content.links.social, [key]: event.target.value } } })}
                 />
               </label>
             ))}
           </div>
-          <p className="mt-3 text-xs text-gray-400">網址免加 https://，前台會自動補上。這些欄位與一頁式「聯絡資訊」相同，儲存後兩頁一起更新。</p>
+          <p className="mt-3 text-xs text-gray-400">網址免加 https://，前台會自動補上。這些欄位與一頁式「聯絡資訊」獨立，各自儲存。</p>
         </PageSectionPanel>
       </div>
     </div>
