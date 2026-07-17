@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChevronDown, ChevronUp, ExternalLink, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -8,7 +8,6 @@ import { SECTION_DEFS, type DesignerWebContent, type PageService } from "@/lib/d
 import ImageUpload from "./ImageUpload";
 import VideoUpload from "./VideoUpload";
 import ColorSelect from "./ColorSelect";
-import PageSectionPanel from "./PageSectionPanel";
 
 const inputClass = "w-full border border-gray-200 bg-white rounded-lg px-3 py-2.5 text-sm outline-none transition focus:border-rose-brand focus:ring-2 focus:ring-rose-light";
 const textareaClass = `${inputClass} min-h-24 resize-y`;
@@ -54,6 +53,7 @@ function ServiceRows({ items, onChange }: { items: PageService[]; onChange: (ite
 export default function PageManagementForm({ initialContent, slug }: { initialContent: DesignerWebContent; slug: string }) {
   const [content, setContent] = useState(initialContent);
   const [saving, setSaving] = useState(false);
+  const [active, setActive] = useState("brand");
   const apiPath = `/api/designer-web/${slug}`;
   const previewPath = `/${slug}`;
 
@@ -83,27 +83,25 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
     setContent({ ...content, sections: content.sections.map((s, i) => (i === index ? { ...s, ...patch } : s)) });
   }
 
-  return (
-    <div className="mx-auto max-w-5xl pb-20">
-      <Link href="/admin/page-management" className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800"><ArrowLeft size={15} />回頁面列表</Link>
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div><h1 className="text-2xl font-bold text-gray-900">編輯頁面：{previewPath}</h1><p className="mt-1 text-sm text-gray-400">依照前台順序編輯各區塊內容。</p></div>
-        <div className="flex gap-2">
-          <a href={previewPath} target="_blank" className="inline-flex items-center gap-2 border border-gray-200 bg-white rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600"><ExternalLink size={15} />預覽前台</a>
-          <button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 bg-rose-brand rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Save size={15} />{saving ? "儲存中" : "儲存設定"}</button>
+  const panels: { id: string; title: string; description?: string; body: ReactNode }[] = [
+    {
+      id: "brand",
+      title: "品牌與導覽",
+      description: "品牌名稱、標語與主色",
+      body: (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="品牌名稱" value={content.brand.name} onChange={(name) => setContent({ ...content, brand: { ...content.brand, name } })} />
+          <Field label="品牌標語" value={content.brand.tagline} onChange={(tagline) => setContent({ ...content, brand: { ...content.brand, tagline } })} />
+          <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">主色</span><ColorSelect value={content.brand.themeColor} onChange={(themeColor) => setContent({ ...content, brand: { ...content.brand, themeColor } })} /></label>
         </div>
-      </div>
-
-      <div className="overflow-hidden border border-gray-200 bg-white rounded-lg">
-        <PageSectionPanel title="品牌與導覽" description="品牌名稱、標語與主色" defaultOpen>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="品牌名稱" value={content.brand.name} onChange={(name) => setContent({ ...content, brand: { ...content.brand, name } })} />
-            <Field label="品牌標語" value={content.brand.tagline} onChange={(tagline) => setContent({ ...content, brand: { ...content.brand, tagline } })} />
-            <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">主色</span><ColorSelect value={content.brand.themeColor} onChange={(themeColor) => setContent({ ...content, brand: { ...content.brand, themeColor } })} /></label>
-          </div>
-        </PageSectionPanel>
-
-        <PageSectionPanel title="首屏形象" description="首頁第一個畫面、主標題與形象媒體">
+      ),
+    },
+    {
+      id: "hero",
+      title: "首屏形象",
+      description: "首頁第一個畫面、主標題與形象媒體",
+      body: (
+        <>
           <TextArea label="主標題（顯示於首屏，可自訂文字）" value={content.hero.heading} onChange={(heading) => setContent({ ...content, hero: { ...content.hero, heading } })} />
           <div className="mt-4">
             <label className="block"><span className="mb-1.5 block text-xs font-medium text-gray-500">主標題文字顏色</span><ColorSelect value={content.hero.headingColor} onChange={(headingColor) => setContent({ ...content, hero: { ...content.hero, headingColor } })} /></label>
@@ -113,9 +111,15 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
           </div>
           {content.hero.mediaType === "image" && <div className="mt-4"><ImageUpload label="首屏圖片" value={content.hero.mediaUrl} onChange={(mediaUrl) => setContent({ ...content, hero: { ...content.hero, mediaUrl } })} /></div>}
           {content.hero.mediaType === "video" && <div className="mt-4"><VideoUpload label="首屏影片" value={content.hero.mediaUrl} onChange={(mediaUrl) => setContent({ ...content, hero: { ...content.hero, mediaUrl } })} /></div>}
-        </PageSectionPanel>
-
-        <PageSectionPanel title="區塊順序與標題" description="調整前台區塊的排列順序，並自訂各區塊的中英文標題">
+        </>
+      ),
+    },
+    {
+      id: "sections",
+      title: "區塊順序與標題",
+      description: "調整前台區塊的排列順序，並自訂各區塊的中英文標題",
+      body: (
+        <>
           {content.sections.map((sec, index) => {
             const def = SECTION_DEFS.find((d) => d.key === sec.key);
             return (
@@ -134,43 +138,97 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
               </div>
             );
           })}
-        </PageSectionPanel>
-
-        <PageSectionPanel title="活動 DM" description="沒有圖片時前台自動隱藏">
+        </>
+      ),
+    },
+    {
+      id: "promos",
+      title: "活動 DM",
+      description: "沒有圖片時前台自動隱藏",
+      body: (
+        <>
           {content.promos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, promos: removeAt(content.promos, index) })} /></div><ImageUpload label={`DM 圖片 ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, promos: updateAt(content.promos, index, { image }) })} /><Field label="圖片說明" value={item.caption} onChange={(caption) => setContent({ ...content, promos: updateAt(content.promos, index, { caption }) })} /></div>)}
           <AddButton label="新增 DM" onClick={() => setContent({ ...content, promos: [...content.promos, { id: makeId("dm"), image: "", caption: "" }] })} />
-        </PageSectionPanel>
-
-        <PageSectionPanel title="接髮介紹"><ServiceRows items={content.services} onChange={(services) => setContent({ ...content, services })} /><AddButton label="新增接髮項目" onClick={() => setContent({ ...content, services: [...content.services, { id: makeId("service"), title: "", description: "", features: [], suitableFor: [], image: "", price: "" }] })} /></PageSectionPanel>
-        <PageSectionPanel title="其他服務"><ServiceRows items={content.otherServices} onChange={(otherServices) => setContent({ ...content, otherServices })} /><AddButton label="新增其他服務" onClick={() => setContent({ ...content, otherServices: [...content.otherServices, { id: makeId("other"), title: "", description: "", features: [], suitableFor: [], image: "", price: "" }] })} /></PageSectionPanel>
-
-        <PageSectionPanel title="作品影片" description="直接上傳影片（存 Cloudflare R2）或貼上播放網址；沒有影片時前台自動隱藏">
+        </>
+      ),
+    },
+    {
+      id: "services",
+      title: "接髮介紹",
+      body: (
+        <>
+          <ServiceRows items={content.services} onChange={(services) => setContent({ ...content, services })} />
+          <AddButton label="新增接髮項目" onClick={() => setContent({ ...content, services: [...content.services, { id: makeId("service"), title: "", description: "", features: [], suitableFor: [], image: "", price: "" }] })} />
+        </>
+      ),
+    },
+    {
+      id: "otherServices",
+      title: "其他服務",
+      body: (
+        <>
+          <ServiceRows items={content.otherServices} onChange={(otherServices) => setContent({ ...content, otherServices })} />
+          <AddButton label="新增其他服務" onClick={() => setContent({ ...content, otherServices: [...content.otherServices, { id: makeId("other"), title: "", description: "", features: [], suitableFor: [], image: "", price: "" }] })} />
+        </>
+      ),
+    },
+    {
+      id: "videos",
+      title: "作品影片",
+      description: "直接上傳影片（存 Cloudflare R2）或貼上播放網址；沒有影片時前台自動隱藏",
+      body: (
+        <>
           {content.videos.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, videos: removeAt(content.videos, index) })} /></div><VideoUpload label={`作品影片 ${index + 1}`} value={item.video} onChange={(video) => setContent({ ...content, videos: updateAt(content.videos, index, { video }) })} /><Field label="影片說明" value={item.caption} onChange={(caption) => setContent({ ...content, videos: updateAt(content.videos, index, { caption }) })} /></div>)}
           <AddButton label="新增作品影片" onClick={() => setContent({ ...content, videos: [...content.videos, { id: makeId("video"), video: "", caption: "" }] })} />
-        </PageSectionPanel>
-
-        <PageSectionPanel title="分期資訊">
+        </>
+      ),
+    },
+    {
+      id: "installment",
+      title: "分期資訊",
+      body: (
+        <>
           {content.installment.map((item, index) => <div key={index} className={`${rowClass} flex items-start gap-3`}><div className="flex-1"><TextArea label={`說明 ${index + 1}`} value={item} onChange={(value) => setContent({ ...content, installment: content.installment.map((current, itemIndex) => itemIndex === index ? value : current) })} /></div><div className="pt-7"><RemoveButton onClick={() => setContent({ ...content, installment: removeAt(content.installment, index) })} /></div></div>)}
           <AddButton label="新增分期說明" onClick={() => setContent({ ...content, installment: [...content.installment, ""] })} />
-        </PageSectionPanel>
-
-        <PageSectionPanel title="價目表">
+        </>
+      ),
+    },
+    {
+      id: "pricing",
+      title: "價目表",
+      body: (
+        <>
           {content.pricing.map((item, index) => <div key={index} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, pricing: removeAt(content.pricing, index) })} /></div><div className="grid gap-4 md:grid-cols-2"><Field label="服務名稱" value={item.name} onChange={(name) => setContent({ ...content, pricing: updateAt(content.pricing, index, { name }) })} /><Field label="價格" value={item.price} onChange={(price) => setContent({ ...content, pricing: updateAt(content.pricing, index, { price }) })} /></div><TextArea label="說明" value={item.description} onChange={(description) => setContent({ ...content, pricing: updateAt(content.pricing, index, { description }) })} /><TextArea label="特色（逗號或換行分隔）" value={item.features.join("\n")} onChange={(value) => setContent({ ...content, pricing: updateAt(content.pricing, index, { features: splitList(value) }) })} /></div>)}
           <AddButton label="新增價目" onClick={() => setContent({ ...content, pricing: [...content.pricing, { name: "", price: "", description: "", features: [] }] })} />
-        </PageSectionPanel>
-
-        <PageSectionPanel title="環境介紹" description="沒有照片時前台自動隱藏">
+        </>
+      ),
+    },
+    {
+      id: "environment",
+      title: "環境介紹",
+      description: "沒有照片時前台自動隱藏",
+      body: (
+        <>
           {content.environment.map((item, index) => <div key={item.id} className={rowClass}><div className="flex justify-end"><RemoveButton onClick={() => setContent({ ...content, environment: removeAt(content.environment, index) })} /></div><ImageUpload label={`環境照片 ${index + 1}`} value={item.image} onChange={(image) => setContent({ ...content, environment: updateAt(content.environment, index, { image }) })} /><Field label="圖片說明" value={item.alt} onChange={(alt) => setContent({ ...content, environment: updateAt(content.environment, index, { alt }) })} /></div>)}
           <AddButton label="新增環境照片" onClick={() => setContent({ ...content, environment: [...content.environment, { id: makeId("environment"), image: "", alt: "" }] })} />
-        </PageSectionPanel>
-
-        <PageSectionPanel title="聯絡資訊">
-          <div className="grid gap-4 md:grid-cols-2">
-            {([['地址', 'address'], ['Google Maps 連結', 'mapUrl'], ['電話', 'phone'], ['Email', 'email'], ['LINE 連結', 'line'], ['Instagram 連結', 'instagram'], ['Facebook 連結', 'facebook'], ['Google Map 嵌入 URL', 'mapEmbedUrl']] as const).map(([label, key]) => <Field key={key} label={label} value={content.contact[key]} onChange={(value) => setContent({ ...content, contact: { ...content.contact, [key]: value } })} />)}
-          </div>
-        </PageSectionPanel>
-
-        <PageSectionPanel title="SEO 設定" description="此頁在搜尋結果與廣告到達頁的標題、描述與分享圖；未填時自動使用品牌與主標題">
+        </>
+      ),
+    },
+    {
+      id: "contact",
+      title: "聯絡資訊",
+      body: (
+        <div className="grid gap-4 md:grid-cols-2">
+          {([['地址', 'address'], ['Google Maps 連結', 'mapUrl'], ['電話', 'phone'], ['Email', 'email'], ['LINE 連結', 'line'], ['Instagram 連結', 'instagram'], ['Facebook 連結', 'facebook'], ['Google Map 嵌入 URL', 'mapEmbedUrl']] as const).map(([label, key]) => <Field key={key} label={label} value={content.contact[key]} onChange={(value) => setContent({ ...content, contact: { ...content.contact, [key]: value } })} />)}
+        </div>
+      ),
+    },
+    {
+      id: "seo",
+      title: "SEO 設定",
+      description: "此頁在搜尋結果與廣告到達頁的標題、描述與分享圖；未填時自動使用品牌與主標題",
+      body: (
+        <>
           <Field label="SEO 標題（搜尋結果與分頁標題）" value={content.seo.title} placeholder={`${content.brand.tagline}｜${content.brand.name}`} onChange={(title) => setContent({ ...content, seo: { ...content.seo, title } })} />
           <div className="mt-4">
             <TextArea label="SEO 描述（搜尋結果摘要，建議 80-150 字）" value={content.seo.description} onChange={(description) => setContent({ ...content, seo: { ...content.seo, description } })} />
@@ -178,7 +236,41 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
           <div className="mt-4">
             <ImageUpload label="社群分享圖（og:image，建議 1200x630）" value={content.seo.ogImage} onChange={(ogImage) => setContent({ ...content, seo: { ...content.seo, ogImage } })} />
           </div>
-        </PageSectionPanel>
+        </>
+      ),
+    },
+  ];
+  const current = panels.find((panel) => panel.id === active) ?? panels[0];
+
+  return (
+    <div className="mx-auto max-w-6xl pb-20">
+      <Link href="/admin/page-management" className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800"><ArrowLeft size={15} />回頁面列表</Link>
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div><h1 className="text-2xl font-bold text-gray-900">編輯頁面：{previewPath}</h1><p className="mt-1 text-sm text-gray-400">左側選單切換區塊，右側編輯內容。</p></div>
+        <div className="flex gap-2">
+          <a href={previewPath} target="_blank" className="inline-flex items-center gap-2 border border-gray-200 bg-white rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600"><ExternalLink size={15} />預覽前台</a>
+          <button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 bg-rose-brand rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Save size={15} />{saving ? "儲存中" : "儲存設定"}</button>
+        </div>
+      </div>
+
+      <div className="md:grid md:grid-cols-[220px_1fr] md:gap-6">
+        <nav className="mb-4 md:mb-0">
+          <ul className="flex gap-2 overflow-x-auto pb-1 md:sticky md:top-4 md:flex-col md:gap-1 md:overflow-visible md:pb-0">
+            {panels.map((panel) => (
+              <li key={panel.id} className="shrink-0">
+                <button type="button" onClick={() => setActive(panel.id)} className={`w-full whitespace-nowrap rounded-lg px-3.5 py-2.5 text-left text-sm font-medium transition ${panel.id === active ? "bg-rose-brand text-white" : "text-gray-600 hover:bg-gray-100"}`}>{panel.title}</button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="border border-gray-200 bg-white rounded-lg p-5 md:p-7">
+          <div className="mb-6">
+            <h2 className="text-base font-semibold text-gray-900">{current.title}</h2>
+            {!!current.description && <p className="mt-1 text-sm text-gray-400">{current.description}</p>}
+          </div>
+          {current.body}
+        </div>
       </div>
     </div>
   );
