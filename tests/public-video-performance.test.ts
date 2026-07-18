@@ -2,12 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import PublicVideo, {
-  hlsFatalRecoveryAction,
-  playbackOverlayVisible,
-  videoVisibilityAction,
-} from "../components/public/PublicVideo";
-import { galleryActiveIndex } from "../components/public/WorksGallery";
+import PublicVideo from "../components/public/PublicVideo";
+import { hlsFatalRecoveryAction } from "../components/public/useStreamHls";
 
 // tsx 保留本專案的 JSX 設定；測試環境補上 classic transform 所需的 React global。
 (globalThis as typeof globalThis & { React: typeof React }).React = React;
@@ -15,33 +11,39 @@ import { galleryActiveIndex } from "../components/public/WorksGallery";
 const read = (path: string) => readFileSync(path, "utf8");
 
 const publicVideo = read("components/public/PublicVideo.tsx");
+const useStreamHls = read("components/public/useStreamHls.ts");
 const mediaView = read("components/public/MediaView.tsx");
 const worksGallery = read("components/public/WorksGallery.tsx");
 const onePage = read("components/public/OnePage.tsx");
 const packageJson = JSON.parse(read("package.json")) as { dependencies?: Record<string, string> };
 
-// 只有首屏能使用 priority；所有內容區塊與作品影片都必須維持 viewport lazy load。
+// 只有首屏用 priority（縮圖 eager＋高優先）；其餘維持預設，但一樣立即掛載播放。
 assert.doesNotMatch(mediaView, /<PublicVideo[^>]*\bpriority\b/);
 assert.doesNotMatch(worksGallery, /<PublicVideo[^>]*\bpriority\b/);
 assert.match(onePage, /<PublicVideo[^>]*\bpriority\b/);
 
-// SSR 先輸出 Stream 縮圖；hydration 後進入可視區才建立播放器。
+// SSR 只輸出 Stream 縮圖；hydration 後立即掛載播放器（不再等捲動、不再用 IntersectionObserver）。
 assert.match(publicVideo, /streamThumbnailUrl/);
-assert.match(publicVideo, /IntersectionObserver/);
-assert.match(publicVideo, /setActive\(false\)/);
+assert.match(publicVideo, /setMounted\(true\)/);
+assert.doesNotMatch(publicVideo, /IntersectionObserver/);
 assert.match(publicVideo, /loading=\{priority \? "eager" : "lazy"\}/);
 
-// 全頁同時只保留一個播放器，並尊重省流量與減少動態效果偏好。
-assert.match(publicVideo, /designer-video-activate/);
-assert.match(publicVideo, /saveData/);
-assert.match(publicVideo, /prefers-reduced-motion/);
-assert.match(publicVideo, /manualPlayback/);
+// 所有影片自動播放、靜音循環、不顯示播放鈕、不做「同時只播一支」限制或省流量手動模式。
+assert.match(publicVideo, /autoPlay,/);
+assert.match(publicVideo, /loop: autoPlay/);
+assert.doesNotMatch(publicVideo, /播放影片/);
+assert.doesNotMatch(publicVideo, /designer-video-activate/);
+assert.doesNotMatch(publicVideo, /prefers-reduced-motion/);
+assert.doesNotMatch(publicVideo, /requestPlayback/);
 
-// Stream 改用可 object-cover 的 HLS video；非 Safari 才動態載入 hls.js，避免 iframe 內建黑邊。
-assert.match(publicVideo, /streamHlsUrl/);
-assert.match(publicVideo, /import\("hls\.js"\)/);
+// 縮圖 404（轉檔中）時隱藏，避免破圖閃爍。
+assert.match(publicVideo, /onError=\{\(\) => setThumbBroken\(true\)\}/);
+
+// Stream 改用可 object-cover 的 HLS video（無黑邊）；HLS 綁定集中在共用 hook，非 Safari 才動態載入 hls.js。
 assert.doesNotMatch(publicVideo, /<iframe\b/);
 assert.match(publicVideo, /absolute inset-0 h-full w-full object-cover/);
+assert.match(useStreamHls, /streamHlsUrl/);
+assert.match(useStreamHls, /import\("hls\.js"\)/);
 assert.ok(packageJson.dependencies?.["hls.js"], "需安裝 hls.js 支援沒有原生 HLS 的瀏覽器");
 
 // HLS 永久錯誤最多恢復一次，第二次就必須顯示失敗備援，不能卡在縮圖或無限重試。
@@ -52,37 +54,11 @@ assert.equal(hlsFatalRecoveryAction("mediaError", 0), "recover-media");
 assert.equal(hlsFatalRecoveryAction("mediaError", 1), "fail");
 assert.equal(hlsFatalRecoveryAction("otherError", 0), "fail");
 
-// 自動播放真正成功前都保留可點擊按鈕；Safari 低耗電模式拒播時仍可手動重試。
-assert.equal(playbackOverlayVisible({ active: false, autoPlay: true, playing: false }), true);
-assert.equal(playbackOverlayVisible({ active: true, autoPlay: true, playing: false }), true);
-assert.equal(playbackOverlayVisible({ active: true, autoPlay: true, playing: true }), false);
-assert.equal(playbackOverlayVisible({ active: true, autoPlay: false, playing: false }), false);
-assert.match(publicVideo, /onPlaying=\{\(\) => setPlaying\(true\)\}/);
-assert.match(publicVideo, /requestPlayback/);
-
-// 可視生命週期的決策直接做行為驗證。
-assert.equal(videoVisibilityAction({ isIntersecting: true, intersectionRatio: 0.15, manualPlayback: false }), "activate");
-assert.equal(videoVisibilityAction({ isIntersecting: true, intersectionRatio: 0.8, manualPlayback: true }), "keep");
-assert.equal(videoVisibilityAction({ isIntersecting: true, intersectionRatio: 0.04, manualPlayback: true }), "deactivate");
-assert.equal(videoVisibilityAction({ isIntersecting: false, intersectionRatio: 0, manualPlayback: false }), "deactivate");
-
-// 手機作品輪播只讓外層選中的卡片自動啟用；其他卡片仍可手動點播。
-assert.equal(videoVisibilityAction({
-  isIntersecting: true,
-  intersectionRatio: 1,
-  manualPlayback: false,
-  autoActivate: false,
-}), "keep");
-
-// 取可視比例最高者；同分時固定選較左邊的索引，避免兩張完整顯示時由 callback 順序決定。
-assert.equal(galleryActiveIndex([1, 0.2]), 0);
-assert.equal(galleryActiveIndex([1, 1, 0.2]), 0);
-assert.equal(galleryActiveIndex([0.15, 1, 1]), 1);
-assert.equal(galleryActiveIndex([0.6, 0.4]), null);
-assert.match(worksGallery, /max-width: 767px/);
-assert.match(worksGallery, /autoActivate=\{!mobileCarousel \|\| index === activeIndex\}/);
-assert.match(worksGallery, /key=\{mobileCarousel \? "mobile" : "desktop"\}/);
-assert.match(worksGallery, /scrollLeft\s*=\s*0/);
+// 作品輪播不再依可視卡片切換播放，也不再因 breakpoint 重掛播放器；全部一律自動播。
+assert.doesNotMatch(worksGallery, /autoActivate/);
+assert.doesNotMatch(worksGallery, /mobileCarousel/);
+assert.doesNotMatch(worksGallery, /IntersectionObserver/);
+assert.match(worksGallery, /<PublicVideo[^>]*autoPlay/);
 
 // 真正的 server render 不得輸出 iframe/video，只留下 Stream 縮圖占位。
 const serverMarkup = renderToStaticMarkup(React.createElement(PublicVideo, {

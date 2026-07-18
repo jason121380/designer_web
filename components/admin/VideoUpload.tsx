@@ -2,8 +2,9 @@
 
 import { useRef, useState, DragEvent } from "react";
 import MediaPickerModal from "./MediaPickerModal";
-import { streamIframeSrc, streamUidFromUrl } from "@/lib/stream-url";
+import { streamUidFromUrl } from "@/lib/stream-url";
 import { uploadClientVideo } from "@/lib/client-video-upload";
+import StreamVideoPreview from "./StreamVideoPreview";
 
 interface Props {
   value?: string;
@@ -54,13 +55,7 @@ export default function VideoUpload({ value, onChange, label = "影片", aspect 
         <div className="space-y-2">
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-black">
             {streamUidFromUrl(value) ? (
-              <iframe
-                src={streamIframeSrc(streamUidFromUrl(value)!, { controls: true, preload: "metadata" })}
-                className={`${aspect} w-full border-0`}
-                allow="accelerometer; gyroscope; encrypted-media; picture-in-picture;"
-                allowFullScreen
-                title="影片預覽"
-              />
+              <StreamVideoPreview uid={streamUidFromUrl(value)!} className={`${aspect} w-full`} />
             ) : (
               <video src={value} controls playsInline preload="metadata" className={`${aspect} w-full bg-black object-contain`} />
             )}
