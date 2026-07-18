@@ -57,6 +57,7 @@ PageManagementForm
 - 子頁面停用：合約新增 `active`（缺欄位＝啟用、向下相容），`false` 時前台該 slug 回 404、sitemap 不收錄；後台列表以「停用／啟用」切換（取代刪除，內容不刪除）。`DELETE` API 仍保留但 UI 不再使用。
 - 後台列表：`components/admin/PageList.tsx`（每列有「一頁式」與「連結頁」兩個編輯入口）；一頁式編輯器：`components/admin/PageManagementForm.tsx`（`/admin/page-management/{slug}`）；連結頁編輯器：`components/admin/LinksManagementForm.tsx`（`/admin/page-management/{slug}/links`，存回同一筆內容的 `links`）
 - 前台輸出：一頁式 `components/public/OnePage.tsx`（`app/(public)/[slug]/web/page.tsx`）；連結頁 `components/public/LinksPage.tsx`（`app/(public)/[slug]/links/page.tsx`）；連結頁 SEO 用 `lib/seo.ts` 的 `linksPageMetadata()`
+- 前台快取（ISR）：`app/(public)/layout.tsx` 用 `export const revalidate = 3600`（**不要**改回 `force-dynamic`，那會讓每次開頁都查 DB＋重渲染、TTFB 很慢）；`[slug]/web` 與 `[slug]/links` 有 `generateStaticParams()`（讀 `listDesignerWebPageSlugs()` 啟用中 slug）使其為靜態/ISR。內容變更時由寫入端呼叫 `revalidatePath` 立即刷新——`app/api/designer-web/[slug]/route.ts` 的 POST/PUT/PATCH/DELETE 皆呼叫 `revalidateSlug()`（刷 `/{slug}`、`/{slug}/web`、`/{slug}/links`、`/sitemap.xml`），工程模式「搬移影片到 Stream」改寫內容後也 revalidate 受影響的 slug。新增會直接改 `site_settings` 內容的路徑時，務必一併 `revalidatePath`，否則前台會停留在舊快取。
 
 頁面後綴規則：小寫英數與連字號、1-50 字、頭尾不可為連字號；`home`、`admin`、`api`、`uploads` 為保留字。
 
