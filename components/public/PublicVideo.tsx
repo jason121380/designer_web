@@ -11,6 +11,8 @@ interface Props {
   autoPlay?: boolean;
   /** 首屏影片只提高縮圖與已啟用播放器的載入優先級，不會在 SSR 階段建立 video。 */
   priority?: boolean;
+  /** 是否允許進入可視範圍時自動啟用；仍可由使用者手動點播。 */
+  autoActivate?: boolean;
 }
 
 interface NavigatorWithConnection extends Navigator {
@@ -23,13 +25,15 @@ export function videoVisibilityAction({
   isIntersecting,
   intersectionRatio,
   manualPlayback,
+  autoActivate = true,
 }: {
   isIntersecting: boolean;
   intersectionRatio: number;
   manualPlayback: boolean;
+  autoActivate?: boolean;
 }): "activate" | "deactivate" | "keep" {
   if (!isIntersecting || intersectionRatio < 0.05) return "deactivate";
-  if (!manualPlayback && intersectionRatio >= 0.15) return "activate";
+  if (autoActivate && !manualPlayback && intersectionRatio >= 0.15) return "activate";
   return "keep";
 }
 
@@ -68,7 +72,14 @@ export function playbackOverlayVisible({
  * - 影片進入視窗才掛載，離開即卸載；頁面同時間最多只啟用一支影片。
  * - 省流量或減少動態效果模式改成點擊播放，避免背景下載影片。
  */
-export default function PublicVideo({ src, className = "", controls = false, autoPlay = false, priority = false }: Props) {
+export default function PublicVideo({
+  src,
+  className = "",
+  controls = false,
+  autoPlay = false,
+  priority = false,
+  autoActivate = true,
+}: Props) {
   const streamUid = streamUidFromUrl(src);
   const playerId = useId();
   const [failed, setFailed] = useState(false);
@@ -113,7 +124,7 @@ export default function PublicVideo({ src, className = "", controls = false, aut
 
     // 舊版 WebView 沒有 IntersectionObserver 時維持可播放；省流量模式仍等待使用者點擊。
     if (!("IntersectionObserver" in window)) {
-      if (!manualPlayback) activate();
+      if (autoActivate && !manualPlayback) activate();
       return;
     }
 
@@ -123,6 +134,7 @@ export default function PublicVideo({ src, className = "", controls = false, aut
           isIntersecting: entry?.isIntersecting ?? false,
           intersectionRatio: entry?.intersectionRatio ?? 0,
           manualPlayback,
+          autoActivate,
         });
         if (action === "deactivate") {
           setActive(false);
@@ -134,7 +146,11 @@ export default function PublicVideo({ src, className = "", controls = false, aut
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, [activate]);
+  }, [activate, autoActivate]);
+
+  useEffect(() => {
+    if (!autoActivate) setActive(false);
+  }, [autoActivate]);
 
   useEffect(() => {
     if (!active) {

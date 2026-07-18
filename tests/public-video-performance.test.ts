@@ -7,6 +7,7 @@ import PublicVideo, {
   playbackOverlayVisible,
   videoVisibilityAction,
 } from "../components/public/PublicVideo";
+import { galleryActiveIndex } from "../components/public/WorksGallery";
 
 // tsx 保留本專案的 JSX 設定；測試環境補上 classic transform 所需的 React global。
 (globalThis as typeof globalThis & { React: typeof React }).React = React;
@@ -64,6 +65,24 @@ assert.equal(videoVisibilityAction({ isIntersecting: true, intersectionRatio: 0.
 assert.equal(videoVisibilityAction({ isIntersecting: true, intersectionRatio: 0.8, manualPlayback: true }), "keep");
 assert.equal(videoVisibilityAction({ isIntersecting: true, intersectionRatio: 0.04, manualPlayback: true }), "deactivate");
 assert.equal(videoVisibilityAction({ isIntersecting: false, intersectionRatio: 0, manualPlayback: false }), "deactivate");
+
+// 手機作品輪播只讓外層選中的卡片自動啟用；其他卡片仍可手動點播。
+assert.equal(videoVisibilityAction({
+  isIntersecting: true,
+  intersectionRatio: 1,
+  manualPlayback: false,
+  autoActivate: false,
+}), "keep");
+
+// 取可視比例最高者；同分時固定選較左邊的索引，避免兩張完整顯示時由 callback 順序決定。
+assert.equal(galleryActiveIndex([1, 0.2]), 0);
+assert.equal(galleryActiveIndex([1, 1, 0.2]), 0);
+assert.equal(galleryActiveIndex([0.15, 1, 1]), 1);
+assert.equal(galleryActiveIndex([0.6, 0.4]), null);
+assert.match(worksGallery, /max-width: 767px/);
+assert.match(worksGallery, /autoActivate=\{!mobileCarousel \|\| index === activeIndex\}/);
+assert.match(worksGallery, /key=\{mobileCarousel \? "mobile" : "desktop"\}/);
+assert.match(worksGallery, /scrollLeft\s*=\s*0/);
 
 // 真正的 server render 不得輸出 iframe/video，只留下 Stream 縮圖占位。
 const serverMarkup = renderToStaticMarkup(React.createElement(PublicVideo, {

@@ -1,9 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import PublicVideo from "@/components/public/PublicVideo";
 
 type Video = { id: string; video: string; caption: string; category: string };
+
+/** 選出主要可見的卡片；比例相同時保留較左邊者，避免 callback 順序造成搶播。 */
+export function galleryActiveIndex(visibleRatios: number[], minimumRatio = 0.7): number | null {
+  let selected: number | null = null;
+  let selectedRatio = minimumRatio;
+  visibleRatios.forEach((ratio, index) => {
+    if (ratio < minimumRatio) return;
+    if (selected === null || ratio > selectedRatio) {
+      selected = index;
+      selectedRatio = ratio;
+    }
+  });
+  return selected;
+}
 
 /**
  * 作品影片區塊：依分類標籤切換；桌機為格狀、手機為可左右滑動（scroll-snap）的橫向輪播。
@@ -22,7 +36,36 @@ export default function WorksGallery({ videos, categoryOrder = [] }: { videos: V
   }, [videos, categoryOrder]);
 
   const [active, setActive] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [mobileCarousel, setMobileCarousel] = useState(true);
+  const carouselRef = useRef<HTMLDivElement>(null);
   const shown = active ? videos.filter((item) => item.category.trim() === active) : videos;
+
+  useEffect(() => {
+    setActiveIndex(0);
+    if (carouselRef.current) carouselRef.current.scrollLeft = 0;
+  }, [active]);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const sync = () => setMobileCarousel(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  const updateActiveVideo = () => {
+    const container = carouselRef.current;
+    if (!container || !mobileCarousel) return;
+    const viewport = container.getBoundingClientRect();
+    const ratios = Array.from(container.children).map((card) => {
+      const rect = card.getBoundingClientRect();
+      const visibleWidth = Math.max(0, Math.min(rect.right, viewport.right) - Math.max(rect.left, viewport.left));
+      return rect.width > 0 ? visibleWidth / rect.width : 0;
+    });
+    const nextIndex = galleryActiveIndex(ratios);
+    if (nextIndex !== null) setActiveIndex(nextIndex);
+  };
 
   const tabClass = (isActive: boolean) =>
     `shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition ${
@@ -40,10 +83,10 @@ export default function WorksGallery({ videos, categoryOrder = [] }: { videos: V
         </div>
       )}
 
-      <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:pb-0 lg:grid-cols-3">
-        {shown.map((item) => (
-          <figure key={item.id} className="w-[78%] shrink-0 snap-center overflow-hidden bg-white rounded-lg sm:w-[46%] md:w-auto">
-            <PublicVideo src={item.video} autoPlay className="aspect-[9/16] w-full bg-black object-cover" />
+      <div ref={carouselRef} onScroll={updateActiveVideo} className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:pb-0 lg:grid-cols-3">
+        {shown.map((item, index) => (
+          <figure key={item.id} data-work-video-card className="w-[78%] shrink-0 snap-center overflow-hidden bg-white rounded-lg sm:w-[46%] md:w-auto">
+            <PublicVideo key={mobileCarousel ? "mobile" : "desktop"} src={item.video} autoPlay autoActivate={!mobileCarousel || index === activeIndex} className="aspect-[9/16] w-full bg-black object-cover" />
             {!!item.caption && <figcaption className="p-4 text-sm text-neutral-600">{item.caption}</figcaption>}
           </figure>
         ))}
