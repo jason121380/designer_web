@@ -17,7 +17,7 @@ export default function MediaView({
   className?: string;
 }) {
   if (isVideoUrl(src)) {
-    return <PublicVideo src={src} autoPlay className={className} />;
+    return <PublicVideo src={src} autoPlay priority className={className} />;
   }
   return <img src={src} alt={alt} className={className} loading="lazy" />;
 }
