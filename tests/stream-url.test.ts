@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { isStreamUrl, streamIframeSrc, streamThumbnailUrl, streamUidFromUrl } from "../lib/stream-url";
+import { isStreamUrl, streamHlsUrl, streamIframeSrc, streamThumbnailUrl, streamUidFromUrl } from "../lib/stream-url";
 
 const UID = "31c9291ab41fac05471db4e73aa11717";
 
@@ -23,6 +23,7 @@ assert.equal(isStreamUrl("https://media.example.com/x.mp4"), false);
 
 // 縮圖網址
 assert.equal(streamThumbnailUrl(UID), `https://videodelivery.net/${UID}/thumbnails/thumbnail.jpg`);
+assert.equal(streamHlsUrl(UID), `https://videodelivery.net/${UID}/manifest/video.m3u8`);
 
 // iframe 網址帶播放參數（作品影片：自動播放、循環、靜音、無控制列）
 const autoSrc = streamIframeSrc(UID, { autoplay: true, loop: true, muted: true, controls: false });

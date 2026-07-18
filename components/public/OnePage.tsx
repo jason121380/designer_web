@@ -212,9 +212,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
     <div style={{ ["--brand" as string]: content.brand.themeColor }}>
       {hasStreamVideo && (
         <>
-          <link rel="preconnect" href="https://iframe.videodelivery.net" />
           <link rel="preconnect" href="https://videodelivery.net" />
-          <link rel="preconnect" href="https://cloudflarestream.com" crossOrigin="" />
         </>
       )}
       <Header

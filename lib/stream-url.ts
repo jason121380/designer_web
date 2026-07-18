@@ -1,5 +1,5 @@
 // Cloudflare Stream 網址工具（純字串處理，不 import 任何伺服器 SDK，可安全用於 client 元件）。
-// Stream 影片以 iframe 播放（自動選畫質＋串流），網址型如 https://iframe.videodelivery.net/{uid}。
+// 儲存的網址可維持 iframe 格式，前台會取出 UID 後改以 HLS 播放。
 
 const STREAM_HOST_RE = /(?:^|\.)(videodelivery\.net|cloudflarestream\.com)$/i;
 const STREAM_UID_RE = /^[0-9a-f]{20,40}$/i;
@@ -27,6 +27,11 @@ export function isStreamUrl(url: string): boolean {
 /** Stream 影片縮圖（第一幀），可直接當 <img> src。 */
 export function streamThumbnailUrl(uid: string): string {
   return `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg`;
+}
+
+/** Stream HLS manifest；可交給 Safari 原生播放，其他瀏覽器由 hls.js 播放。 */
+export function streamHlsUrl(uid: string): string {
+  return `https://videodelivery.net/${uid}/manifest/video.m3u8`;
 }
 
 interface StreamIframeOptions {

@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import PublicVideo, { videoVisibilityAction } from "../components/public/PublicVideo";
+import PublicVideo, {
+  hlsFatalRecoveryAction,
+  playbackOverlayVisible,
+  videoVisibilityAction,
+} from "../components/public/PublicVideo";
 
 // tsx 保留本專案的 JSX 設定；測試環境補上 classic transform 所需的 React global。
 (globalThis as typeof globalThis & { React: typeof React }).React = React;
@@ -13,6 +17,7 @@ const publicVideo = read("components/public/PublicVideo.tsx");
 const mediaView = read("components/public/MediaView.tsx");
 const worksGallery = read("components/public/WorksGallery.tsx");
 const onePage = read("components/public/OnePage.tsx");
+const packageJson = JSON.parse(read("package.json")) as { dependencies?: Record<string, string> };
 
 // 只有首屏能使用 priority；所有內容區塊與作品影片都必須維持 viewport lazy load。
 assert.doesNotMatch(mediaView, /<PublicVideo[^>]*\bpriority\b/);
@@ -30,7 +35,29 @@ assert.match(publicVideo, /designer-video-activate/);
 assert.match(publicVideo, /saveData/);
 assert.match(publicVideo, /prefers-reduced-motion/);
 assert.match(publicVideo, /manualPlayback/);
-assert.match(publicVideo, /\{!active && \(/, "未啟用的 Stream 縮圖必須能手動點播");
+
+// Stream 改用可 object-cover 的 HLS video；非 Safari 才動態載入 hls.js，避免 iframe 內建黑邊。
+assert.match(publicVideo, /streamHlsUrl/);
+assert.match(publicVideo, /import\("hls\.js"\)/);
+assert.doesNotMatch(publicVideo, /<iframe\b/);
+assert.match(publicVideo, /absolute inset-0 h-full w-full object-cover/);
+assert.ok(packageJson.dependencies?.["hls.js"], "需安裝 hls.js 支援沒有原生 HLS 的瀏覽器");
+
+// HLS 永久錯誤最多恢復一次，第二次就必須顯示失敗備援，不能卡在縮圖或無限重試。
+assert.equal(hlsFatalRecoveryAction("networkError", 0), "retry-network");
+assert.equal(hlsFatalRecoveryAction("networkError", 0, true), "reload-manifest");
+assert.equal(hlsFatalRecoveryAction("networkError", 1), "fail");
+assert.equal(hlsFatalRecoveryAction("mediaError", 0), "recover-media");
+assert.equal(hlsFatalRecoveryAction("mediaError", 1), "fail");
+assert.equal(hlsFatalRecoveryAction("otherError", 0), "fail");
+
+// 自動播放真正成功前都保留可點擊按鈕；Safari 低耗電模式拒播時仍可手動重試。
+assert.equal(playbackOverlayVisible({ active: false, autoPlay: true, playing: false }), true);
+assert.equal(playbackOverlayVisible({ active: true, autoPlay: true, playing: false }), true);
+assert.equal(playbackOverlayVisible({ active: true, autoPlay: true, playing: true }), false);
+assert.equal(playbackOverlayVisible({ active: true, autoPlay: false, playing: false }), false);
+assert.match(publicVideo, /onPlaying=\{\(\) => setPlaying\(true\)\}/);
+assert.match(publicVideo, /requestPlayback/);
 
 // 可視生命週期的決策直接做行為驗證。
 assert.equal(videoVisibilityAction({ isIntersecting: true, intersectionRatio: 0.15, manualPlayback: false }), "activate");
