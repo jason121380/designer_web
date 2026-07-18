@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 type EnvLike = Record<string, string | undefined>;
@@ -104,6 +104,54 @@ export function r2KeyFromPublicUrl(url: string, env: EnvLike = process.env): str
   if (!base || !url) return null;
   const prefix = `${base.replace(/\/+$/, "")}/`;
   return url.startsWith(prefix) ? url.slice(prefix.length) : null;
+}
+
+/** 健康檢查：實際連線 R2（列一個物件）確認憑證與 bucket 可用。 */
+export async function checkR2Connectivity(): Promise<{ ok: boolean; error?: string }> {
+  if (!isR2Configured()) return { ok: false, error: "R2 未設定" };
+  try {
+    await r2Client().send(
+      new ListObjectsV2Command({ Bucket: process.env.CLOUDFLARE_R2_BUCKET!, MaxKeys: 1 })
+    );
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "R2 連線失敗" };
+  }
+}
+
+/** 健康檢查：呼叫 Stream API 驗證 token 有效，並統計影片轉檔狀態。 */
+export async function checkStreamStatus(): Promise<{
+  ok: boolean;
+  total?: number;
+  ready?: number;
+  processing?: number;
+  errored?: number;
+  error?: string;
+}> {
+  if (!isStreamConfigured()) return { ok: false, error: "Stream 未設定" };
+  try {
+    const res = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/stream?limit=1000`,
+      { headers: { Authorization: `Bearer ${process.env.CLOUDFLARE_STREAM_API_TOKEN}` } }
+    );
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      return { ok: false, error: data.errors?.[0]?.message ?? "Stream API 回應錯誤" };
+    }
+    const videos = Array.isArray(data.result) ? data.result : [];
+    let ready = 0;
+    let processing = 0;
+    let errored = 0;
+    for (const video of videos) {
+      const state = video?.status?.state;
+      if (state === "ready") ready += 1;
+      else if (state === "error") errored += 1;
+      else processing += 1;
+    }
+    return { ok: true, total: videos.length, ready, processing, errored };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Stream API 連線失敗" };
+  }
 }
 
 /** 從 R2 刪除物件（媒體庫刪除時使用）。 */

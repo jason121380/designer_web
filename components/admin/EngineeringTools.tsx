@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DatabaseBackup, Film, Image as ImageIcon } from "lucide-react";
+import { AlertTriangle, CheckCircle2, DatabaseBackup, Film, HeartPulse, Image as ImageIcon, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
+
+type HealthCheck = { group: string; label: string; status: "ok" | "warn" | "error"; detail: string };
+type HealthResult = { checks: HealthCheck[]; summary: { ok: number; warn: number; error: number } };
 
 export default function EngineeringTools() {
   const [running, setRunning] = useState(false);
@@ -11,6 +14,8 @@ export default function EngineeringTools() {
   const [iconUrl, setIconUrl] = useState("");
   const [migrating, setMigrating] = useState(false);
   const [migrateResult, setMigrateResult] = useState<{ scanned: number; migrated: number; failed: number } | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [health, setHealth] = useState<HealthResult | null>(null);
 
   useEffect(() => {
     fetch("/api/site-icon").then((res) => (res.ok ? res.json() : { url: "" })).then((body) => setIconUrl(body.url || "")).catch(() => {});
@@ -39,6 +44,23 @@ export default function EngineeringTools() {
       toast.error(error instanceof Error ? error.message : "回填失敗");
     } finally {
       setRunning(false);
+    }
+  }
+
+  async function runHealthCheck() {
+    setChecking(true);
+    try {
+      const res = await fetch("/api/health-check");
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "檢查失敗");
+      setHealth(body);
+      if (body.summary.error > 0) toast.error(`發現 ${body.summary.error} 項錯誤，請看下方紅色項目`);
+      else if (body.summary.warn > 0) toast.success(`檢查完成：${body.summary.warn} 項提醒，無錯誤`);
+      else toast.success("全部正常 ✓");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "檢查失敗");
+    } finally {
+      setChecking(false);
     }
   }
 
@@ -72,6 +94,49 @@ export default function EngineeringTools() {
       </div>
 
       <div className="space-y-5">
+        <div className="border border-gray-200 bg-white rounded-lg p-5">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-brand/10 text-rose-brand"><HeartPulse size={20} /></div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-semibold text-gray-900">系統健康檢查</h2>
+              <p className="mt-1 text-sm text-gray-500">一鍵確認資料庫、環境變數、Cloudflare R2／Stream（含 Token 是否有效與影片轉檔狀態）、帳號與頁面內容是否都正確完整。唯讀檢查，不會更動任何資料。</p>
+              <button type="button" onClick={runHealthCheck} disabled={checking} className="mt-4 inline-flex items-center gap-2 bg-rose-brand rounded-lg px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                {checking ? "檢查中…" : "執行檢查"}
+              </button>
+
+              {health && (
+                <div className="mt-4">
+                  <div className="mb-3 flex flex-wrap gap-2 text-xs font-medium">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700"><CheckCircle2 size={13} />正常 {health.summary.ok}</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-amber-700"><AlertTriangle size={13} />提醒 {health.summary.warn}</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-red-700"><XCircle size={13} />錯誤 {health.summary.error}</span>
+                  </div>
+                  <div className="space-y-4">
+                    {[...new Set(health.checks.map((c) => c.group))].map((group) => (
+                      <div key={group}>
+                        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">{group}</p>
+                        <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-100">
+                          {health.checks.filter((c) => c.group === group).map((c, i) => (
+                            <div key={i} className="flex items-start gap-2.5 px-3 py-2.5">
+                              <span className="mt-0.5 shrink-0">
+                                {c.status === "ok" ? <CheckCircle2 size={16} className="text-emerald-500" /> : c.status === "warn" ? <AlertTriangle size={16} className="text-amber-500" /> : <XCircle size={16} className="text-red-500" />}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-gray-800">{c.label}</p>
+                                <p className="text-xs text-gray-500 break-words">{c.detail}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="border border-gray-200 bg-white rounded-lg p-5">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-brand/10 text-rose-brand"><DatabaseBackup size={20} /></div>
