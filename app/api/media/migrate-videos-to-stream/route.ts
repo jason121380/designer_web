@@ -6,9 +6,9 @@ import {
   DESIGNER_WEB_SETTINGS_KEY,
   DESIGNER_WEB_SETTINGS_PREFIX,
   parseDesignerWebContent,
-  type DesignerWebContent,
 } from "@/lib/designer-web-content";
 import { isVideoUrl } from "@/lib/media";
+import { collectMediaUsage } from "@/lib/media-usage";
 import { buildStreamIframeUrl, copyStreamFromUrl, isStreamConfigured } from "@/lib/cloudflare-media";
 
 export const dynamic = "force-dynamic";
@@ -16,23 +16,6 @@ export const maxDuration = 60;
 
 // 一次最多搬移的影片數，避免異常內容造成大量對外請求。
 const MAX_MIGRATE = 50;
-
-/**
- * 從一頁內容收集所有「可放影片」欄位的網址：首屏影片、作品影片，以及
- * 促銷/DM、接髮介紹、特色項目、環境等項目（這些欄位圖片影片兩用）。
- * 是否真的是影片，由呼叫端以 isVideoUrl 過濾。
- */
-function collectVideoUrls(content: DesignerWebContent): string[] {
-  const urls: string[] = [];
-  const push = (url?: string) => { if (url && /^https?:\/\//.test(url)) urls.push(url); };
-  push(content.hero.video);
-  content.videos.forEach((item) => push(item.video));
-  content.promos.forEach((item) => push(item.image));
-  content.services.forEach((item) => push(item.image));
-  content.otherServices.forEach((item) => push(item.image));
-  content.environment.forEach((item) => push(item.image));
-  return urls;
-}
 
 /**
  * 把舊 R2 影片搬到 Cloudflare Stream：
@@ -59,9 +42,10 @@ export async function POST() {
   });
 
   // 需搬移的目標：本站 R2 上的影片網址（Stream 網址不含 R2 base，天然被排除）。
+  // 用 collectMediaUsage 當單一真相來源，涵蓋所有媒體欄位（含連結頁頭像），再以 isVideoUrl 過濾出影片。
   const targets = new Set<string>();
   for (const row of rows) {
-    for (const url of collectVideoUrls(parseDesignerWebContent(row.value))) {
+    for (const { url } of collectMediaUsage(parseDesignerWebContent(row.value))) {
       if (isOwnR2(url) && isVideoUrl(url)) targets.add(url);
     }
   }
