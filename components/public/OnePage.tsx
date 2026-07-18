@@ -8,6 +8,7 @@ import MediaView from "@/components/public/MediaView";
 import WorksGallery from "@/components/public/WorksGallery";
 import FloatingBubble from "@/components/public/FloatingBubble";
 import { externalHref } from "@/lib/utils";
+import { streamUidFromUrl } from "@/lib/stream-url";
 
 type Section = { key: string; zh: string; en: string; bg: string };
 
@@ -197,8 +198,17 @@ function renderSection(content: DesignerWebContent, sec: Section) {
 
 /** 一頁式網站的完整輸出（Header + 首屏 + 依 sections 排序的區塊 + Footer）。 */
 export default function OnePage({ content }: { content: DesignerWebContent }) {
+  // 頁面若含 Stream 影片，預先與 Cloudflare 建立連線，縮短首屏影片啟動時間。
+  const hasStreamVideo = [content.hero.video, ...content.videos.map((v) => v.video)].some((url) => streamUidFromUrl(url));
   return (
     <div style={{ ["--brand" as string]: content.brand.themeColor }}>
+      {hasStreamVideo && (
+        <>
+          <link rel="preconnect" href="https://iframe.videodelivery.net" />
+          <link rel="preconnect" href="https://videodelivery.net" />
+          <link rel="preconnect" href="https://cloudflarestream.com" crossOrigin="" />
+        </>
+      )}
       <Header content={content} />
       <main className="min-h-screen">
         <section id="top" className="scroll-mt-14" style={{ backgroundColor: content.hero.bgColor }}>
@@ -211,7 +221,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
               )}
               {!!content.hero.video && (
                 <div className="overflow-hidden">
-                  <PublicVideo src={content.hero.video} autoPlay className="aspect-square w-full object-cover" />
+                  <PublicVideo src={content.hero.video} autoPlay priority className="aspect-square w-full object-cover" />
                 </div>
               )}
             </div>
