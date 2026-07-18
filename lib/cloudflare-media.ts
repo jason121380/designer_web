@@ -114,6 +114,31 @@ export async function deleteFromR2(key: string) {
   );
 }
 
+/**
+ * 請 Cloudflare Stream 從公開網址匯入影片（把既有 R2 影片搬到 Stream）。
+ * 立即回傳 uid（Cloudflare 之後非同步下載並轉檔）；來源網址必須可公開存取。
+ */
+export async function copyStreamFromUrl(url: string, name?: string) {
+  if (!isStreamConfigured()) throw new Error("Cloudflare Stream 尚未設定");
+
+  const res = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/stream/copy`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.CLOUDFLARE_STREAM_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(name ? { url, meta: { name } } : { url }),
+    }
+  );
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.errors?.[0]?.message ?? "Cloudflare Stream 匯入失敗");
+  }
+  return data.result as { uid: string };
+}
+
 export async function createStreamDirectUpload(maxDurationSeconds: number) {
   if (!isStreamConfigured()) throw new Error("Cloudflare Stream 尚未設定");
 
