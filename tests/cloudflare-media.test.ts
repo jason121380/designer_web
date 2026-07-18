@@ -48,6 +48,7 @@ assert.match(videoRoute, /200 \* 1024 \* 1024/, "影片上限 200MB");
 // 後台表單以 VideoUpload 取代手貼影片 URL（首屏影片與作品影片）
 const form = read("components/admin/PageManagementForm.tsx");
 assert.match(form, /VideoUpload/);
-const videoUpload = read("components/admin/VideoUpload.tsx");
-assert.match(videoUpload, /\/api\/upload\/video-url/);
-assert.match(videoUpload, /xhr\.send\(file\)/, "以 XHR 直傳 R2（帶進度）");
+const clientVideoUpload = read("lib/client-video-upload.ts");
+assert.match(clientVideoUpload, /\/api\/cloudflare\/stream\/direct-upload/);
+assert.match(clientVideoUpload, /\/api\/upload\/video-url/);
+assert.match(clientVideoUpload, /xhr\.send\(body\)/, "共用 helper 以 XHR 直傳並回報進度");

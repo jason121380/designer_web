@@ -1,80 +1,82 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { streamIframeSrc, streamThumbnailUrl, streamUidFromUrl } from "@/lib/stream-url";
 
 interface Props {
   src: string;
   className?: string;
-  /** true＝顯示播放控制列（作品影片）；false＝首屏自動播放靜音循環。 */
+  /** true＝顯示播放控制列（作品影片）；false＝自動播放靜音循環。 */
   controls?: boolean;
   autoPlay?: boolean;
-  /** 首屏影片：略過「捲到才載入」，一進頁面就立即掛載播放器（避免等 2 秒才出現）。 */
+  /** 首屏影片只提高縮圖與已啟用播放器的載入優先級，不會在 SSR 階段建立 iframe。 */
   priority?: boolean;
 }
 
+interface NavigatorWithConnection extends Navigator {
+  connection?: { saveData?: boolean };
+}
+
+const ACTIVE_VIDEO_EVENT = "designer-video-activate";
+
 /**
  * 前台影片播放器：
- * - Cloudflare Stream 網址以 iframe 播放（自動選畫質＋串流，最省流量）；其餘網址用原生 <video>。
- * - 預設進到視窗附近才載入並播放（省頻寬）；priority＝首屏，立即載入不等捲動。
- * - <video> 載入或解碼失敗（例如部分裝置無法播放 .mov）時，改顯示可點開的連結，避免整塊消失。
+ * - 首次回應只輸出輕量縮圖，不建立昂貴的 Cloudflare Stream iframe。
+ * - 影片進入視窗才掛載播放器，離開即卸載；頁面同時間最多只啟用一支影片。
+ * - 省流量或減少動態效果模式改成點擊播放，避免背景下載影片。
  */
 export default function PublicVideo({ src, className = "", controls = false, autoPlay = false, priority = false }: Props) {
   const streamUid = streamUidFromUrl(src);
+  const playerId = useId();
   const [failed, setFailed] = useState(false);
-  const [active, setActive] = useState(priority);
+  const [active, setActive] = useState(false);
+  const [manualOnly, setManualOnly] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  const activate = useCallback(() => {
+    window.dispatchEvent(new CustomEvent(ACTIVE_VIDEO_EVENT, { detail: { id: playerId } }));
+    setActive(true);
+  }, [playerId]);
+
   useEffect(() => {
-    if (priority) {
-      // 首屏：立即嘗試播放，不等 IntersectionObserver。
-      if (!streamUid && autoPlay) videoRef.current?.play().catch(() => {});
+    const deactivateOtherPlayers = (event: Event) => {
+      const detail = (event as CustomEvent<{ id?: string }>).detail;
+      if (detail?.id !== playerId) setActive(false);
+    };
+    window.addEventListener(ACTIVE_VIDEO_EVENT, deactivateOtherPlayers);
+    return () => window.removeEventListener(ACTIVE_VIDEO_EVENT, deactivateOtherPlayers);
+  }, [playerId]);
+
+  useEffect(() => {
+    const target = wrapRef.current;
+    if (!target) return;
+
+    const saveData = (navigator as NavigatorWithConnection).connection?.saveData === true;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (saveData || reducedMotion) {
+      setManualOnly(true);
+      setActive(false);
       return;
     }
-    const target = streamUid ? wrapRef.current : videoRef.current;
-    if (!target) return;
+
     const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActive(true);
-            if (!streamUid && autoPlay) videoRef.current?.play().catch(() => {});
-          } else if (!streamUid) {
-            videoRef.current?.pause();
-          }
+      ([entry]) => {
+        if (entry?.isIntersecting && entry.intersectionRatio >= 0.35) {
+          activate();
+        } else {
+          setActive(false);
         }
       },
-      { rootMargin: "200px" }
+      { threshold: [0, 0.35, 0.6] }
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, [autoPlay, streamUid, priority]);
+  }, [activate]);
 
-  // Cloudflare Stream：iframe 播放。首屏立即掛載並 eager 載入，其餘進到視窗附近才掛載。
-  if (streamUid) {
-    return (
-      <div ref={wrapRef} className={`relative overflow-hidden bg-black ${className}`}>
-        {active && (
-          <iframe
-            src={streamIframeSrc(streamUid, {
-              autoplay: autoPlay,
-              loop: autoPlay,
-              muted: autoPlay,
-              controls,
-              preload: priority ? "auto" : "metadata",
-              poster: streamThumbnailUrl(streamUid),
-            })}
-            className="absolute inset-0 h-full w-full border-0"
-            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-            allowFullScreen
-            loading={priority ? "eager" : "lazy"}
-            title="影片"
-          />
-        )}
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!active) videoRef.current?.pause();
+  }, [active]);
 
   if (failed) {
     return (
@@ -86,18 +88,76 @@ export default function PublicVideo({ src, className = "", controls = false, aut
     );
   }
 
+  if (streamUid) {
+    const thumbnail = streamThumbnailUrl(streamUid);
+    return (
+      <div ref={wrapRef} className={`relative overflow-hidden bg-black ${className}`}>
+        <img
+          src={thumbnail}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          decoding="async"
+        />
+        {active && (
+          <iframe
+            src={streamIframeSrc(streamUid, {
+              autoplay: autoPlay,
+              loop: autoPlay,
+              muted: autoPlay,
+              controls,
+              preload: priority ? "auto" : "metadata",
+              poster: thumbnail,
+            })}
+            className="absolute inset-0 h-full w-full border-0"
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+            allowFullScreen
+            loading={priority ? "eager" : "lazy"}
+            title="影片"
+          />
+        )}
+        {manualOnly && !active && (
+          <button
+            type="button"
+            onClick={activate}
+            className="absolute inset-0 flex items-center justify-center bg-black/20 text-sm font-semibold text-white"
+            aria-label="播放影片"
+          >
+            <span className="rounded-full bg-black/65 px-5 py-3">播放影片</span>
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <video
-      ref={videoRef}
-      src={active ? src : undefined}
-      className={className}
-      onError={() => { if (active) setFailed(true); }}
-      onLoadedData={() => { if (autoPlay) videoRef.current?.play().catch(() => {}); }}
-      controls={controls}
-      playsInline
-      preload={priority ? "auto" : active ? "metadata" : "none"}
-      muted={autoPlay || undefined}
-      loop={autoPlay || undefined}
-    />
+    <div ref={wrapRef} className={`relative overflow-hidden bg-black ${className}`}>
+      {active && (
+        <video
+          ref={videoRef}
+          src={src}
+          className="h-full w-full object-cover"
+          onError={() => setFailed(true)}
+          onLoadedData={() => { if (autoPlay) videoRef.current?.play().catch(() => {}); }}
+          controls={controls}
+          playsInline
+          preload={priority ? "auto" : "metadata"}
+          muted={autoPlay || undefined}
+          loop={autoPlay || undefined}
+        />
+      )}
+      {!active && (
+        <button
+          type="button"
+          onClick={activate}
+          className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-white"
+          aria-label="播放影片"
+        >
+          <span className="rounded-full bg-white/15 px-5 py-3">播放影片</span>
+        </button>
+      )}
+    </div>
   );
 }

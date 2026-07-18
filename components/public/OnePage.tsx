@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
-import type { DesignerWebContent } from "@/lib/designer-web-content";
+import { SECTION_ANCHOR, type DesignerWebContent } from "@/lib/designer-web-content";
 import Header from "@/components/public/Header";
 import Footer from "@/components/public/Footer";
 import PublicVideo from "@/components/public/PublicVideo";
@@ -200,6 +200,14 @@ function renderSection(content: DesignerWebContent, sec: Section) {
 export default function OnePage({ content }: { content: DesignerWebContent }) {
   // 頁面若含 Stream 影片，預先與 Cloudflare 建立連線，縮短首屏影片啟動時間。
   const hasStreamVideo = [content.hero.video, ...content.videos.map((v) => v.video)].some((url) => streamUidFromUrl(url));
+  const headerLinks = content.sections
+    .filter((sec) => {
+      if (sec.key === "dm") return content.promos.length > 0;
+      if (sec.key === "videos") return content.videos.length > 0;
+      if (sec.key === "environment") return content.environment.length > 0;
+      return true;
+    })
+    .map((sec) => ({ href: `#${SECTION_ANCHOR[sec.key]}`, label: sec.zh }));
   return (
     <div style={{ ["--brand" as string]: content.brand.themeColor }}>
       {hasStreamVideo && (
@@ -209,7 +217,12 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
           <link rel="preconnect" href="https://cloudflarestream.com" crossOrigin="" />
         </>
       )}
-      <Header content={content} />
+      <Header
+        title={content.brand.tagline || content.brand.name}
+        themeColor={content.brand.themeColor}
+        textColor={content.brand.headerTextColor}
+        links={headerLinks}
+      />
       <main className="min-h-screen">
         <section id="top" className="scroll-mt-14" style={{ backgroundColor: content.hero.bgColor }}>
           {(content.hero.image || content.hero.video) && (

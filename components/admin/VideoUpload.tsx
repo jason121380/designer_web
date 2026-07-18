@@ -3,6 +3,7 @@
 import { useRef, useState, DragEvent } from "react";
 import MediaPickerModal from "./MediaPickerModal";
 import { streamIframeSrc, streamUidFromUrl } from "@/lib/stream-url";
+import { uploadClientVideo } from "@/lib/client-video-upload";
 
 interface Props {
   value?: string;
@@ -11,9 +12,6 @@ interface Props {
   /** 預覽/上傳區的長寬比 Tailwind class，預設 16:9；作品影片可傳 "aspect-[9/16]" 呈現直式卡片。 */
   aspect?: string;
 }
-
-const ALLOWED = ["video/mp4", "video/webm", "video/quicktime"];
-const MAX_SIZE = 200 * 1024 * 1024;
 
 export default function VideoUpload({ value, onChange, label = "影片", aspect = "aspect-video" }: Props) {
   const [uploading, setUploading] = useState(false);
@@ -26,79 +24,14 @@ export default function VideoUpload({ value, onChange, label = "影片", aspect 
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function uploadFile(file: File) {
-    if (!ALLOWED.includes(file.type)) { setError("僅支援 mp4、webm、mov 影片"); return; }
-    if (file.size > MAX_SIZE) { setError("影片大小不得超過 200MB"); return; }
-
     setError("");
     setNotice("");
     setUploading(true);
     setProgress(0);
     try {
-      // 優先走 Cloudflare Stream（自動轉檔＋串流，最省流量、載入最快）；未設定時（503）回退 R2 直傳。
-      const streamRes = await fetch("/api/cloudflare/stream/direct-upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ maxDurationSeconds: 21600 }),
-      });
-
-      if (streamRes.ok) {
-        const stream = await streamRes.json();
-        // 瀏覽器直接把檔案 POST 到 Cloudflare（multipart form-data，欄位名 file），帶進度。
-        await new Promise<void>((resolve, reject) => {
-          const form = new FormData();
-          form.append("file", file);
-          const xhr = new XMLHttpRequest();
-          xhr.open("POST", stream.uploadURL);
-          xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable) setProgress(Math.round((event.loaded / event.total) * 100));
-          };
-          xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error("上傳到 Cloudflare Stream 失敗")));
-          xhr.onerror = () => reject(new Error("上傳到 Cloudflare Stream 失敗"));
-          xhr.send(form);
-        });
-        // 記錄媒體並取得播放網址（失敗不影響上傳結果）。
-        fetch("/api/cloudflare/stream/complete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ uid: stream.uid, originalName: file.name, size: file.size, mimeType: file.type }),
-        }).catch(() => {});
-        onChange(stream.iframeUrl);
-        setNotice("影片已上傳，Cloudflare 正在轉檔，稍待片刻即可正常播放");
-        return;
-      }
-
-      if (streamRes.status !== 503) {
-        const info = await streamRes.json().catch(() => ({}));
-        throw new Error(info.error ?? "取得上傳連結失敗");
-      }
-
-      // === 回退：Cloudflare Stream 未設定，改用 R2 直傳 ===
-      // .mov（QuickTime）在部分 Chrome/Android 可能無法播放，仍允許上傳但提醒改用 MP4。
-      setNotice(file.type === "video/quicktime" ? ".mov 在部分 Chrome／Android 可能無法播放，若前台無法播放建議改上傳 MP4（H.264）" : "");
-      const res = await fetch("/api/upload/video-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contentType: file.type, size: file.size }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "取得上傳連結失敗");
-
-      // 瀏覽器直接 PUT 到 R2（帶進度）
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("PUT", data.uploadUrl);
-        xhr.setRequestHeader("Content-Type", file.type);
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) setProgress(Math.round((event.loaded / event.total) * 100));
-        };
-        xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error("上傳到 R2 失敗")));
-        xhr.onerror = () => reject(new Error("上傳到 R2 失敗（請確認 R2 CORS 設定）"));
-        xhr.send(file);
-      });
-
-      onChange(data.publicUrl);
-      // 記錄到媒體庫（失敗不影響上傳結果）。
-      fetch("/api/media", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: data.publicUrl, mimeType: file.type, size: file.size, originalName: file.name }) }).catch(() => {});
+      const result = await uploadClientVideo(file, { onProgress: setProgress });
+      onChange(result.url);
+      setNotice(result.notice);
     } catch (e) {
       setError(e instanceof Error ? e.message : "上傳失敗");
     } finally {

@@ -2,26 +2,19 @@
 
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-import type { DesignerWebContent } from "@/lib/designer-web-content";
-import { SECTION_ANCHOR } from "@/lib/designer-web-content";
 
-/** 可選區塊沒有內容時不進導覽（跟前台顯示規則一致）。 */
-function isVisible(key: string, content: DesignerWebContent): boolean {
-  if (key === "dm") return content.promos.length > 0;
-  if (key === "videos") return content.videos.length > 0;
-  if (key === "environment") return content.environment.length > 0;
-  return true;
+interface Props {
+  title: string;
+  themeColor: string;
+  textColor: string;
+  links: { href: string; label: string }[];
 }
 
-export default function Header({ content }: { content: DesignerWebContent }) {
+export default function Header({ title, themeColor, textColor, links }: Props) {
   const [open, setOpen] = useState(false);
-  const title = content.brand.tagline || content.brand.name;
-  const links = content.sections
-    .filter((sec) => isVisible(sec.key, content))
-    .map((sec) => ({ href: `#${SECTION_ANCHOR[sec.key]}`, label: sec.zh }));
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur" style={{ backgroundColor: content.brand.themeColor, color: content.brand.headerTextColor }}>
+    <nav className="sticky top-0 z-50 backdrop-blur" style={{ backgroundColor: themeColor, color: textColor }}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <a href="#top" className="font-semibold tracking-wide" onClick={() => setOpen(false)}>{title}</a>
         <ul className="hidden items-center gap-6 text-sm md:flex">
@@ -41,7 +34,7 @@ export default function Header({ content }: { content: DesignerWebContent }) {
       </div>
 
       {open && (
-        <div className="border-t border-black/10 md:hidden" style={{ backgroundColor: content.brand.themeColor, color: content.brand.headerTextColor }}>
+        <div className="border-t border-black/10 md:hidden" style={{ backgroundColor: themeColor, color: textColor }}>
           <ul className="mx-auto max-w-6xl px-4 py-2">
             {links.map((link) => (
               <li key={link.href}>

@@ -3,6 +3,7 @@
 import { useRef, useState, DragEvent } from "react";
 import { isVideoUrl } from "@/lib/media";
 import { streamIframeSrc, streamUidFromUrl } from "@/lib/stream-url";
+import { uploadClientVideo } from "@/lib/client-video-upload";
 import MediaPickerModal from "./MediaPickerModal";
 
 interface Props {
@@ -14,10 +15,8 @@ interface Props {
 }
 
 const IMAGE_MAX = 10 * 1024 * 1024;
-const VIDEO_MAX = 200 * 1024 * 1024;
-const VIDEO_ALLOWED = ["video/mp4", "video/webm", "video/quicktime"];
 
-/** 通用媒體上傳：圖片走 /api/upload（伺服器處理），影片走 presigned 直傳 R2（帶進度）。 */
+/** 通用媒體上傳：圖片走 /api/upload；影片走 Stream-first 共用管線。 */
 export default function MediaUpload({ value, onChange, label = "圖片或影片", aspect = "aspect-video" }: Props) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -39,28 +38,9 @@ export default function MediaUpload({ value, onChange, label = "圖片或影片"
   }
 
   async function uploadVideo(file: File) {
-    if (!VIDEO_ALLOWED.includes(file.type)) { setError("僅支援 mp4、webm、mov 影片"); return; }
-    if (file.size > VIDEO_MAX) { setError("影片大小不得超過 200MB"); return; }
-    setNotice(file.type === "video/quicktime" ? ".mov 在部分 Chrome／Android 可能無法播放，若前台無法播放建議改上傳 MP4（H.264）" : "");
-    const res = await fetch("/api/upload/video-url", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contentType: file.type, size: file.size }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error ?? "取得上傳連結失敗");
-    await new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("PUT", data.uploadUrl);
-      xhr.setRequestHeader("Content-Type", file.type);
-      xhr.upload.onprogress = (event) => { if (event.lengthComputable) setProgress(Math.round((event.loaded / event.total) * 100)); };
-      xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error("上傳到 R2 失敗")));
-      xhr.onerror = () => reject(new Error("上傳到 R2 失敗（請確認 R2 CORS 設定）"));
-      xhr.send(file);
-    });
-    onChange(data.publicUrl);
-    // 記錄到媒體庫（失敗不影響上傳結果）。
-    fetch("/api/media", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: data.publicUrl, mimeType: file.type, size: file.size, originalName: file.name }) }).catch(() => {});
+    const result = await uploadClientVideo(file, { onProgress: setProgress });
+    onChange(result.url);
+    setNotice(result.notice);
   }
 
   async function uploadFile(file: File) {

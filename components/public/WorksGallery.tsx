@@ -43,7 +43,7 @@ export default function WorksGallery({ videos, categoryOrder = [] }: { videos: V
       <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:pb-0 lg:grid-cols-3">
         {shown.map((item) => (
           <figure key={item.id} className="w-[78%] shrink-0 snap-center overflow-hidden bg-white rounded-lg sm:w-[46%] md:w-auto">
-            <PublicVideo src={item.video} autoPlay priority className="aspect-[9/16] w-full bg-black object-cover" />
+            <PublicVideo src={item.video} autoPlay className="aspect-[9/16] w-full bg-black object-cover" />
             {!!item.caption && <figcaption className="p-4 text-sm text-neutral-600">{item.caption}</figcaption>}
           </figure>
         ))}

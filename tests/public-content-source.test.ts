@@ -25,10 +25,12 @@ assert.match(onePageSource, /content\.videos/);
 assert.match(onePageSource, /content\.installment/);
 assert.doesNotMatch(onePageSource, /frontendDemo|getDesignerWebContent/);
 
-// Header 與 Footer 都是 props 驅動，跟著各頁面的內容走
+// Header 只接收 OnePage 算好的最小 props，避免把完整內容 schema 帶入 client bundle；Footer 仍由內容 props 驅動。
 const headerSource = read("components/public/Header.tsx");
-assert.match(headerSource, /content: DesignerWebContent/);
-assert.doesNotMatch(headerSource, /frontendDemo|getDesignerWebContent/);
+assert.match(headerSource, /title: string/);
+assert.match(headerSource, /links: \{ href: string; label: string \}\[\]/);
+assert.match(onePageSource, /<Header\s+title=/);
+assert.doesNotMatch(headerSource, /DesignerWebContent|designer-web-content|frontendDemo|getDesignerWebContent/);
 
 const footerSource = read("components/public/Footer.tsx");
 assert.match(footerSource, /content: DesignerWebContent/);
