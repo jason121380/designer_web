@@ -218,7 +218,7 @@ export default function PageList({ pages }: { pages: PageListItem[] }) {
                 {menuSlug === page.slug && (
                   <>
                     <div className="fixed inset-0 z-10" aria-hidden onClick={() => setMenuSlug(null)} />
-                    <div className="absolute right-0 z-20 mt-1 w-36 overflow-hidden border border-gray-200 bg-white rounded-lg py-1 shadow-lg">
+                    <div className="absolute left-0 right-auto z-20 mt-1 w-36 overflow-hidden border border-gray-200 bg-white rounded-lg py-1 shadow-lg sm:left-auto sm:right-0">
                       <button type="button" onClick={() => { openRename(page); setMenuSlug(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"><Pencil size={13} />編輯後綴</button>
                       <button type="button" onClick={() => { openCopy(page); setMenuSlug(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"><Copy size={13} />複製</button>
                       <button type="button" disabled={togglingSlug === page.slug} onClick={() => { toggleActive(page.slug, !page.active); setMenuSlug(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">{page.active ? <><EyeOff size={13} />停用</> : <><Eye size={13} />啟用</>}</button>

@@ -49,6 +49,8 @@ assert.match(listSource, /首頁/);
 assert.match(listSource, /停用/, "子頁面需提供停用切換");
 assert.match(listSource, /啟用/, "停用後可重新啟用");
 assert.doesNotMatch(listSource, /window\.confirm|window\.alert/);
+// 「更多」在手機換行後靠左，選單需向右展開；桌機才改回靠右對齊，避免超出 viewport。
+assert.match(listSource, /absolute left-0 right-auto[^\"]*sm:left-auto sm:right-0/);
 
 const adminListPage = read("app/admin/page-management/page.tsx");
 assert.match(adminListPage, /PageList/);
