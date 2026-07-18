@@ -90,12 +90,13 @@ PageManagementForm
 
 ### 影片
 
-影片一律直傳 Cloudflare R2（與圖片同一個 bucket，不走 Volume、不需 Cloudflare Stream）：
-- 前端 `components/admin/VideoUpload.tsx` 選檔後，向 `POST /api/upload/video-url` 取得 R2 presigned PUT URL，再用 XHR **由瀏覽器直接上傳到 R2**（帶進度，大檔不佔伺服器記憶體）。
-- presigned helper：`getR2PresignedUploadUrl()`（`lib/cloudflare-media.ts`），簽名含 ContentType，前端 PUT 必須帶相同 `Content-Type`。key 為 `uploads/videos/YYYY/MM/<檔名>`。
-- 限制：mp4／webm／mov，單檔 200MB；R2 未設定回 503。**R2 bucket 需設 CORS 允許站台來源 PUT/GET**。
-- 首屏影片與作品影片欄位皆改用 `VideoUpload`（仍保留「貼上影片網址」欄，可填 Cloudflare Stream 等外部播放 URL）。
-- `/api/cloudflare/stream/*` 與 Stream helper 仍保留（可選的 Cloudflare Stream 方案），但預設走 R2。
+影片**優先走 Cloudflare Stream（自動轉檔＋自適應串流，載入最快）**；未設定 Stream 時自動回退 Cloudflare R2 直傳。上傳元件 `components/admin/VideoUpload.tsx` 對兩種情況透明處理：
+
+- **Stream（預設）**：選檔後 `POST /api/cloudflare/stream/direct-upload` 取得一次性 `uploadURL` 與 `uid`，瀏覽器用 XHR **以 multipart form-data（欄位 `file`）直接 POST 到 Cloudflare**（帶進度、不佔伺服器記憶體），再 `POST /api/cloudflare/stream/complete` 建立 `media` 紀錄。存回內容的網址為 iframe 播放網址 `https://iframe.videodelivery.net/{uid}`。Cloudflare 上傳完會有短暫「轉檔中」，稍待即可播放。Stream direct_upload 網址允許跨來源上傳，**不需額外設 CORS**。
+- **R2（回退）**：`direct-upload` 在 Stream 未設定時回 **503**，前端改走 `POST /api/upload/video-url` 取得 R2 presigned PUT URL，瀏覽器 PUT 上傳（key `uploads/videos/YYYY/MM/<檔名>`）。**R2 bucket 需設 CORS 允許站台來源 PUT/GET**。
+- 限制：mp4／webm／mov，單檔 200MB。仍保留「貼上影片網址」欄，可填外部播放 URL。
+- **播放**：`components/public/PublicVideo.tsx` 依網址判斷——Stream 網址（`lib/stream-url.ts` 的 `streamUidFromUrl()`）用 `<iframe>`（作品影片帶 `autoplay/loop/muted/controls=false`、懶載入）；其餘網址用原生 `<video>`。後台縮圖 `AdminVideoThumb` 對 Stream 直接用官方縮圖圖片 `videodelivery.net/{uid}/thumbnails/thumbnail.jpg`。
+- client 端不可 import `lib/cloudflare-media.ts`（含 aws-sdk）；Stream 網址判斷／組裝一律用純字串工具 `lib/stream-url.ts`。
 
 ## 環境變數
 
@@ -116,10 +117,10 @@ R2：
 - `CLOUDFLARE_R2_BUCKET`
 - `CLOUDFLARE_R2_PUBLIC_URL`
 
-Stream：
+Stream（影片預設走此路徑；未設定時影片自動回退 R2）：
 
 - `CLOUDFLARE_ACCOUNT_ID`
-- `CLOUDFLARE_STREAM_API_TOKEN`
+- `CLOUDFLARE_STREAM_API_TOKEN`（需具備 Stream 讀寫權限）
 
 AI SEO（選填，用於後台 SEO「AI 自動填寫」按鈕，未設定時該 API 回 503）：
 
