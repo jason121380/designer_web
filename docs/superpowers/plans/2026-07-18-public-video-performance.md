@@ -137,4 +137,3 @@ Run: `npm run build:verify`
 Run: `git diff --check && git status --short && git diff --stat`
 
 Expected: 無 whitespace error、所有修改均在本計畫範圍內。
-

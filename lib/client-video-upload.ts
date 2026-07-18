@@ -26,6 +26,19 @@ async function responseJson<T>(response: Response): Promise<T> {
   return response.json().catch(() => ({} as T));
 }
 
+async function registerUploadedMedia(url: string, init: RequestInit): Promise<string> {
+  try {
+    const response = await fetch(url, init);
+    return response.ok ? "" : "影片已上傳，但媒體庫登錄失敗；目前欄位仍可正常使用此影片網址";
+  } catch {
+    return "影片已上傳，但媒體庫登錄失敗；目前欄位仍可正常使用此影片網址";
+  }
+}
+
+function notices(...messages: string[]): string {
+  return messages.filter(Boolean).join("；");
+}
+
 function xhrUpload({
   url,
   method,
@@ -89,7 +102,7 @@ export async function uploadClientVideo(file: File, { onProgress }: UploadOption
       errorMessage: "上傳到 Cloudflare Stream 失敗",
     });
 
-    void fetch("/api/cloudflare/stream/complete", {
+    const registrationNotice = await registerUploadedMedia("/api/cloudflare/stream/complete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -98,11 +111,11 @@ export async function uploadClientVideo(file: File, { onProgress }: UploadOption
         size: file.size,
         mimeType: file.type,
       }),
-    }).catch(() => {});
+    });
 
     return {
       url: stream.iframeUrl,
-      notice: "影片已上傳，Cloudflare 正在轉檔，稍待片刻即可正常播放",
+      notice: notices("影片已上傳，Cloudflare 正在轉檔，稍待片刻即可正常播放", registrationNotice),
     };
   }
 
@@ -128,7 +141,7 @@ export async function uploadClientVideo(file: File, { onProgress }: UploadOption
     errorMessage: "上傳到 R2 失敗（請確認 R2 CORS 設定）",
   });
 
-  void fetch("/api/media", {
+  const registrationNotice = await registerUploadedMedia("/api/media", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -137,12 +150,15 @@ export async function uploadClientVideo(file: File, { onProgress }: UploadOption
       size: file.size,
       originalName: file.name,
     }),
-  }).catch(() => {});
+  });
 
   return {
     url: r2.publicUrl,
-    notice: file.type === "video/quicktime"
-      ? ".mov 在部分 Chrome／Android 可能無法播放，若前台無法播放建議改上傳 MP4（H.264）"
-      : "",
+    notice: notices(
+      file.type === "video/quicktime"
+        ? ".mov 在部分 Chrome／Android 可能無法播放，若前台無法播放建議改上傳 MP4（H.264）"
+        : "",
+      registrationNotice
+    ),
   };
 }

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import PublicVideo from "../components/public/PublicVideo";
+import PublicVideo, { videoVisibilityAction } from "../components/public/PublicVideo";
 
 // tsx 保留本專案的 JSX 設定；測試環境補上 classic transform 所需的 React global。
 (globalThis as typeof globalThis & { React: typeof React }).React = React;
@@ -29,6 +29,14 @@ assert.match(publicVideo, /loading=\{priority \? "eager" : "lazy"\}/);
 assert.match(publicVideo, /designer-video-activate/);
 assert.match(publicVideo, /saveData/);
 assert.match(publicVideo, /prefers-reduced-motion/);
+assert.match(publicVideo, /manualPlayback/);
+assert.match(publicVideo, /\{!active && \(/, "未啟用的 Stream 縮圖必須能手動點播");
+
+// 可視生命週期的決策直接做行為驗證。
+assert.equal(videoVisibilityAction({ isIntersecting: true, intersectionRatio: 0.15, manualPlayback: false }), "activate");
+assert.equal(videoVisibilityAction({ isIntersecting: true, intersectionRatio: 0.8, manualPlayback: true }), "keep");
+assert.equal(videoVisibilityAction({ isIntersecting: true, intersectionRatio: 0.04, manualPlayback: true }), "deactivate");
+assert.equal(videoVisibilityAction({ isIntersecting: false, intersectionRatio: 0, manualPlayback: false }), "deactivate");
 
 // 真正的 server render 不得輸出 iframe/video，只留下 Stream 縮圖占位。
 const serverMarkup = renderToStaticMarkup(React.createElement(PublicVideo, {

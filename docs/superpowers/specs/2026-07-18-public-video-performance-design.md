@@ -72,4 +72,3 @@
 - Save-Data／reduced motion 顯示手動播放按鈕。
 - `MediaUpload` 和 `VideoUpload` 都走共用 Stream-first helper。
 - 完整 TypeScript 測試、`tsc`、production build 與 `git diff --check` 通過。
-

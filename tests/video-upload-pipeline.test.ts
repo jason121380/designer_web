@@ -18,4 +18,3 @@ assert.doesNotMatch(mediaUpload, /new XMLHttpRequest/);
 assert.doesNotMatch(mediaUpload, /\/api\/upload\/video-url/);
 
 console.log("video-upload-pipeline.test.ts passed");
-

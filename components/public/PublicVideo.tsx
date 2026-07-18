@@ -19,6 +19,20 @@ interface NavigatorWithConnection extends Navigator {
 
 const ACTIVE_VIDEO_EVENT = "designer-video-activate";
 
+export function videoVisibilityAction({
+  isIntersecting,
+  intersectionRatio,
+  manualPlayback,
+}: {
+  isIntersecting: boolean;
+  intersectionRatio: number;
+  manualPlayback: boolean;
+}): "activate" | "deactivate" | "keep" {
+  if (!isIntersecting || intersectionRatio < 0.05) return "deactivate";
+  if (!manualPlayback && intersectionRatio >= 0.15) return "activate";
+  return "keep";
+}
+
 /**
  * 前台影片播放器：
  * - 首次回應只輸出輕量縮圖，不建立昂貴的 Cloudflare Stream iframe。
@@ -53,22 +67,31 @@ export default function PublicVideo({ src, className = "", controls = false, aut
     if (!target) return;
 
     const saveData = (navigator as NavigatorWithConnection).connection?.saveData === true;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (saveData || reducedMotion) {
-      setManualOnly(true);
-      setActive(false);
+    const reducedMotion = typeof window.matchMedia === "function"
+      && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const manualPlayback = saveData || reducedMotion;
+    setManualOnly(manualPlayback);
+
+    // 舊版 WebView 沒有 IntersectionObserver 時維持可播放；省流量模式仍等待使用者點擊。
+    if (!("IntersectionObserver" in window)) {
+      if (!manualPlayback) activate();
       return;
     }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry?.isIntersecting && entry.intersectionRatio >= 0.35) {
-          activate();
-        } else {
+        const action = videoVisibilityAction({
+          isIntersecting: entry?.isIntersecting ?? false,
+          intersectionRatio: entry?.intersectionRatio ?? 0,
+          manualPlayback,
+        });
+        if (action === "deactivate") {
           setActive(false);
+        } else if (action === "activate") {
+          activate();
         }
       },
-      { threshold: [0, 0.35, 0.6] }
+      { threshold: [0, 0.05, 0.15, 0.6] }
     );
     observer.observe(target);
     return () => observer.disconnect();
@@ -118,14 +141,14 @@ export default function PublicVideo({ src, className = "", controls = false, aut
             title="影片"
           />
         )}
-        {manualOnly && !active && (
+        {!active && (
           <button
             type="button"
             onClick={activate}
             className="absolute inset-0 flex items-center justify-center bg-black/20 text-sm font-semibold text-white"
             aria-label="播放影片"
           >
-            <span className="rounded-full bg-black/65 px-5 py-3">播放影片</span>
+            <span className={`rounded-full bg-black/65 px-5 py-3 ${manualOnly ? "" : "opacity-80"}`}>播放影片</span>
           </button>
         )}
       </div>

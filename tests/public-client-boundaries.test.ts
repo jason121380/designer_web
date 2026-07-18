@@ -17,4 +17,3 @@ assert.match(header, /links: \{ href: string; label: string \}\[\]/);
 assert.match(onePage, /<Header\s+title=/);
 
 console.log("public-client-boundaries.test.ts passed");
-
