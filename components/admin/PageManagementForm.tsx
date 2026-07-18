@@ -365,7 +365,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
           </div>
           <div className="grid gap-5 md:grid-cols-2">
             <div>
-              <ImageUpload label="社群分享圖（og:image，建議 1200x630）" aspect="aspect-[1200/630]" value={content.seo.ogImage} onChange={(ogImage) => setContent({ ...content, seo: { ...content.seo, ogImage } })} />
+              <ImageUpload label="社群分享圖（og:image，建議 1200x630）" aspect="aspect-[1200/630]" value={content.seo.ogImage} onChange={(ogImage) => setContent((prev) => ({ ...prev, seo: { ...prev.seo, ogImage } }))} />
             </div>
             <div className="space-y-4">
               <Field label="SEO 標題（搜尋結果與分頁標題）" value={content.seo.title} placeholder={content.brand.name} onChange={(title) => setContent({ ...content, seo: { ...content.seo, title } })} />

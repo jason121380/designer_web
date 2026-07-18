@@ -4,12 +4,13 @@ import prisma from "@/lib/prisma";
 const SLUG_REDIRECTS_KEY = "designer_web_slug_redirects";
 
 async function readMap(): Promise<Record<string, string>> {
-  const row = await prisma.siteSettings.findUnique({ where: { key: SLUG_REDIRECTS_KEY } });
-  if (!row) return {};
   try {
+    const row = await prisma.siteSettings.findUnique({ where: { key: SLUG_REDIRECTS_KEY } });
+    if (!row) return {};
     const parsed = JSON.parse(row.value);
     return parsed && typeof parsed === "object" ? (parsed as Record<string, string>) : {};
   } catch {
+    // DB 不可用或 JSON 損壞時回空對照，讓前台維持 404 而非 500。
     return {};
   }
 }

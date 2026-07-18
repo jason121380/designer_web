@@ -8,6 +8,7 @@ import {
   parseDesignerWebContent,
 } from "@/lib/designer-web-content";
 import prisma from "@/lib/prisma";
+import { rateLimit, tooMany } from "@/lib/rate-limit";
 import { clearSlugRedirect, recordSlugRename } from "@/lib/slug-redirects";
 
 export const dynamic = "force-dynamic";
@@ -16,11 +17,11 @@ type RouteContext = { params: Promise<{ slug: string }> };
 
 async function requireEditor() {
   const session = await auth();
-  const role = (session?.user as { role?: string } | undefined)?.role;
-  if (!session?.user || (role !== "ADMIN" && role !== "EDITOR")) {
-    return NextResponse.json({ error: "需要管理員或編輯身分" }, { status: 403 });
+  const user = session?.user as { id?: string; role?: string } | undefined;
+  if (!user || (user.role !== "ADMIN" && user.role !== "EDITOR")) {
+    return { error: NextResponse.json({ error: "需要管理員或編輯身分" }, { status: 403 }), userId: "" };
   }
-  return null;
+  return { error: null, userId: user.id ?? "" };
 }
 
 async function resolveSlug(context: RouteContext) {
@@ -39,7 +40,7 @@ export async function GET(_req: NextRequest, context: RouteContext) {
 
 /** 建立新頁面：以示範內容起始，可帶入設計師名稱設為品牌名；已存在時回 409，避免覆寫。 */
 export async function POST(req: NextRequest, context: RouteContext) {
-  const forbidden = await requireEditor();
+  const { error: forbidden } = await requireEditor();
   if (forbidden) return forbidden;
 
   const slug = await resolveSlug(context);
@@ -75,8 +76,11 @@ export async function POST(req: NextRequest, context: RouteContext) {
 }
 
 export async function PUT(req: NextRequest, context: RouteContext) {
-  const forbidden = await requireEditor();
+  const { error: forbidden, userId } = await requireEditor();
   if (forbidden) return forbidden;
+
+  const rl = rateLimit(`designer-web-put:${userId}`, { limit: 60, windowMs: 60_000 });
+  if (!rl.ok) return tooMany(rl.retryAfter, "儲存太頻繁，請稍後再試");
 
   const slug = await resolveSlug(context);
   if (!slug) return NextResponse.json({ error: "無效的頁面後綴" }, { status: 400 });
@@ -96,7 +100,7 @@ export async function PUT(req: NextRequest, context: RouteContext) {
  * - { active: boolean } 切換啟用/停用（停用後前台回 404）。
  */
 export async function PATCH(req: NextRequest, context: RouteContext) {
-  const forbidden = await requireEditor();
+  const { error: forbidden } = await requireEditor();
   if (forbidden) return forbidden;
 
   const slug = await resolveSlug(context);
@@ -141,7 +145,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(_req: NextRequest, context: RouteContext) {
-  const forbidden = await requireEditor();
+  const { error: forbidden } = await requireEditor();
   if (forbidden) return forbidden;
 
   const slug = await resolveSlug(context);
