@@ -17,12 +17,20 @@ export const maxDuration = 60;
 // 一次最多搬移的影片數，避免異常內容造成大量對外請求。
 const MAX_MIGRATE = 50;
 
-/** 從一頁內容收集影片欄位網址（首屏影片 + 作品影片）。 */
+/**
+ * 從一頁內容收集所有「可放影片」欄位的網址：首屏影片、作品影片，以及
+ * 促銷/DM、接髮介紹、特色項目、環境等項目（這些欄位圖片影片兩用）。
+ * 是否真的是影片，由呼叫端以 isVideoUrl 過濾。
+ */
 function collectVideoUrls(content: DesignerWebContent): string[] {
   const urls: string[] = [];
   const push = (url?: string) => { if (url && /^https?:\/\//.test(url)) urls.push(url); };
   push(content.hero.video);
   content.videos.forEach((item) => push(item.video));
+  content.promos.forEach((item) => push(item.image));
+  content.services.forEach((item) => push(item.image));
+  content.otherServices.forEach((item) => push(item.image));
+  content.environment.forEach((item) => push(item.image));
   return urls;
 }
 

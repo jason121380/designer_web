@@ -97,7 +97,7 @@ PageManagementForm
 - **R2（回退）**：`direct-upload` 在 Stream 未設定時回 **503**，前端改走 `POST /api/upload/video-url` 取得 R2 presigned PUT URL，瀏覽器 PUT 上傳（key `uploads/videos/YYYY/MM/<檔名>`）。**R2 bucket 需設 CORS 允許站台來源 PUT/GET**。
 - 限制：mp4／webm／mov，單檔 200MB。仍保留「貼上影片網址」欄，可填外部播放 URL。
 - **播放**：`components/public/PublicVideo.tsx` 依網址判斷——Stream 網址（`lib/stream-url.ts` 的 `streamUidFromUrl()`）用 `<iframe>`（作品影片帶 `autoplay/loop/muted/controls=false`、懶載入）；其餘網址用原生 `<video>`。後台縮圖 `AdminVideoThumb` 對 Stream 直接用官方縮圖圖片 `videodelivery.net/{uid}/thumbnails/thumbnail.jpg`。
-- **舊影片搬移**：工程模式「把舊影片搬到 Stream」按鈕 → `POST /api/media/migrate-videos-to-stream`（ADMIN），掃描所有頁面的首屏／作品影片，對本站 R2 上的影片以 `copyStreamFromUrl()`（Stream `stream/copy` 從網址匯入）取得 uid，再把所有頁面內容與媒體庫中的舊網址整批字串取代成新 iframe 網址。安全可重複執行（已是 Stream 網址天然被排除）、保留舊 R2 檔案不刪除、單次上限 50 支。
+- **舊影片搬移**：工程模式「把舊影片搬到 Stream」按鈕 → `POST /api/media/migrate-videos-to-stream`（ADMIN），掃描所有頁面**所有可放影片的欄位**（首屏影片、作品影片，以及促銷/DM、接髮介紹、特色項目、環境等圖片影片兩用欄位，以 `isVideoUrl` 過濾出影片），對本站 R2 上的影片以 `copyStreamFromUrl()`（Stream `stream/copy` 從網址匯入）取得 uid，再把所有頁面內容與媒體庫中的舊網址整批字串取代成新 iframe 網址。安全可重複執行（已是 Stream 網址天然被排除）、保留舊 R2 檔案不刪除、單次上限 50 支。
 - client 端不可 import `lib/cloudflare-media.ts`（含 aws-sdk）；Stream 網址判斷／組裝一律用純字串工具 `lib/stream-url.ts`。
 
 ## 環境變數

@@ -41,7 +41,8 @@ export default function AdminVideoThumb({ src, className = "" }: { src: string; 
   return (
     <video
       ref={ref}
-      src={load ? src : undefined}
+      // 加 #t=0.1 讓 iOS Safari 也會 seek 到第 0.1 秒並畫出該幀當縮圖（否則常是空白）。
+      src={load ? `${src}#t=0.1` : undefined}
       preload={load ? "metadata" : "none"}
       muted
       playsInline
