@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import {
   DESIGNER_WEB_SETTINGS_KEY,
+  DESIGNER_WEB_SETTINGS_PREFIX,
   parseDesignerWebContent,
   type DesignerWebContent,
 } from "@/lib/designer-web-content";
@@ -90,6 +92,15 @@ export async function POST() {
     }
     if (changed) {
       await prisma.siteSettings.update({ where: { key: row.key }, data: { value } });
+      // 刷新該子頁前台快取（ISR），讓新的 Stream 網址立即生效。
+      const slug = row.key.startsWith(DESIGNER_WEB_SETTINGS_PREFIX)
+        ? row.key.slice(DESIGNER_WEB_SETTINGS_PREFIX.length)
+        : "";
+      if (slug) {
+        revalidatePath(`/${slug}`);
+        revalidatePath(`/${slug}/web`);
+        revalidatePath(`/${slug}/links`);
+      }
     }
   }
 

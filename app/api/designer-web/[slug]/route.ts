@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import {
   defaultDesignerWebContent,
@@ -27,6 +28,14 @@ async function requireEditor() {
 async function resolveSlug(context: RouteContext) {
   const { slug } = await context.params;
   return isValidPageSlug(slug) ? slug : null;
+}
+
+/** 編輯後立即刷新該子頁的前台快取（ISR），讓變更馬上生效。 */
+function revalidateSlug(slug: string) {
+  revalidatePath(`/${slug}`);
+  revalidatePath(`/${slug}/web`);
+  revalidatePath(`/${slug}/links`);
+  revalidatePath("/sitemap.xml");
 }
 
 export async function GET(_req: NextRequest, context: RouteContext) {
@@ -72,6 +81,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   await prisma.siteSettings.create({ data: { key, value: JSON.stringify(content) } });
   await clearSlugRedirect(slug); // 若此後綴曾是別頁的舊轉址，建立實體頁後清掉，避免被導走
+  revalidateSlug(slug);
   return NextResponse.json(content, { status: 201 });
 }
 
@@ -91,6 +101,7 @@ export async function PUT(req: NextRequest, context: RouteContext) {
     create: { key: pageContentKey(slug), value: JSON.stringify(content) },
     update: { value: JSON.stringify(content) },
   });
+  revalidateSlug(slug);
   return NextResponse.json(content);
 }
 
@@ -131,6 +142,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     ]);
     // 記錄舊後綴 → 新後綴，前台會 308 永久轉址（保住廣告到達頁與 SEO）。
     await recordSlugRename(slug, newSlug);
+    revalidateSlug(slug);
+    revalidateSlug(newSlug);
     return NextResponse.json({ slug: newSlug });
   }
 
@@ -141,6 +154,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     where: { key: pageContentKey(slug) },
     data: { value: JSON.stringify(content) },
   });
+  revalidateSlug(slug);
   return NextResponse.json({ active: content.active });
 }
 
@@ -156,5 +170,6 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
   } catch {
     return NextResponse.json({ error: "頁面不存在" }, { status: 404 });
   }
+  revalidateSlug(slug);
   return NextResponse.json({ ok: true });
 }
