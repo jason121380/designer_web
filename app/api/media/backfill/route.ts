@@ -53,13 +53,17 @@ export async function POST() {
   // 既有但沒有大小（例如先前回填為 0）的，補抓實際大小。
   const toFixSize = existing.filter((item) => !item.size);
 
-  // 以 HEAD 取得檔案大小（Content-Length）；失敗回 0。
+  // 只對本站 R2 公開網址取大小，避免對內容中任意網址發請求（SSRF）。
+  const r2Base = (process.env.CLOUDFLARE_R2_PUBLIC_URL || "").replace(/\/+$/, "");
+  const isOwnR2 = (url: string) => Boolean(r2Base) && url.startsWith(`${r2Base}/`);
+
+  // 以 HEAD 取得檔案大小（Content-Length）；逾時或失敗回 0，且逾時不拖垮整批。
   const sizeCache = new Map<string, number>();
-  const targets = [...new Set([...toAdd, ...toFixSize.map((item) => item.url)])];
+  const targets = [...new Set([...toAdd, ...toFixSize.map((item) => item.url)])].filter(isOwnR2);
   await Promise.all(
     targets.map(async (url) => {
       try {
-        const res = await fetch(url, { method: "HEAD" });
+        const res = await fetch(url, { method: "HEAD", redirect: "manual", signal: AbortSignal.timeout(5000) });
         const length = res.headers.get("content-length");
         sizeCache.set(url, length ? Number(length) : 0);
       } catch {

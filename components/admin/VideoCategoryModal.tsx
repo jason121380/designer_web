@@ -29,10 +29,14 @@ export default function VideoCategoryModal({ open, onClose, categories, usageCou
     setNewName("");
   }
 
-  function commitRename(from: string, value: string) {
-    const to = value.trim();
-    if (!to || to === from) return;
-    if (categories.includes(to)) { toast.error("已有相同分類"); return; }
+  function commitRename(from: string, input: HTMLInputElement) {
+    const to = input.value.trim();
+    if (to === from) return;
+    if (!to || categories.includes(to)) {
+      if (to) toast.error("已有相同分類");
+      input.value = from; // 還原，避免畫面停留在無效/空白名稱
+      return;
+    }
     onRename(from, to);
   }
 
@@ -58,7 +62,7 @@ export default function VideoCategoryModal({ open, onClose, categories, usageCou
                 <input
                   defaultValue={category}
                   className={inputClass}
-                  onBlur={(event) => commitRename(category, event.target.value)}
+                  onBlur={(event) => commitRename(category, event.target)}
                   onKeyDown={(event) => { if (event.key === "Enter") (event.target as HTMLInputElement).blur(); }}
                 />
                 <button

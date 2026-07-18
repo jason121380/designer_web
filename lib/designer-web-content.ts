@@ -18,7 +18,6 @@ export const SECTION_DEFS = [
   { key: "environment", anchor: "ev", zh: "環境介紹", en: "Environment" },
   { key: "contact", anchor: "contact", zh: "聯絡我們", en: "Contact" },
 ] as const;
-export const SECTION_KEYS = SECTION_DEFS.map((d) => d.key) as string[];
 export const SECTION_ANCHOR: Record<string, string> = Object.fromEntries(SECTION_DEFS.map((d) => [d.key, d.anchor]));
 
 // 區塊預設底色＝「接髮介紹」底色（globals.css 的 --cream-3）。每個區塊可各自覆寫。

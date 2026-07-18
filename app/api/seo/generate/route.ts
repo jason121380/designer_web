@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { rateLimit, tooMany } from "@/lib/rate-limit";
 import { normalizeDesignerWebContent } from "@/lib/designer-web-content";
 
 export const dynamic = "force-dynamic";
@@ -8,11 +9,9 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
 
 async function requireEditor() {
   const session = await auth();
-  const role = (session?.user as { role?: string } | undefined)?.role;
-  if (!session?.user || (role !== "ADMIN" && role !== "EDITOR")) {
-    return NextResponse.json({ error: "需要管理員或編輯身分" }, { status: 403 });
-  }
-  return null;
+  const user = session?.user as { id?: string; role?: string } | undefined;
+  if (!user?.id || (user.role !== "ADMIN" && user.role !== "EDITOR")) return null;
+  return { id: user.id };
 }
 
 /** 從頁面內容擷取關鍵資訊，做為 AI 產生 SEO 的依據。 */
@@ -29,8 +28,11 @@ function buildSummary(content: ReturnType<typeof normalizeDesignerWebContent>): 
 }
 
 export async function POST(req: NextRequest) {
-  const forbidden = await requireEditor();
-  if (forbidden) return forbidden;
+  const user = await requireEditor();
+  if (!user) return NextResponse.json({ error: "需要管理員或編輯身分" }, { status: 403 });
+
+  const rl = rateLimit(`seo-generate:${user.id}`, { limit: 20, windowMs: 60 * 60_000 });
+  if (!rl.ok) return tooMany(rl.retryAfter, "AI 產生太頻繁，請稍後再試");
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
