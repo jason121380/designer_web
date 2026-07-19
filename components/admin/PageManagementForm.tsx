@@ -344,7 +344,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
             <div className="flex flex-wrap gap-4">
               {([['LINE', 'line'], ['Facebook', 'facebook'], ['Instagram', 'instagram'], ['Google 地圖', 'map']] as const).map(([label, key]) => (
                 <label key={key} className="inline-flex items-center gap-2 text-sm text-gray-700">
-                  <input type="checkbox" checked={content.contact.bubble[key]} onChange={(event) => setContent({ ...content, contact: { ...content.contact, bubble: { ...content.contact.bubble, [key]: event.target.checked } } })} className="h-4 w-4 rounded border-gray-300 text-rose-brand focus:ring-rose-light" />
+                  <input type="checkbox" checked={content.contact.bubble[key]} onChange={(event) => setContent({ ...content, contact: { ...content.contact, bubble: { ...content.contact.bubble, [key]: event.target.checked } } })} className="h-4 w-4 rounded border-gray-300 accent-rose-brand focus:ring-rose-light" />
                   {label}
                 </label>
               ))}
