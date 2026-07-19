@@ -31,6 +31,13 @@ export async function generateMetadata(): Promise<Metadata> {
 const baseMetadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
   manifest: "/manifest.webmanifest",
+  // 預設圖示改由 metadata 統一指定（指向 public 靜態檔），不再放在 app/ 自動注入；
+  // 這樣後台上傳的自訂圖示才能可靠蓋過預設，不會與自動注入的 <link> 衝突。
+  icons: {
+    icon: [{ url: "/icon.png" }],
+    shortcut: [{ url: "/icon.png" }],
+    apple: [{ url: "/apple-icon.png" }],
+  },
   title: {
     default: "designer_web｜設計師一頁式品牌網站",
     template: "%s｜designer_web",
