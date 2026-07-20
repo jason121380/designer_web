@@ -45,6 +45,8 @@ const serviceSchema = z.object({
   features: nullableStringList,
   suitableFor: nullableStringList,
   image: nullableString,
+  // 接髮介紹（services）可放多個媒體，前台 3 個一列呈現；缺欄位＝沿用單張 image（向下相容）。
+  images: z.array(nullableString).optional().nullable(),
   price: nullableString,
 });
 
@@ -160,6 +162,8 @@ export interface PageService {
   features: string[];
   suitableFor: string[];
   image: string;
+  /** 多媒體（接髮介紹用，前台 3 個一列）；空陣列時沿用單張 image。 */
+  images: string[];
   price: string;
 }
 
@@ -228,6 +232,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
       features: ["小接點設計，接合處幾乎隱形", "適合細軟髮、髮量少，增量不增負擔", "可自然擺動，洗髮梳理都方便"],
       suitableFor: ["希望接髮後仍維持自然輕盈感的人", "容易因接髮重量頭皮不適的人"],
       image: "",
+      images: [],
       price: "",
     },
   ],
@@ -239,6 +244,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
       features: ["比傳統縮毛矯正更溫和", "光澤感提升，柔順亮麗"],
       suitableFor: ["自然捲、毛躁髮想要柔順光澤的人"],
       image: "",
+      images: [],
       price: "",
     },
     {
@@ -248,6 +254,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
       features: ["自然漸層，不會一塊一塊", "維護簡單，布丁頭不明顯"],
       suitableFor: ["想要層次感、不喜歡單一髮色的人"],
       image: "",
+      images: [],
       price: "",
     },
   ],
@@ -313,6 +320,13 @@ function normalizeServices(items: RawContent["services"], fallback: PageService[
       features: stringList(item.features),
       suitableFor: stringList(item.suitableFor),
       image: trim(item.image),
+      // 多媒體：優先用 images 陣列（去空白去空值）；為空且有單張 image 時退回 [image]（向下相容）。
+      images: (() => {
+        const list = (item.images ?? []).map((url) => trim(url)).filter(Boolean);
+        if (list.length) return list;
+        const single = trim(item.image);
+        return single ? [single] : [];
+      })(),
       price: trim(item.price),
     }));
   return normalized.length ? normalized : fallback;

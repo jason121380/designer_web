@@ -64,17 +64,27 @@ function renderSection(content: DesignerWebContent, sec: Section) {
           <div className="mx-auto max-w-5xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
             <div className="space-y-8">
-              {content.services.map((service) => (
-                <article key={service.id} className="overflow-hidden bg-white rounded-lg md:grid md:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]">
-                  <div className="p-6 md:p-8">
+              {content.services.map((service) => {
+                // 多媒體：優先 images，向下相容沿用單張 image。
+                const media = service.images.length ? service.images : (service.image ? [service.image] : []);
+                return (
+                  <article key={service.id} className="overflow-hidden bg-white rounded-lg p-6 md:p-8">
                     <h3 className="mb-3 text-xl font-bold text-neutral-800">{service.title}</h3>
                     <p className="mb-4 whitespace-pre-line leading-relaxed text-neutral-600">{service.description}</p>
                     <BulletList label="特色：" items={service.features} />
                     <BulletList label="適合對象：" items={service.suitableFor} />
-                  </div>
-                  {!!service.image && <MediaView src={service.image} alt={service.title} className={mediaClass(service.image, "h-full min-h-64")} />}
-                </article>
-              ))}
+                    {media.length > 0 && (
+                      <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {media.map((src, i) => (
+                          <figure key={i} className="overflow-hidden bg-neutral-100 rounded-lg">
+                            <MediaView src={src} alt={service.title} className={mediaClass(src, "aspect-square")} />
+                          </figure>
+                        ))}
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
             </div>
           </div>
         </section>
