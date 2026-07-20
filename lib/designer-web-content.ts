@@ -149,6 +149,8 @@ export const designerWebContentSchema = z.object({
   }).optional(),
   // 子頁面是否啟用；false＝停用，前台該 slug 回 404（不刪除內容）。缺欄位＝啟用（向下相容）。
   active: z.boolean().optional().nullable(),
+  // 是否已封存；true＝從頁面管理列表移除、僅管理員的封存列表可見，前台也回 404（不刪除內容）。
+  archived: z.boolean().optional().nullable(),
 });
 
 export interface PageService {
@@ -198,6 +200,8 @@ export interface DesignerWebContent {
   };
   /** 子頁面是否啟用；false＝停用（前台該 slug 回 404）。首頁不使用此欄位。 */
   active: boolean;
+  /** 是否已封存；true＝從頁面管理列表移除、僅管理員的封存列表可見，前台亦回 404。 */
+  archived: boolean;
 }
 
 export const defaultDesignerWebContent: DesignerWebContent = {
@@ -289,6 +293,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
   links: { avatar: "", bio: "", qr: "", items: [], social: { instagram: "", facebook: "", line: "", email: "", phone: "", mapUrl: "" } },
   sections: SECTION_DEFS.map((d) => ({ key: d.key, zh: d.zh, en: d.en, bg: DEFAULT_SECTION_BG })),
   active: true,
+  archived: false,
 };
 
 type RawContent = z.infer<typeof designerWebContentSchema>;
@@ -484,6 +489,8 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
     sections: normalizeSections(data.sections),
     // 只有明確為 false 才停用；缺欄位或其他值一律視為啟用（向下相容舊資料）。
     active: data.active !== false,
+    // 只有明確為 true 才封存；缺欄位＝未封存（向下相容舊資料）。
+    archived: data.archived === true,
   };
 }
 

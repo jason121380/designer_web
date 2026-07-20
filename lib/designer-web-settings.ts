@@ -26,15 +26,16 @@ export const getDesignerWebPageContent = cache(
   }
 );
 
-/** 對外可見（啟用中）子頁面的 slug，供 sitemap 使用。 */
+/** 對外可見（啟用中且未封存）子頁面的 slug，供 sitemap 使用。 */
 export const listDesignerWebPageSlugs = cache(async (): Promise<string[]> => {
-  return (await listDesignerWebPages()).filter((page) => page.active).map((page) => page.slug);
+  return (await listDesignerWebPages()).filter((page) => page.active && !page.archived).map((page) => page.slug);
 });
 
 export interface DesignerWebPageSummary {
   slug: string;
   brandName: string;
   active: boolean;
+  archived: boolean;
 }
 
 /** 所有子頁面的 slug、品牌名稱與啟用狀態（後台列表用），依 slug 排序。 */
@@ -53,6 +54,7 @@ export const listDesignerWebPages = cache(async (): Promise<DesignerWebPageSumma
         slug: row.key.slice(DESIGNER_WEB_SETTINGS_PREFIX.length),
         brandName: content.brand.name,
         active: content.active,
+        archived: content.archived,
       };
     });
   } catch {

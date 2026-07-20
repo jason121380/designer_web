@@ -15,7 +15,7 @@ Designer Web 是設計師品牌的一頁式網站，不是文章 CMS。
 
 ## 不可破壞的產品決策
 
-1. 後台側欄保留「頁面管理」「媒體庫」「用戶管理」與「工程模式」四個入口（用戶管理僅 ADMIN 可見，功能限「列出帳號 + 新增帳號 + 編輯帳號（登入帳號/名稱/密碼）」，新增時可選 EDITOR/ADMIN 角色；媒體庫供 EDITOR/ADMIN 使用，功能限「列出已上傳圖片/影片 + 複製網址 + 刪除」，不是完整 CMS；工程模式僅 ADMIN 可見，只放安全可重複執行的維護工具，例如「系統健康檢查」「回填媒體庫」「把舊影片搬到 Stream」「網站圖示上傳」，不擴充成通用後台）。不要重新加入總覽、文章、分類、標籤或流量分析，也不要把用戶管理擴充成刪除帳號或獨立的角色管理模組。
+1. 後台側欄保留「頁面管理」「封存」「媒體庫」「用戶管理」與「工程模式」入口（封存僅 ADMIN 可見，列出已封存子頁並可還原，不是通用垃圾桶或版本管理；用戶管理僅 ADMIN 可見，功能限「列出帳號 + 新增帳號 + 編輯帳號（登入帳號/名稱/密碼）」，新增時可選 EDITOR/ADMIN 角色；媒體庫供 EDITOR/ADMIN 使用，功能限「列出已上傳圖片/影片 + 複製網址 + 刪除」，不是完整 CMS；工程模式僅 ADMIN 可見，只放安全可重複執行的維護工具，例如「系統健康檢查」「回填媒體庫」「把舊影片搬到 Stream」「網站圖示上傳」，不擴充成通用後台）。不要重新加入總覽、文章、分類、標籤或流量分析，也不要把用戶管理擴充成刪除帳號或獨立的角色管理模組。
 2. 頁面管理區塊順序必須跟前台一致。
 3. 所有可編輯前台內容都應進入 `DesignerWebContent` 合約並存入 PostgreSQL，不要另建散落的常數或第二份設定來源。
 4. 圖片/影片從各區塊內直接上傳；另有「媒體庫」頁（`/admin/media`）列出所有已上傳媒體，可複製網址與刪除，上傳元件也可從媒體庫選取既有媒體。媒體庫只做「列出 + 選取 + 刪除」，不擴充成分類、標籤或編輯等 CMS 功能。
@@ -55,6 +55,7 @@ PageManagementForm
 - DB 讀取、頁面列表與 fallback：`lib/designer-web-settings.ts`
 - 寫入 API：`app/api/designer-web/[slug]/route.ts`（子頁面 CRUD；`POST` 建立、`PUT` 儲存、`PATCH` 兩用：`{ active }` 切換停用/啟用、`{ slug }` 變更後綴（搬移 site_settings key，內容不變、新後綴重複回 409）、`DELETE` 保留但 UI 不用）
 - 子頁面停用：合約新增 `active`（缺欄位＝啟用、向下相容），`false` 時前台該 slug 回 404、sitemap 不收錄；後台列表以「停用／啟用」切換（取代刪除，內容不刪除）。`DELETE` API 仍保留但 UI 不再使用。
+- 子頁面封存：合約新增 `archived`（缺欄位＝未封存、向下相容），`true` 時從「頁面管理」列表移除、前台三路由（`/{slug}`、`/web`、`/links`）皆回 404、sitemap 不收錄，內容仍保留。後台「頁面管理」每列「更多 → 封存」設 `archived=true`（`PATCH { archived }`）；管理員專屬頁 `/admin/archived`（`components/admin/ArchivedPageList.tsx`）列出已封存頁並可「還原」（`PATCH { archived:false }`）。側欄「封存」入口 `adminOnly`。
 - 後台列表：`components/admin/PageList.tsx`（每列有「一頁式」與「連結頁」兩個編輯入口）；一頁式編輯器：`components/admin/PageManagementForm.tsx`（`/admin/page-management/{slug}`）；連結頁編輯器：`components/admin/LinksManagementForm.tsx`（`/admin/page-management/{slug}/links`，存回同一筆內容的 `links`）
 - 前台輸出：一頁式 `components/public/OnePage.tsx`（`app/(public)/[slug]/web/page.tsx`）；連結頁 `components/public/LinksPage.tsx`（`app/(public)/[slug]/links/page.tsx`）；連結頁 SEO 用 `lib/seo.ts` 的 `linksPageMetadata()`
 - 前台快取（ISR）：`app/(public)/layout.tsx` 用 `export const revalidate = 3600`（**不要**改回 `force-dynamic`，那會讓每次開頁都查 DB＋重渲染、TTFB 很慢）；`[slug]/web` 與 `[slug]/links` 有 `generateStaticParams()`（讀 `listDesignerWebPageSlugs()` 啟用中 slug）使其為靜態/ISR。內容變更時由寫入端呼叫 `revalidatePath` 立即刷新——`app/api/designer-web/[slug]/route.ts` 的 POST/PUT/PATCH/DELETE 皆呼叫 `revalidateSlug()`（刷 `/{slug}`、`/{slug}/web`、`/{slug}/links`、`/sitemap.xml`），工程模式「搬移影片到 Stream」改寫內容後也 revalidate 受影響的 slug。新增會直接改 `site_settings` 內容的路徑時，務必一併 `revalidatePath`，否則前台會停留在舊快取。

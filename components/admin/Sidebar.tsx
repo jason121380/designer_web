@@ -9,6 +9,7 @@ import {
   ChevronRight,
   X,
   PanelsTopLeft,
+  Archive,
   Images,
   Users,
   Wrench,
@@ -21,6 +22,7 @@ const navItems: {
   adminOnly?: boolean;
 }[] = [
   { href: "/admin/page-management", label: "頁面管理", icon: PanelsTopLeft },
+  { href: "/admin/archived", label: "封存", icon: Archive, adminOnly: true },
   { href: "/admin/media", label: "媒體庫", icon: Images },
   { href: "/admin/users", label: "用戶管理", icon: Users, adminOnly: true },
   { href: "/admin/tools", label: "工程模式", icon: Wrench, adminOnly: true },

@@ -11,7 +11,7 @@ export default async function DesignerRootPage({ params }: PageProps) {
   const { slug } = await params;
   if (!isValidPageSlug(slug)) notFound();
   const content = await getDesignerWebPageContent(slug);
-  if (!content || !content.active) {
+  if (!content || !content.active || content.archived) {
     const target = await resolveSlugRedirect(slug);
     if (target) permanentRedirect(`/${target}`);
     notFound();
