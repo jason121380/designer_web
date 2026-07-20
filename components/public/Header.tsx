@@ -14,6 +14,7 @@ export default function Header({ title, themeColor, textColor, links }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
+    <>
     <nav className="sticky top-0 z-50 backdrop-blur" style={{ backgroundColor: themeColor, color: textColor }}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <a href="#top" className="font-semibold tracking-wide" onClick={() => setOpen(false)}>{title}</a>
@@ -34,14 +35,6 @@ export default function Header({ title, themeColor, textColor, links }: Props) {
       </div>
 
       {open && (
-        <div
-          className="fixed inset-0 top-14 z-40 bg-black/20 md:hidden"
-          aria-hidden
-          onClick={() => setOpen(false)}
-        />
-      )}
-
-      {open && (
         <div className="relative z-50 border-t border-black/10 md:hidden" style={{ backgroundColor: themeColor, color: textColor }}>
           <ul className="mx-auto max-w-6xl px-4 py-2">
             {links.map((link) => (
@@ -53,5 +46,16 @@ export default function Header({ title, themeColor, textColor, links }: Props) {
         </div>
       )}
     </nav>
+
+      {/* 遮罩放在 nav 外面：nav 的 backdrop-blur 會讓內部 fixed 相對於 nav 而非整個畫面，
+          移出後才能真正蓋滿標題列以下的整頁，點擊即關閉選單。 */}
+      {open && (
+        <div
+          className="fixed inset-x-0 bottom-0 top-14 z-40 bg-black/20 md:hidden"
+          aria-hidden
+          onClick={() => setOpen(false)}
+        />
+      )}
+    </>
   );
 }
