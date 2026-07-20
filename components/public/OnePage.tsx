@@ -9,8 +9,13 @@ import WorksGallery from "@/components/public/WorksGallery";
 import FloatingBubble from "@/components/public/FloatingBubble";
 import { externalHref } from "@/lib/utils";
 import { streamUidFromUrl } from "@/lib/stream-url";
+import { isVideoUrl } from "@/lib/media";
 
 type Section = { key: string; zh: string; en: string; bg: string };
+
+// 前台影片一律以 9:16 呈現；圖片維持各區塊原本比例。
+const mediaClass = (url: string, imageAspect: string) =>
+  `${isVideoUrl(url) ? "aspect-[9/16]" : imageAspect} w-full object-cover`;
 
 function SectionHeading({ en, zh }: { en: string; zh: string }) {
   return (
@@ -44,7 +49,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
             <div className="grid gap-5 md:grid-cols-2">
               {content.promos.map((promo) => (
                 <figure key={promo.id} className="overflow-hidden bg-white rounded-lg">
-                  <MediaView src={promo.image} alt={promo.caption || sec.zh} className="h-auto w-full object-cover" />
+                  <MediaView src={promo.image} alt={promo.caption || sec.zh} className={mediaClass(promo.image, "h-auto")} />
                   {!!promo.caption && <figcaption className="p-4 text-sm text-neutral-600">{promo.caption}</figcaption>}
                 </figure>
               ))}
@@ -67,7 +72,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
                     <BulletList label="特色：" items={service.features} />
                     <BulletList label="適合對象：" items={service.suitableFor} />
                   </div>
-                  {!!service.image && <MediaView src={service.image} alt={service.title} className="h-full min-h-64 w-full object-cover" />}
+                  {!!service.image && <MediaView src={service.image} alt={service.title} className={mediaClass(service.image, "h-full min-h-64")} />}
                 </article>
               ))}
             </div>
@@ -83,7 +88,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
             <div className="grid gap-6 md:grid-cols-2">
               {content.otherServices.map((service) => (
                 <article key={service.id} className="overflow-hidden bg-white rounded-lg">
-                  {!!service.image && <MediaView src={service.image} alt={service.title} className="aspect-square w-full object-cover" />}
+                  {!!service.image && <MediaView src={service.image} alt={service.title} className={mediaClass(service.image, "aspect-square")} />}
                   <div className="p-6">
                     <h3 className="mb-3 text-lg font-bold text-neutral-800">{service.title}</h3>
                     <p className="mb-4 whitespace-pre-line leading-relaxed text-neutral-600">{service.description}</p>
@@ -157,7 +162,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {content.environment.map((item, index) => (
                 <figure key={item.id} className="overflow-hidden bg-white rounded-lg">
-                  <MediaView src={item.image} alt={item.alt || `${sec.zh} ${index + 1}`} className="aspect-square w-full object-cover" />
+                  <MediaView src={item.image} alt={item.alt || `${sec.zh} ${index + 1}`} className={mediaClass(item.image, "aspect-square")} />
                 </figure>
               ))}
             </div>
@@ -232,7 +237,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
               )}
               {!!content.hero.video && (
                 <div className="overflow-hidden">
-                  <PublicVideo src={content.hero.video} autoPlay priority className="aspect-square w-full object-cover" />
+                  <PublicVideo src={content.hero.video} autoPlay priority className="aspect-[9/16] w-full object-cover" />
                 </div>
               )}
             </div>
