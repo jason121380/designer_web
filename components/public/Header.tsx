@@ -34,7 +34,15 @@ export default function Header({ title, themeColor, textColor, links }: Props) {
       </div>
 
       {open && (
-        <div className="border-t border-black/10 md:hidden" style={{ backgroundColor: themeColor, color: textColor }}>
+        <div
+          className="fixed inset-0 top-14 z-40 bg-black/20 md:hidden"
+          aria-hidden
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {open && (
+        <div className="relative z-50 border-t border-black/10 md:hidden" style={{ backgroundColor: themeColor, color: textColor }}>
           <ul className="mx-auto max-w-6xl px-4 py-2">
             {links.map((link) => (
               <li key={link.href}>
