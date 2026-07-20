@@ -8,6 +8,7 @@ import { SECTION_DEFS, type DesignerWebContent, type PageService } from "@/lib/d
 import ImageUpload from "./ImageUpload";
 import VideoUpload from "./VideoUpload";
 import MediaUpload from "./MediaUpload";
+import MultiMediaUpload from "./MultiMediaUpload";
 import ColorSelect from "./ColorSelect";
 import VideoCategoryModal from "./VideoCategoryModal";
 
@@ -60,7 +61,7 @@ const MENU_GROUPS: { title: string; ids: string[] }[] = [
   { title: "內容區塊", ids: ["promos", "services", "otherServices", "videos", "installment", "pricing", "environment", "contact"] },
 ];
 
-function ServiceRows({ items, onChange, onImageChange }: { items: PageService[]; onChange: (items: PageService[]) => void; onImageChange: (index: number, image: string) => void }) {
+function ServiceRows({ items, onChange, onImageChange, multiMedia, onImagesChange }: { items: PageService[]; onChange: (items: PageService[]) => void; onImageChange: (index: number, image: string) => void; multiMedia?: boolean; onImagesChange?: (index: number, images: string[]) => void }) {
   return <>{items.map((item, index) => <div key={item.id} className={rowClass}>
     <div className="flex items-center justify-between"><p className="text-sm font-semibold text-gray-700">項目 {index + 1}</p><RowTools index={index} total={items.length} onMove={(dir) => onChange(moveAt(items, index, dir))} onRemove={() => onChange(removeAt(items, index))} /></div>
     <div className="grid gap-4 md:grid-cols-2">
@@ -72,7 +73,9 @@ function ServiceRows({ items, onChange, onImageChange }: { items: PageService[];
       <TextArea label="特色（逗號或換行分隔）" value={item.features.join("\n")} onChange={(value) => onChange(updateAt(items, index, { features: splitList(value) }))} />
       <TextArea label="適合對象（逗號或換行分隔）" value={item.suitableFor.join("\n")} onChange={(value) => onChange(updateAt(items, index, { suitableFor: splitList(value) }))} />
     </div>
-    <MediaUpload label="項目圖片或影片" value={item.image} onChange={(image) => onImageChange(index, image)} />
+    {multiMedia
+      ? <MultiMediaUpload label="項目圖片或影片（可多個，前台 3 個一列）" values={item.images} onChange={(images) => onImagesChange?.(index, images)} />
+      : <MediaUpload label="項目圖片或影片" value={item.image} onChange={(image) => onImageChange(index, image)} />}
   </div>)}</>;
 }
 
@@ -253,8 +256,8 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       title: "接髮介紹",
       body: (
         <>
-          <ServiceRows items={content.services} onChange={(services) => setContent({ ...content, services })} onImageChange={(i, image) => setContent((prev) => ({ ...prev, services: updateAt(prev.services, i, { image }) }))} />
-          <AddButton label="新增接髮項目" onClick={() => setContent({ ...content, services: [...content.services, { id: makeId("service"), title: "", description: "", features: [], suitableFor: [], image: "", price: "" }] })} />
+          <ServiceRows items={content.services} onChange={(services) => setContent({ ...content, services })} onImageChange={(i, image) => setContent((prev) => ({ ...prev, services: updateAt(prev.services, i, { image }) }))} multiMedia onImagesChange={(i, images) => setContent((prev) => ({ ...prev, services: updateAt(prev.services, i, { images }) }))} />
+          <AddButton label="新增接髮項目" onClick={() => setContent({ ...content, services: [...content.services, { id: makeId("service"), title: "", description: "", features: [], suitableFor: [], image: "", images: [], price: "" }] })} />
         </>
       ),
     },
@@ -264,7 +267,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
       body: (
         <>
           <ServiceRows items={content.otherServices} onChange={(otherServices) => setContent({ ...content, otherServices })} onImageChange={(i, image) => setContent((prev) => ({ ...prev, otherServices: updateAt(prev.otherServices, i, { image }) }))} />
-          <AddButton label="新增特色項目" onClick={() => setContent({ ...content, otherServices: [...content.otherServices, { id: makeId("other"), title: "", description: "", features: [], suitableFor: [], image: "", price: "" }] })} />
+          <AddButton label="新增特色項目" onClick={() => setContent({ ...content, otherServices: [...content.otherServices, { id: makeId("other"), title: "", description: "", features: [], suitableFor: [], image: "", images: [], price: "" }] })} />
         </>
       ),
     },
