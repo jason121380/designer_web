@@ -35,11 +35,16 @@ export default function PublicVideo({ src, className = "", controls = false, aut
   useStreamHls(videoRef, streamUid, mounted && !failed, onFail);
 
   if (failed) {
+    // Stream 影片剛上傳時 Cloudflare 仍在轉檔，HLS 尚未就緒會落到這裡；顯示「優化中」較貼切。
     return (
       <div className={`flex items-center justify-center bg-black p-4 text-center ${className}`}>
-        <a href={src} target="_blank" rel="noreferrer" className="text-xs text-white/80 underline">
-          影片無法在此瀏覽器播放，點此開啟
-        </a>
+        {streamUid ? (
+          <span className="text-xs text-white/80">影片優化中，請稍後重新整理…</span>
+        ) : (
+          <a href={src} target="_blank" rel="noreferrer" className="text-xs text-white/80 underline">
+            影片無法在此瀏覽器播放，點此開啟
+          </a>
+        )}
       </div>
     );
   }

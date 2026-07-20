@@ -17,7 +17,7 @@ async function loadPage(params: PageProps["params"]) {
   const { slug } = await params;
   if (!isValidPageSlug(slug)) return null;
   const content = await getDesignerWebPageContent(slug);
-  return content && content.active ? content : null;
+  return content && content.active && !content.archived ? content : null;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

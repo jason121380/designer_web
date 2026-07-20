@@ -120,7 +120,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   const row = await prisma.siteSettings.findUnique({ where: { key: pageContentKey(slug) } });
   if (!row) return NextResponse.json({ error: "頁面不存在" }, { status: 404 });
 
-  const body = (await req.json().catch(() => ({}))) as { active?: boolean; slug?: string };
+  const body = (await req.json().catch(() => ({}))) as { active?: boolean; slug?: string; archived?: boolean };
 
   // 變更後綴：搬移 key（建立新 key、刪除舊 key），內容原封不動
   if (typeof body.slug === "string") {
@@ -145,6 +145,18 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     revalidateSlug(slug);
     revalidateSlug(newSlug);
     return NextResponse.json({ slug: newSlug });
+  }
+
+  // 封存/還原：從頁面管理列表移除（封存列表可見），前台亦回 404
+  if (typeof body.archived === "boolean") {
+    const content = parseDesignerWebContent(row.value);
+    content.archived = body.archived;
+    await prisma.siteSettings.update({
+      where: { key: pageContentKey(slug) },
+      data: { value: JSON.stringify(content) },
+    });
+    revalidateSlug(slug);
+    return NextResponse.json({ archived: content.archived });
   }
 
   // 切換啟用狀態

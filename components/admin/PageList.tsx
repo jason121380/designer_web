@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Copy, Eye, EyeOff, ExternalLink, Link2, MoreHorizontal, Pencil, Plus, X } from "lucide-react";
+import { Archive, Copy, Eye, EyeOff, ExternalLink, Link2, MoreHorizontal, Pencil, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { isValidPageSlug } from "@/lib/designer-web-content";
 
@@ -157,6 +157,25 @@ export default function PageList({ pages }: { pages: PageListItem[] }) {
     }
   }
 
+  async function archivePage(slug: string) {
+    setTogglingSlug(slug);
+    try {
+      const response = await fetch(`/api/designer-web/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ archived: true }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "封存失敗");
+      toast.success(`已封存 /${slug}（可到左側「封存」還原）`);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "封存失敗");
+    } finally {
+      setTogglingSlug(null);
+    }
+  }
+
   async function toggleActive(slug: string, active: boolean) {
     setTogglingSlug(slug);
     try {
@@ -222,6 +241,7 @@ export default function PageList({ pages }: { pages: PageListItem[] }) {
                       <button type="button" onClick={() => { openRename(page); setMenuSlug(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"><Pencil size={13} />編輯後綴</button>
                       <button type="button" onClick={() => { openCopy(page); setMenuSlug(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"><Copy size={13} />複製</button>
                       <button type="button" disabled={togglingSlug === page.slug} onClick={() => { toggleActive(page.slug, !page.active); setMenuSlug(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">{page.active ? <><EyeOff size={13} />停用</> : <><Eye size={13} />啟用</>}</button>
+                      <button type="button" disabled={togglingSlug === page.slug} onClick={() => { archivePage(page.slug); setMenuSlug(null); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"><Archive size={13} />封存</button>
                     </div>
                   </>
                 )}

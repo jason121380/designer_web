@@ -18,7 +18,7 @@ async function loadPage(params: PageProps["params"]) {
   if (!isValidPageSlug(slug)) return null;
   const content = await getDesignerWebPageContent(slug);
   // 停用的頁面對外視為不存在（404）
-  return content && content.active ? content : null;
+  return content && content.active && !content.archived ? content : null;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
