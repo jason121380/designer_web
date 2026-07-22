@@ -101,6 +101,8 @@ export const designerWebContentSchema = z.object({
   })).optional(),
   // 作品影片的分類清單（後台「管理分類」維護，影片從中挑選）。
   videoCategories: z.array(z.string()).optional(),
+  // 作品影片下方「查看更多作品」按鈕連結（開新分頁）；空＝不顯示按鈕。
+  videosMoreUrl: nullableString,
   installment: z.array(z.string()).optional(),
   pricing: z.array(pricingSchema).optional(),
   environment: z.array(z.object({
@@ -178,6 +180,8 @@ export interface DesignerWebContent {
   videos: { id: string; video: string; caption: string; category: string }[];
   /** 作品影片分類清單（順序即前台標籤順序）。 */
   videoCategories: string[];
+  /** 作品影片下方「查看更多作品」按鈕連結（開新分頁）；空＝不顯示。 */
+  videosMoreUrl: string;
   installment: string[];
   pricing: { name: string; price: string; description: string; features: string[] }[];
   environment: { id: string; image: string; alt: string }[];
@@ -260,6 +264,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
   ],
   videos: [],
   videoCategories: [],
+  videosMoreUrl: "",
   installment: [
     "【zingala 銀角零卡】先享受、後付款，不需要任何信用卡。",
     "分期可分 3/6/9 期，美麗無壓力，先享受下個月再付款。",
@@ -465,6 +470,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
     otherServices: normalizeServices(data.otherServices, defaultDesignerWebContent.otherServices),
     videos,
     videoCategories,
+    videosMoreUrl: trim(data.videosMoreUrl),
     installment: installment.length ? installment : defaultDesignerWebContent.installment,
     pricing: pricing.length ? pricing : defaultDesignerWebContent.pricing,
     environment,

@@ -291,6 +291,9 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
             ))}
           </div>
           <AddButton label="新增作品影片" onClick={() => setContent({ ...content, videos: [...content.videos, { id: makeId("video"), video: "", caption: "", category: "" }] })} />
+          <div className="mt-5 border-t border-gray-100 pt-5">
+            <Field label="「查看更多作品」連結（選填，前台作品影片下方會出現按鈕、點擊開新分頁；留空不顯示）" value={content.videosMoreUrl} onChange={(videosMoreUrl) => setContent({ ...content, videosMoreUrl })} placeholder="https://www.instagram.com/..." />
+          </div>
         </>
       ),
     },
