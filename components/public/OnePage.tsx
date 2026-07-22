@@ -118,6 +118,19 @@ function renderSection(content: DesignerWebContent, sec: Section) {
           <div className="mx-auto max-w-6xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
             <WorksGallery videos={content.videos} categoryOrder={content.videoCategories} />
+            {!!content.videosMoreUrl && (
+              <div className="mt-10 text-center">
+                <a
+                  href={externalHref(content.videosMoreUrl)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: "var(--brand)" }}
+                >
+                  查看更多作品
+                </a>
+              </div>
+            )}
           </div>
         </section>
       ) : null;
