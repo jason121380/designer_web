@@ -376,6 +376,7 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
             <div className="space-y-4">
               <Field label="SEO 標題（搜尋結果與分頁標題）" value={content.seo.title} placeholder={content.brand.name} onChange={(title) => setContent({ ...content, seo: { ...content.seo, title } })} />
               <TextArea label="SEO 描述（搜尋結果摘要，建議 80-150 字）" value={content.seo.description} onChange={(description) => setContent({ ...content, seo: { ...content.seo, description } })} />
+              <Field label="Google 代碼 ID（此頁專屬，選填；GA4 填 G- 開頭，Google Ads 填 AW- 開頭）" value={content.seo.gaId} placeholder="G-XXXXXXXXXX" onChange={(gaId) => setContent({ ...content, seo: { ...content.seo, gaId } })} />
             </div>
           </div>
         </>

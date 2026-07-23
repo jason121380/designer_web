@@ -130,6 +130,8 @@ export const designerWebContentSchema = z.object({
     title: nullableString,
     description: nullableString,
     ogImage: nullableString,
+    // 此頁專屬 Google 代碼 ID（GA4 G-… 或 Google Ads AW-…）；每個 slug 各自獨立。
+    gaId: nullableString,
   }).optional(),
   // 個人連結頁（linktree 風格）：頭像、簡介、連結按鈕清單與 QR Code 圖。
   links: z.object({
@@ -197,7 +199,7 @@ export interface DesignerWebContent {
     bubble: { line: boolean; facebook: boolean; instagram: boolean; map: boolean };
   };
   /** 每頁獨立 SEO；空字串代表自動使用品牌與主標題產生。 */
-  seo: { title: string; description: string; ogImage: string };
+  seo: { title: string; description: string; ogImage: string; gaId: string };
   /** 個人連結頁（`/{slug}/links`，linktree 風格）內容。social 與一頁式 contact 獨立。 */
   links: {
     avatar: string;
@@ -301,7 +303,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
     facebook: "",
     bubble: { line: true, facebook: false, instagram: true, map: true },
   },
-  seo: { title: "", description: "", ogImage: "" },
+  seo: { title: "", description: "", ogImage: "", gaId: "" },
   links: { avatar: "", bio: "", qr: "", items: [], social: { instagram: "", facebook: "", line: "", email: "", phone: "", mapUrl: "" } },
   sections: SECTION_DEFS.map((d) => ({ key: d.key, zh: d.zh, en: d.en, bg: DEFAULT_SECTION_BG })),
   active: true,
@@ -479,6 +481,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
       title: trim(data.seo?.title),
       description: trim(data.seo?.description),
       ogImage: trim(data.seo?.ogImage),
+      gaId: trim(data.seo?.gaId),
     },
     links: {
       avatar: trim(data.links?.avatar),
