@@ -4,6 +4,7 @@ import { externalHref } from "@/lib/utils";
 import LinksQrButton from "@/components/public/LinksQrButton";
 import MediaView from "@/components/public/MediaView";
 import Analytics from "@/components/public/Analytics";
+import AnalyticsClicks from "@/components/public/AnalyticsClicks";
 
 /** 個人連結頁（linktree 風格）：頭像、名稱、簡介、連結按鈕與社群 icon。 */
 export default function LinksPage({ content }: { content: DesignerWebContent }) {
@@ -11,18 +12,19 @@ export default function LinksPage({ content }: { content: DesignerWebContent }) 
   const social = links.social;
   const initial = brand.name.trim()[0]?.toUpperCase() ?? "•";
 
-  const socials: { key: string; href: string; label: string; node: React.ReactNode }[] = [
-    social.instagram && { key: "ig", href: externalHref(social.instagram), label: "Instagram", node: <span className="text-xs font-bold">IG</span> },
-    social.facebook && { key: "fb", href: externalHref(social.facebook), label: "Facebook", node: <span className="text-sm font-bold">f</span> },
-    social.line && { key: "line", href: externalHref(social.line), label: "LINE", node: <MessageCircle size={18} /> },
-    social.email && { key: "mail", href: `mailto:${social.email}`, label: "Email", node: <Mail size={18} /> },
-    social.phone && { key: "tel", href: `tel:${social.phone}`, label: "電話", node: <Phone size={18} /> },
-    social.mapUrl && { key: "map", href: externalHref(social.mapUrl), label: "地圖", node: <MapPin size={18} /> },
-  ].filter(Boolean) as { key: string; href: string; label: string; node: React.ReactNode }[];
+  const socials: { key: string; event: string; href: string; label: string; node: React.ReactNode }[] = [
+    social.instagram && { key: "ig", event: "click_instagram", href: externalHref(social.instagram), label: "Instagram", node: <span className="text-xs font-bold">IG</span> },
+    social.facebook && { key: "fb", event: "click_facebook", href: externalHref(social.facebook), label: "Facebook", node: <span className="text-sm font-bold">f</span> },
+    social.line && { key: "line", event: "click_line", href: externalHref(social.line), label: "LINE", node: <MessageCircle size={18} /> },
+    social.email && { key: "mail", event: "click_email", href: `mailto:${social.email}`, label: "Email", node: <Mail size={18} /> },
+    social.phone && { key: "tel", event: "click_phone", href: `tel:${social.phone}`, label: "電話", node: <Phone size={18} /> },
+    social.mapUrl && { key: "map", event: "click_map", href: externalHref(social.mapUrl), label: "地圖", node: <MapPin size={18} /> },
+  ].filter(Boolean) as { key: string; event: string; href: string; label: string; node: React.ReactNode }[];
 
   return (
     <div style={{ ["--brand" as string]: brand.themeColor }} className="min-h-screen bg-neutral-50">
       <Analytics id={content.seo.gaId} />
+      {!!content.seo.gaId && <AnalyticsClicks />}
       {!!links.qr && <LinksQrButton src={links.qr} />}
       <main className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center px-6 py-14">
         {links.avatar ? (
@@ -46,6 +48,8 @@ export default function LinksPage({ content }: { content: DesignerWebContent }) 
                 href={externalHref(item.url)}
                 target="_blank"
                 rel="noreferrer"
+                data-ga-event="click_link"
+                data-ga-label={item.label}
                 className="block w-full rounded-full border border-neutral-200 bg-white px-5 py-3.5 text-center text-sm font-medium text-neutral-800 transition hover:-translate-y-0.5 hover:border-[color:var(--brand)]"
               >
                 {item.label}
@@ -64,6 +68,8 @@ export default function LinksPage({ content }: { content: DesignerWebContent }) 
                 rel="noreferrer"
                 aria-label={s.label}
                 title={s.label}
+                data-ga-event={s.event}
+                data-ga-label={`連結頁_${s.label}`}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
               >
                 {s.node}
