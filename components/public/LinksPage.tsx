@@ -26,7 +26,7 @@ export default function LinksPage({ content }: { content: DesignerWebContent }) 
     <div style={{ ["--brand" as string]: brand.themeColor }} className="min-h-screen bg-neutral-50">
       <Analytics id={content.seo.gaId} />
       {!!content.seo.gaId && <AnalyticsClicks />}
-      {!!links.qr && <LinksQrButton src={links.qr} />}
+      {!!links.qr && <LinksQrButton src={links.qr} event={content.analyticsEvents.qr} />}
       <main className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center px-6 py-14">
         {links.avatar ? (
           <div className="h-24 w-24 overflow-hidden rounded-full">

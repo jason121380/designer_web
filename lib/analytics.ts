@@ -18,6 +18,9 @@ export const ANALYTICS_EVENT_DEFS = [
   { key: "email", label: "Email", default: "click_email" },
   { key: "moreWorks", label: "查看更多作品按鈕", default: "click_more_works" },
   { key: "link", label: "連結頁的每個連結按鈕", default: "click_link" },
+  { key: "nav", label: "導覽選單／漢堡選單項目", default: "click_nav" },
+  { key: "worksCategory", label: "作品影片分類切換", default: "click_works_category" },
+  { key: "qr", label: "連結頁 QR 按鈕", default: "click_qr" },
 ] as const;
 
 export type AnalyticsEventKey = (typeof ANALYTICS_EVENT_DEFS)[number]["key"];

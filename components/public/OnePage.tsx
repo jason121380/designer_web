@@ -119,7 +119,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
         <section id="hair-video" className="scroll-mt-14 py-14 md:py-20" style={{ backgroundColor: sec.bg }}>
           <div className="mx-auto max-w-6xl px-4">
             <SectionHeading en={sec.en} zh={sec.zh} />
-            <WorksGallery videos={content.videos} categoryOrder={content.videoCategories} />
+            <WorksGallery videos={content.videos} categoryOrder={content.videoCategories} categoryEvent={content.analyticsEvents.worksCategory} />
             {!!content.videosMoreUrl && (
               <div className="mt-10 text-center">
                 <a
@@ -253,6 +253,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
         themeColor={content.brand.themeColor}
         textColor={content.brand.headerTextColor}
         links={headerLinks}
+        navEvent={content.analyticsEvents.nav}
       />
       <main className="min-h-screen">
         <section id="top" className="scroll-mt-14" style={{ backgroundColor: content.hero.bgColor }}>

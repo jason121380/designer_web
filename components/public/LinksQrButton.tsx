@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { QrCode, X } from "lucide-react";
 
 /** 連結頁右上角的 QR Code 按鈕：點擊彈窗放大顯示 QR 圖。 */
-export default function LinksQrButton({ src }: { src: string }) {
+export default function LinksQrButton({ src, event }: { src: string; event?: string }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -24,6 +24,8 @@ export default function LinksQrButton({ src }: { src: string }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="顯示 QR Code"
+        data-ga-event={event}
+        data-ga-label="連結頁_QR"
         className="fixed right-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 transition hover:text-[color:var(--brand)]"
       >
         <QrCode size={18} />
