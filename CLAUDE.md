@@ -64,7 +64,9 @@ PageManagementForm
 
 （已移除）首頁顯示設定：舊版可用 `designer_web_home_page` 指定 `/` 呈現某子頁；現在 `/` 固定維護頁，此功能連同後端 key、API 與讀取函式已全數刪除。
 
-每頁 SEO：合約內 `seo { title, description, ogImage }`，空字串＝自動以品牌標語＋名稱與主標題產生。metadata 統一由 `lib/seo.ts` 的 `designerPageMetadata()` 輸出（title/description/canonical/og/twitter），廣告到達頁（Google Ads）依賴此設定，修改時必須保持每頁獨立。
+每頁 SEO：合約內 `seo { title, description, ogImage, gaId }`，空字串＝自動以品牌標語＋名稱與主標題產生。metadata 統一由 `lib/seo.ts` 的 `designerPageMetadata()` 輸出（title/description/canonical/og/twitter），廣告到達頁（Google Ads）依賴此設定，修改時必須保持每頁獨立。
+
+每頁分析（GA）：`seo.gaId`（GA4 `G-`／Ads `AW-`，各頁獨立）由 `components/public/Analytics.tsx` 用 `next/script` 注入 gtag（`lib/analytics.ts` 的 `sanitizeGtagId` 驗證後才載入），`/{slug}/web` 與 `/{slug}/links` 共用同一份。按鈕點擊事件：合約 `analyticsEvents`（key 見 `ANALYTICS_EVENT_DEFS`，各頁可自訂事件名稱，`sanitizeEventName` 驗證）；前台按鈕帶 `data-ga-event`，由 `components/public/AnalyticsClicks.tsx`（事件委派）送出。後台編輯器「GA設定及分析」分頁（basic 群組）設定 gaId 與各按鈕事件名稱。工程模式「Google Analytics 檢查」卡片（`GET /api/ga-check`）盤點各頁 GA 設定狀態。
 
 修改資料結構時必須同步更新 schema、TypeScript interface、default、normalize、表單、前台與測試。對舊 DB JSON 保持容錯，不要讓缺少新欄位造成整頁 500。
 

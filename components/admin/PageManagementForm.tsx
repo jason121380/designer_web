@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ChevronDown, ChevronUp, ExternalLink, GripVertical, Plus, Save, Sparkles, Tags, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { SECTION_DEFS, type DesignerWebContent, type PageService } from "@/lib/designer-web-content";
+import { ANALYTICS_EVENT_DEFS } from "@/lib/analytics";
 import ImageUpload from "./ImageUpload";
 import VideoUpload from "./VideoUpload";
 import MediaUpload from "./MediaUpload";
@@ -57,7 +58,7 @@ const makeId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toSt
 
 // 左側選單分組：基本設定與內容區塊（id 對應 panels 的 id）。
 const MENU_GROUPS: { title: string; ids: string[] }[] = [
-  { title: "基本設定", ids: ["brand", "hero", "sections", "seo"] },
+  { title: "基本設定", ids: ["brand", "hero", "sections", "seo", "analytics"] },
   { title: "內容區塊", ids: ["promos", "services", "otherServices", "videos", "installment", "pricing", "environment", "contact"] },
 ];
 
@@ -376,10 +377,36 @@ export default function PageManagementForm({ initialContent, slug }: { initialCo
             <div className="space-y-4">
               <Field label="SEO 標題（搜尋結果與分頁標題）" value={content.seo.title} placeholder={content.brand.name} onChange={(title) => setContent({ ...content, seo: { ...content.seo, title } })} />
               <TextArea label="SEO 描述（搜尋結果摘要，建議 80-150 字）" value={content.seo.description} onChange={(description) => setContent({ ...content, seo: { ...content.seo, description } })} />
-              <Field label="Google 代碼 ID（此頁專屬，選填；GA4 填 G- 開頭，Google Ads 填 AW- 開頭）" value={content.seo.gaId} placeholder="G-XXXXXXXXXX" onChange={(gaId) => setContent({ ...content, seo: { ...content.seo, gaId } })} />
             </div>
           </div>
         </>
+      ),
+    },
+    {
+      id: "analytics",
+      title: "GA設定及分析",
+      description: "此頁專屬的 Google Analytics／Ads 代碼與按鈕事件名稱。每個一頁式各自獨立。",
+      body: (
+        <div className="space-y-6">
+          <Field label="Google 代碼 ID（GA4 填 G- 開頭，Google Ads 填 AW- 開頭；留空＝此頁不追蹤）" value={content.seo.gaId} placeholder="G-XXXXXXXXXX" onChange={(gaId) => setContent({ ...content, seo: { ...content.seo, gaId } })} />
+          <div>
+            <p className="mb-1 text-sm font-semibold text-gray-700">按鈕點擊事件名稱</p>
+            <p className="mb-3 text-xs text-gray-400">各按鈕被點擊時送到 GA 的事件名稱（可改；限英文字母開頭、英數與底線，≤40 字；留空或格式錯誤會自動用預設）。這些名稱可在 Google Ads 設為轉換。</p>
+            <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200">
+              {ANALYTICS_EVENT_DEFS.map((def) => (
+                <div key={def.key} className="flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-sm text-gray-700">{def.label}</span>
+                  <input
+                    className={`${inputClass} sm:max-w-[240px]`}
+                    value={content.analyticsEvents[def.key] ?? def.default}
+                    placeholder={def.default}
+                    onChange={(event) => setContent({ ...content, analyticsEvents: { ...content.analyticsEvents, [def.key]: event.target.value } })}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       ),
     },
   ];
