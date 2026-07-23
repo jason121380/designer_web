@@ -10,7 +10,7 @@ type Video = { id: string; video: string; caption: string; category: string };
  * 分類由各影片的 category 依出現順序去重而來；沒有任何分類時不顯示標籤列。
  * 所有影片一進頁面即自動播放（靜音循環），不等捲動、不顯示播放鈕。
  */
-export default function WorksGallery({ videos, categoryOrder = [] }: { videos: Video[]; categoryOrder?: string[] }) {
+export default function WorksGallery({ videos, categoryOrder = [], categoryEvent }: { videos: Video[]; categoryOrder?: string[]; categoryEvent?: string }) {
   const categories = useMemo(() => {
     const used = new Set(videos.map((item) => item.category.trim()).filter(Boolean));
     // 先依後台管理的分類順序，再補上影片有用到但不在清單內的分類。
@@ -35,9 +35,9 @@ export default function WorksGallery({ videos, categoryOrder = [] }: { videos: V
     <div>
       {categories.length > 0 && (
         <div className="mb-8 flex flex-wrap justify-center gap-2">
-          <button type="button" onClick={() => setActive(null)} className={tabClass(active === null)} style={active === null ? { backgroundColor: "var(--brand)" } : undefined}>全部</button>
+          <button type="button" onClick={() => setActive(null)} data-ga-event={categoryEvent} data-ga-label="全部" className={tabClass(active === null)} style={active === null ? { backgroundColor: "var(--brand)" } : undefined}>全部</button>
           {categories.map((category) => (
-            <button key={category} type="button" onClick={() => setActive(category)} className={tabClass(active === category)} style={active === category ? { backgroundColor: "var(--brand)" } : undefined}>{category}</button>
+            <button key={category} type="button" onClick={() => setActive(category)} data-ga-event={categoryEvent} data-ga-label={category} className={tabClass(active === category)} style={active === category ? { backgroundColor: "var(--brand)" } : undefined}>{category}</button>
           ))}
         </div>
       )}

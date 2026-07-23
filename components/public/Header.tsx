@@ -8,9 +8,11 @@ interface Props {
   themeColor: string;
   textColor: string;
   links: { href: string; label: string }[];
+  /** 導覽連結點擊的 GA 事件名稱（空＝不追蹤）。 */
+  navEvent?: string;
 }
 
-export default function Header({ title, themeColor, textColor, links }: Props) {
+export default function Header({ title, themeColor, textColor, links, navEvent }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -20,7 +22,7 @@ export default function Header({ title, themeColor, textColor, links }: Props) {
         <a href="#top" className="font-semibold tracking-wide" onClick={() => setOpen(false)}>{title}</a>
         <ul className="hidden items-center gap-6 text-sm md:flex">
           {links.map((link) => (
-            <li key={link.href}><a href={link.href} className="transition-opacity hover:opacity-100 opacity-90">{link.label}</a></li>
+            <li key={link.href}><a href={link.href} data-ga-event={navEvent} data-ga-label={link.label} className="transition-opacity hover:opacity-100 opacity-90">{link.label}</a></li>
           ))}
         </ul>
         <button
@@ -39,7 +41,7 @@ export default function Header({ title, themeColor, textColor, links }: Props) {
           <ul className="mx-auto max-w-6xl px-4 py-2">
             {links.map((link) => (
               <li key={link.href}>
-                <a href={link.href} onClick={() => setOpen(false)} className="block rounded-lg px-2 py-3 text-sm transition-colors hover:bg-black/10">{link.label}</a>
+                <a href={link.href} onClick={() => setOpen(false)} data-ga-event={navEvent} data-ga-label={link.label} className="block rounded-lg px-2 py-3 text-sm transition-colors hover:bg-black/10">{link.label}</a>
               </li>
             ))}
           </ul>
