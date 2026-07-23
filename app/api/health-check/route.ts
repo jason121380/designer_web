@@ -15,7 +15,6 @@ import {
 import { getSiteIconUrl } from "@/lib/site-icon";
 import { isVideoUrl } from "@/lib/media";
 import { streamUidFromUrl } from "@/lib/stream-url";
-import { sanitizeGtagId } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -79,9 +78,6 @@ export async function GET() {
       let active = 0;
       let videoTotal = 0;
       let videoStream = 0;
-      const gaConfigured: string[] = []; // slug（已設定且格式正確）
-      const gaInvalid: string[] = []; // slug（有填但格式錯誤）
-      const gaActiveUnset: string[] = []; // 啟用中卻沒設 GA 的 slug
       for (const row of subpages) {
         try {
           JSON.parse(row.value);
@@ -96,18 +92,6 @@ export async function GET() {
           videoTotal += 1;
           if (streamUidFromUrl(v)) videoStream += 1;
         }
-        // GA 設定盤點（跳過已封存頁）。
-        if (!content.archived) {
-          const slug = row.key.slice(DESIGNER_WEB_SETTINGS_PREFIX.length);
-          const raw = content.seo.gaId?.trim() ?? "";
-          if (!raw) {
-            if (content.active) gaActiveUnset.push(slug);
-          } else if (sanitizeGtagId(raw)) {
-            gaConfigured.push(slug);
-          } else {
-            gaInvalid.push(slug);
-          }
-        }
       }
       add("資料庫與內容", "子頁面", "ok", `共 ${subpages.length} 頁，其中 ${active} 頁啟用中`);
       add("資料庫與內容", "內容格式", corrupt === 0 ? "ok" : "error", corrupt === 0 ? "所有頁面內容 JSON 正常" : `有 ${corrupt} 頁內容毀損，前台會顯示預設內容`);
@@ -115,26 +99,7 @@ export async function GET() {
         const onR2 = videoTotal - videoStream;
         add("資料庫與內容", "影片來源", onR2 === 0 ? "ok" : "warn", `作品／首屏影片共 ${videoTotal} 支：Stream ${videoStream} 支${onR2 > 0 ? `、仍在 R2 ${onR2} 支（可用工程模式搬移）` : ""}`);
       }
-
-      // === Google Analytics（各頁獨立）===
-      add(
-        "Google Analytics",
-        "GA 設定",
-        gaConfigured.length ? "ok" : "warn",
-        gaConfigured.length ? `已設定並格式正確：${gaConfigured.map((s) => `/${s}`).join("、")}` : "目前沒有任何頁面設定 GA 代碼",
-      );
-      if (gaInvalid.length) {
-        add("Google Analytics", "格式錯誤", "error", `這些頁面的 GA 代碼格式不對（需 G-／AW-／GTM- 開頭），不會生效：${gaInvalid.map((s) => `/${s}`).join("、")}`);
-      }
-      if (gaActiveUnset.length) {
-        add("Google Analytics", "尚未設定", "warn", `這些啟用中頁面還沒設 GA：${gaActiveUnset.map((s) => `/${s}`).join("、")}`);
-      }
-      add(
-        "Google Analytics",
-        "是否真的收到資料",
-        "warn",
-        "健康檢查只驗證代碼格式與是否設定；「實際是否收到流量」請開該頁後到 GA4 →『即時』報表確認，或用 Google Tag Assistant 測試（自動驗證需另接 GA Data API 授權，目前未接）。",
-      );
+      // GA 檢查已獨立為工程模式的「Google Analytics 檢查」卡片。
     } catch (error) {
       add("資料庫與內容", "內容讀取", "error", error instanceof Error ? error.message : "讀取頁面內容失敗");
     }
