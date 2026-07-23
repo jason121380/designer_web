@@ -3,6 +3,7 @@ import type { DesignerWebContent } from "@/lib/designer-web-content";
 import { externalHref } from "@/lib/utils";
 import LinksQrButton from "@/components/public/LinksQrButton";
 import MediaView from "@/components/public/MediaView";
+import Analytics from "@/components/public/Analytics";
 
 /** 個人連結頁（linktree 風格）：頭像、名稱、簡介、連結按鈕與社群 icon。 */
 export default function LinksPage({ content }: { content: DesignerWebContent }) {
@@ -21,6 +22,7 @@ export default function LinksPage({ content }: { content: DesignerWebContent }) 
 
   return (
     <div style={{ ["--brand" as string]: brand.themeColor }} className="min-h-screen bg-neutral-50">
+      <Analytics id={content.seo.gaId} />
       {!!links.qr && <LinksQrButton src={links.qr} />}
       <main className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center px-6 py-14">
         {links.avatar ? (

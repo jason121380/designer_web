@@ -7,6 +7,7 @@ import PublicVideo from "@/components/public/PublicVideo";
 import MediaView from "@/components/public/MediaView";
 import WorksGallery from "@/components/public/WorksGallery";
 import FloatingBubble from "@/components/public/FloatingBubble";
+import Analytics from "@/components/public/Analytics";
 import { externalHref } from "@/lib/utils";
 import { streamUidFromUrl } from "@/lib/stream-url";
 import { isVideoUrl } from "@/lib/media";
@@ -238,6 +239,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
     .map((sec) => ({ href: `#${SECTION_ANCHOR[sec.key]}`, label: sec.zh }));
   return (
     <div style={{ ["--brand" as string]: content.brand.themeColor }}>
+      <Analytics id={content.seo.gaId} />
       {hasStreamVideo && (
         <>
           <link rel="preconnect" href="https://videodelivery.net" />

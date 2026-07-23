@@ -88,7 +88,7 @@ assert.deepEqual(demoNormalized.contact, defaultDesignerWebContent.contact);
 assert.equal(normalized.seo.title, "中壢接髮第一品牌");
 assert.equal(normalized.seo.description, "廣告到達頁描述");
 assert.equal(normalized.seo.ogImage, "https://cdn.example.com/og.jpg");
-assert.deepEqual(demoNormalized.seo, { title: "", description: "", ogImage: "" });
+assert.deepEqual(demoNormalized.seo, { title: "", description: "", ogImage: "", gaId: "" });
 
 // 內容缺失/損壞時 fallback 到示範內容（子頁面讀取層與 API 均依賴此容錯）
 assert.equal(parseDesignerWebContent(null).hero.heading, defaultDesignerWebContent.hero.heading);

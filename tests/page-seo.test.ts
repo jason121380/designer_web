@@ -19,6 +19,7 @@ custom.seo = {
   title: "中壢接髮｜KIMIKO 專屬預約",
   description: "Google Ads 到達頁專用描述",
   ogImage: "https://cdn.example.com/og.jpg",
+  gaId: "",
 };
 const meta = designerPageMetadata(custom, "/kimiko");
 assert.deepEqual(meta.title, { absolute: "中壢接髮｜KIMIKO 專屬預約" });
