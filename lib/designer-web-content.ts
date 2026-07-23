@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeAnalyticsEvents, defaultAnalyticsEvents } from "@/lib/analytics";
 
 export const DESIGNER_WEB_SETTINGS_KEY = "designer_web_content";
 export const DESIGNER_WEB_SETTINGS_PREFIX = `${DESIGNER_WEB_SETTINGS_KEY}:`;
@@ -103,6 +104,8 @@ export const designerWebContentSchema = z.object({
   videoCategories: z.array(z.string()).optional(),
   // 作品影片下方「查看更多作品」按鈕連結（開新分頁）；空＝不顯示按鈕。
   videosMoreUrl: nullableString,
+  // 各按鈕的 GA 事件名稱對照（可在後台自訂）；缺欄位＝用預設。
+  analyticsEvents: z.record(z.string()).optional().nullable(),
   installment: z.array(z.string()).optional(),
   pricing: z.array(pricingSchema).optional(),
   environment: z.array(z.object({
@@ -184,6 +187,8 @@ export interface DesignerWebContent {
   videoCategories: string[];
   /** 作品影片下方「查看更多作品」按鈕連結（開新分頁）；空＝不顯示。 */
   videosMoreUrl: string;
+  /** 各按鈕的 GA 事件名稱對照（key 見 lib/analytics.ts ANALYTICS_EVENT_DEFS）。 */
+  analyticsEvents: Record<string, string>;
   installment: string[];
   pricing: { name: string; price: string; description: string; features: string[] }[];
   environment: { id: string; image: string; alt: string }[];
@@ -267,6 +272,7 @@ export const defaultDesignerWebContent: DesignerWebContent = {
   videos: [],
   videoCategories: [],
   videosMoreUrl: "",
+  analyticsEvents: defaultAnalyticsEvents(),
   installment: [
     "【zingala 銀角零卡】先享受、後付款，不需要任何信用卡。",
     "分期可分 3/6/9 期，美麗無壓力，先享受下個月再付款。",
@@ -473,6 +479,7 @@ export function normalizeDesignerWebContent(input: unknown): DesignerWebContent 
     videos,
     videoCategories,
     videosMoreUrl: trim(data.videosMoreUrl),
+    analyticsEvents: normalizeAnalyticsEvents(data.analyticsEvents),
     installment: installment.length ? installment : defaultDesignerWebContent.installment,
     pricing: pricing.length ? pricing : defaultDesignerWebContent.pricing,
     environment,

@@ -12,13 +12,14 @@ export default function LinksPage({ content }: { content: DesignerWebContent }) 
   const social = links.social;
   const initial = brand.name.trim()[0]?.toUpperCase() ?? "•";
 
+  const events = content.analyticsEvents;
   const socials: { key: string; event: string; href: string; label: string; node: React.ReactNode }[] = [
-    social.instagram && { key: "ig", event: "click_instagram", href: externalHref(social.instagram), label: "Instagram", node: <span className="text-xs font-bold">IG</span> },
-    social.facebook && { key: "fb", event: "click_facebook", href: externalHref(social.facebook), label: "Facebook", node: <span className="text-sm font-bold">f</span> },
-    social.line && { key: "line", event: "click_line", href: externalHref(social.line), label: "LINE", node: <MessageCircle size={18} /> },
-    social.email && { key: "mail", event: "click_email", href: `mailto:${social.email}`, label: "Email", node: <Mail size={18} /> },
-    social.phone && { key: "tel", event: "click_phone", href: `tel:${social.phone}`, label: "電話", node: <Phone size={18} /> },
-    social.mapUrl && { key: "map", event: "click_map", href: externalHref(social.mapUrl), label: "地圖", node: <MapPin size={18} /> },
+    social.instagram && { key: "ig", event: events.instagram, href: externalHref(social.instagram), label: "Instagram", node: <span className="text-xs font-bold">IG</span> },
+    social.facebook && { key: "fb", event: events.facebook, href: externalHref(social.facebook), label: "Facebook", node: <span className="text-sm font-bold">f</span> },
+    social.line && { key: "line", event: events.line, href: externalHref(social.line), label: "LINE", node: <MessageCircle size={18} /> },
+    social.email && { key: "mail", event: events.email, href: `mailto:${social.email}`, label: "Email", node: <Mail size={18} /> },
+    social.phone && { key: "tel", event: events.phone, href: `tel:${social.phone}`, label: "電話", node: <Phone size={18} /> },
+    social.mapUrl && { key: "map", event: events.map, href: externalHref(social.mapUrl), label: "地圖", node: <MapPin size={18} /> },
   ].filter(Boolean) as { key: string; event: string; href: string; label: string; node: React.ReactNode }[];
 
   return (
@@ -48,7 +49,7 @@ export default function LinksPage({ content }: { content: DesignerWebContent }) 
                 href={externalHref(item.url)}
                 target="_blank"
                 rel="noreferrer"
-                data-ga-event="click_link"
+                data-ga-event={events.link}
                 data-ga-label={item.label}
                 className="block w-full rounded-full border border-neutral-200 bg-white px-5 py-3.5 text-center text-sm font-medium text-neutral-800 transition hover:-translate-y-0.5 hover:border-[color:var(--brand)]"
               >

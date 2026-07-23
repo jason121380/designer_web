@@ -9,14 +9,14 @@ import { externalHref } from "@/lib/utils";
  * 前台右下角懸浮泡泡：點擊展開，顯示後台勾選且有填網址的聯絡管道（LINE／Facebook／Instagram／Google 地圖）。
  * 都沒有時不顯示。
  */
-export default function FloatingBubble({ contact }: { contact: DesignerWebContent["contact"] }) {
+export default function FloatingBubble({ contact, events }: { contact: DesignerWebContent["contact"]; events: Record<string, string> }) {
   const [open, setOpen] = useState(false);
 
   const items = [
-    contact.bubble.line && contact.line && { key: "line", event: "click_line", href: externalHref(contact.line), label: "LINE", node: <MessageCircle size={20} /> },
-    contact.bubble.facebook && contact.facebook && { key: "fb", event: "click_facebook", href: externalHref(contact.facebook), label: "Facebook", node: <span className="text-lg font-bold">f</span> },
-    contact.bubble.instagram && contact.instagram && { key: "ig", event: "click_instagram", href: externalHref(contact.instagram), label: "Instagram", node: <span className="text-sm font-bold">IG</span> },
-    contact.bubble.map && contact.mapUrl && { key: "map", event: "click_map", href: externalHref(contact.mapUrl), label: "Google 地圖", node: <MapPin size={20} /> },
+    contact.bubble.line && contact.line && { key: "line", event: events.line, href: externalHref(contact.line), label: "LINE", node: <MessageCircle size={20} /> },
+    contact.bubble.facebook && contact.facebook && { key: "fb", event: events.facebook, href: externalHref(contact.facebook), label: "Facebook", node: <span className="text-lg font-bold">f</span> },
+    contact.bubble.instagram && contact.instagram && { key: "ig", event: events.instagram, href: externalHref(contact.instagram), label: "Instagram", node: <span className="text-sm font-bold">IG</span> },
+    contact.bubble.map && contact.mapUrl && { key: "map", event: events.map, href: externalHref(contact.mapUrl), label: "Google 地圖", node: <MapPin size={20} /> },
   ].filter(Boolean) as { key: string; event: string; href: string; label: string; node: ReactNode }[];
 
   if (items.length === 0) return null;
