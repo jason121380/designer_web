@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, DatabaseBackup, Film, HeartPulse, Image as ImageIcon, XCircle } from "lucide-react";
+import { AlertTriangle, BarChart3, CheckCircle2, DatabaseBackup, Film, HeartPulse, Image as ImageIcon, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
 
 type HealthCheck = { group: string; label: string; status: "ok" | "warn" | "error"; detail: string };
 type HealthResult = { checks: HealthCheck[]; summary: { ok: number; warn: number; error: number } };
+type GaPage = { slug: string; brandName: string; active: boolean; gaId: string; status: "ok" | "invalid" | "unset" };
+type GaResult = { pages: GaPage[]; summary: { ok: number; invalid: number; unset: number } };
 
 export default function EngineeringTools() {
   const [running, setRunning] = useState(false);
@@ -16,6 +18,8 @@ export default function EngineeringTools() {
   const [migrateResult, setMigrateResult] = useState<{ scanned: number; migrated: number; failed: number } | null>(null);
   const [checking, setChecking] = useState(false);
   const [health, setHealth] = useState<HealthResult | null>(null);
+  const [gaChecking, setGaChecking] = useState(false);
+  const [ga, setGa] = useState<GaResult | null>(null);
 
   useEffect(() => {
     fetch("/api/site-icon").then((res) => (res.ok ? res.json() : { url: "" })).then((body) => setIconUrl(body.url || "")).catch(() => {});
@@ -61,6 +65,22 @@ export default function EngineeringTools() {
       toast.error(error instanceof Error ? error.message : "檢查失敗");
     } finally {
       setChecking(false);
+    }
+  }
+
+  async function runGaCheck() {
+    setGaChecking(true);
+    try {
+      const res = await fetch("/api/ga-check");
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "檢查失敗");
+      setGa(body);
+      if (body.summary.invalid > 0) toast.error(`有 ${body.summary.invalid} 頁 GA 代碼格式錯誤`);
+      else toast.success(`已設定 ${body.summary.ok} 頁、未設定 ${body.summary.unset} 頁`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "檢查失敗");
+    } finally {
+      setGaChecking(false);
     }
   }
 
@@ -130,6 +150,47 @@ export default function EngineeringTools() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="border border-gray-200 bg-white rounded-lg p-5">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-brand/10 text-rose-brand"><BarChart3 size={20} /></div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-semibold text-gray-900">Google Analytics 檢查</h2>
+              <p className="mt-1 text-sm text-gray-500">盤點每個頁面的 GA 代碼設定：已設定且格式正確、格式錯誤、或尚未設定。註：此處僅驗證「有沒有設、格式對不對」；「實際是否收到流量」請開該頁後到 GA4 →「即時」報表確認。</p>
+              <button type="button" onClick={runGaCheck} disabled={gaChecking} className="mt-4 inline-flex items-center gap-2 bg-rose-brand rounded-lg px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                {gaChecking ? "檢查中…" : "執行檢查"}
+              </button>
+
+              {ga && (
+                <div className="mt-4">
+                  <div className="mb-3 flex flex-wrap gap-2 text-xs font-medium">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700"><CheckCircle2 size={13} />已設定 {ga.summary.ok}</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-red-700"><XCircle size={13} />格式錯誤 {ga.summary.invalid}</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-gray-500"><AlertTriangle size={13} />未設定 {ga.summary.unset}</span>
+                  </div>
+                  <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-100">
+                    {ga.pages.map((page) => (
+                      <div key={page.slug} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-gray-800">{page.brandName} <span className="text-xs font-normal text-gray-400">/{page.slug}{page.active ? "" : "（停用）"}</span></p>
+                          {page.status !== "unset" && <p className="truncate text-xs text-gray-500">{page.gaId}</p>}
+                        </div>
+                        <span className="shrink-0">
+                          {page.status === "ok"
+                            ? <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"><CheckCircle2 size={12} />已設定</span>
+                            : page.status === "invalid"
+                              ? <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700"><XCircle size={12} />格式錯誤</span>
+                              : <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">未設定</span>}
+                        </span>
+                      </div>
+                    ))}
+                    {ga.pages.length === 0 && <p className="px-3 py-6 text-center text-sm text-gray-400">沒有可檢查的頁面。</p>}
                   </div>
                 </div>
               )}
