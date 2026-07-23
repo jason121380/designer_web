@@ -13,11 +13,11 @@ export default function FloatingBubble({ contact }: { contact: DesignerWebConten
   const [open, setOpen] = useState(false);
 
   const items = [
-    contact.bubble.line && contact.line && { key: "line", href: externalHref(contact.line), label: "LINE", node: <MessageCircle size={20} /> },
-    contact.bubble.facebook && contact.facebook && { key: "fb", href: externalHref(contact.facebook), label: "Facebook", node: <span className="text-lg font-bold">f</span> },
-    contact.bubble.instagram && contact.instagram && { key: "ig", href: externalHref(contact.instagram), label: "Instagram", node: <span className="text-sm font-bold">IG</span> },
-    contact.bubble.map && contact.mapUrl && { key: "map", href: externalHref(contact.mapUrl), label: "Google 地圖", node: <MapPin size={20} /> },
-  ].filter(Boolean) as { key: string; href: string; label: string; node: ReactNode }[];
+    contact.bubble.line && contact.line && { key: "line", event: "click_line", href: externalHref(contact.line), label: "LINE", node: <MessageCircle size={20} /> },
+    contact.bubble.facebook && contact.facebook && { key: "fb", event: "click_facebook", href: externalHref(contact.facebook), label: "Facebook", node: <span className="text-lg font-bold">f</span> },
+    contact.bubble.instagram && contact.instagram && { key: "ig", event: "click_instagram", href: externalHref(contact.instagram), label: "Instagram", node: <span className="text-sm font-bold">IG</span> },
+    contact.bubble.map && contact.mapUrl && { key: "map", event: "click_map", href: externalHref(contact.mapUrl), label: "Google 地圖", node: <MapPin size={20} /> },
+  ].filter(Boolean) as { key: string; event: string; href: string; label: string; node: ReactNode }[];
 
   if (items.length === 0) return null;
 
@@ -31,6 +31,8 @@ export default function FloatingBubble({ contact }: { contact: DesignerWebConten
             target="_blank"
             rel="noreferrer"
             aria-label={item.label}
+            data-ga-event={item.event}
+            data-ga-label={`懸浮泡泡_${item.label}`}
             className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-black/5 transition hover:scale-105"
             style={{ color: "var(--brand)" }}
           >

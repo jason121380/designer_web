@@ -8,6 +8,7 @@ import MediaView from "@/components/public/MediaView";
 import WorksGallery from "@/components/public/WorksGallery";
 import FloatingBubble from "@/components/public/FloatingBubble";
 import Analytics from "@/components/public/Analytics";
+import AnalyticsClicks from "@/components/public/AnalyticsClicks";
 import { externalHref } from "@/lib/utils";
 import { streamUidFromUrl } from "@/lib/stream-url";
 import { isVideoUrl } from "@/lib/media";
@@ -125,6 +126,7 @@ function renderSection(content: DesignerWebContent, sec: Section) {
                   href={externalHref(content.videosMoreUrl)}
                   target="_blank"
                   rel="noreferrer"
+                  data-ga-event="click_more_works"
                   className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
                   style={{ backgroundColor: "var(--brand)" }}
                 >
@@ -204,17 +206,17 @@ function renderSection(content: DesignerWebContent, sec: Section) {
                 <span className="flex items-center gap-2">
                   <MapPin size={18} style={{ color: "var(--brand)" }} />
                   {content.contact.mapUrl ? (
-                    <a href={externalHref(content.contact.mapUrl)} target="_blank" rel="noreferrer" className="hover:underline">{content.contact.address}</a>
+                    <a href={externalHref(content.contact.mapUrl)} target="_blank" rel="noreferrer" data-ga-event="click_map" data-ga-label="聯絡我_地圖" className="hover:underline">{content.contact.address}</a>
                   ) : (
                     <span>{content.contact.address}</span>
                   )}
                 </span>
               )}
-              {!!content.contact.phone && <a href={`tel:${content.contact.phone}`} className="flex items-center gap-2 hover:underline"><Phone size={18} style={{ color: "var(--brand)" }} />{content.contact.phone}</a>}
-              {!!content.contact.email && <a href={`mailto:${content.contact.email}`} className="flex items-center gap-2 hover:underline"><Mail size={18} style={{ color: "var(--brand)" }} />{content.contact.email}</a>}
-              {!!content.contact.facebook && <a href={externalHref(content.contact.facebook)} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:underline"><span className="w-[18px] text-center text-sm font-bold" style={{ color: "var(--brand)" }}>f</span>Facebook</a>}
-              {!!content.contact.instagram && <a href={externalHref(content.contact.instagram)} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:underline"><span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>IG</span>Instagram</a>}
-              {!!content.contact.line && <a href={externalHref(content.contact.line)} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:underline"><MessageCircle size={18} style={{ color: "var(--brand)" }} />LINE</a>}
+              {!!content.contact.phone && <a href={`tel:${content.contact.phone}`} data-ga-event="click_phone" data-ga-label="聯絡我_電話" className="flex items-center gap-2 hover:underline"><Phone size={18} style={{ color: "var(--brand)" }} />{content.contact.phone}</a>}
+              {!!content.contact.email && <a href={`mailto:${content.contact.email}`} data-ga-event="click_email" data-ga-label="聯絡我_Email" className="flex items-center gap-2 hover:underline"><Mail size={18} style={{ color: "var(--brand)" }} />{content.contact.email}</a>}
+              {!!content.contact.facebook && <a href={externalHref(content.contact.facebook)} target="_blank" rel="noreferrer" data-ga-event="click_facebook" data-ga-label="聯絡我_Facebook" className="flex items-center gap-2 hover:underline"><span className="w-[18px] text-center text-sm font-bold" style={{ color: "var(--brand)" }}>f</span>Facebook</a>}
+              {!!content.contact.instagram && <a href={externalHref(content.contact.instagram)} target="_blank" rel="noreferrer" data-ga-event="click_instagram" data-ga-label="聯絡我_Instagram" className="flex items-center gap-2 hover:underline"><span className="w-[18px] text-center text-xs font-bold" style={{ color: "var(--brand)" }}>IG</span>Instagram</a>}
+              {!!content.contact.line && <a href={externalHref(content.contact.line)} target="_blank" rel="noreferrer" data-ga-event="click_line" data-ga-label="聯絡我_LINE" className="flex items-center gap-2 hover:underline"><MessageCircle size={18} style={{ color: "var(--brand)" }} />LINE</a>}
             </div>
           </div>
         </section>
@@ -240,6 +242,7 @@ export default function OnePage({ content }: { content: DesignerWebContent }) {
   return (
     <div style={{ ["--brand" as string]: content.brand.themeColor }}>
       <Analytics id={content.seo.gaId} />
+      {!!content.seo.gaId && <AnalyticsClicks />}
       {hasStreamVideo && (
         <>
           <link rel="preconnect" href="https://videodelivery.net" />
